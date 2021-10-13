@@ -24,3 +24,4 @@ apache-libcloud
 jmespath
 lxml
 pycrypto
+psycopg2

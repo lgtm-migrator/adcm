@@ -135,13 +135,13 @@ REST_FRAMEWORK = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'data/var/cluster.db'),
-        # 'ENGINE': 'django.db.backends.postgresql',
-        # 'NAME': 'adcm',
-        # 'HOST': 'localhost',
-        # 'USER': 'adcm',
-        # 'PASSWORD': 'adcm',
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': os.path.join(BASE_DIR, 'data/var/cluster.db'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'HOST': '10.92.6.179',
+        'USER': 'postgres',
+        'PASSWORD': 'Orion123',
         'OPTIONS': {
             'timeout': 20,
         },
