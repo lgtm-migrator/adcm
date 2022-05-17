@@ -26,6 +26,38 @@
       min: 1
       default: 2
 
+    - name: file_field
+      type: file
+      default: ./simple.txt
+
+    - name: list_not_required_will_have_default
+      type: list
+      required: false
+      default:
+        - new-item
+        - new-item-2
+
+    - name: list_changed_default
+      type: list
+      default:
+        - after-default-1
+        - after-default-2
+
+    - name: list_required_with_default
+      type: list
+      default:
+        - first-item
+        - "2"
+
+    - name: from_readonly_to_writable
+      type: string
+      writable: any
+
+    - name: from_writable_to_readonly
+      type: string
+      default: some_default
+      read_only: any
+
     - name: simple_then_advanced
       type: group
       activatable: true
