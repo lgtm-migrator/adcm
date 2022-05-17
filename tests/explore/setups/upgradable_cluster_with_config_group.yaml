@@ -1,0 +1,15 @@
+version: 0.1
+
+config:
+  on_conflict: delete
+
+entities:
+  bundles:
+    - old_cluster
+    - new_cluster
+
+  clusters:
+    - from: old_cluster
+      name: Old Cluster
+      config_groups:
+        - name: cfg

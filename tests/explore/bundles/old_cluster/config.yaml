@@ -1,0 +1,40 @@
+- type: cluster
+  name: awesome
+  version: 0.1
+
+  config_group_customization: true
+
+  config:
+    - &simple_value
+      name: simple_value
+      type: string
+      required: false
+
+    - &numeric
+      name: numeric_value_with_bounds
+      type: integer
+      max: 10
+      min: 1
+      default: 2
+
+    - name: simple_then_advanced
+      type: group
+      subs: &group_subs
+        - *simple_value
+        - *numeric
+
+    - name: advanced_then_simple
+      type: group
+      activatable: true
+      active: true
+      subs: *group_subs
+
+    - name: inactive_then_active
+      type: group
+      activatable: true
+      active: false
+      subs: *group_subs
+
+    - name: this_field_will_be_gone
+      type: string
+      default: hehehehehehe
