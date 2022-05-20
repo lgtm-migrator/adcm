@@ -30,6 +30,15 @@
       type: file
       default: ./simple.txt
 
+    - name: struct
+      type: structure
+      yspec: ./schema.yaml
+      default:
+        - base: Another
+          somecode: 20
+        - base: Something
+          somecode: 100
+
     - name: list_not_required_will_have_default
       type: list
       required: false

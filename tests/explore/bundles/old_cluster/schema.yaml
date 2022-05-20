@@ -1,0 +1,13 @@
+---
+root:
+  match: list
+  item: somestruct
+
+somestruct:
+  match: dict
+  items:
+    base: string
+    somecode: string
+
+string:
+  match: string
