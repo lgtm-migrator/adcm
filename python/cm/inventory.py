@@ -155,6 +155,10 @@ def get_provider_variables(provider: HostProvider, provider_config: dict = None)
     }
 
 
+def is_host_in_mm(host: Host) -> bool:
+    return host.maintenance_mode == MaintenanceModeType.On.value
+
+
 def get_host_vars(host: Host, obj):
     # TODO: add test for this function
     groups = host.group_config.filter(
@@ -245,27 +249,45 @@ def get_provider_config(provider_id):
     return {'provider': get_provider_variables(provider)}
 
 
-def get_host_groups(cluster, delta, action_host=None):
-    def in_mm(hc: HostComponent) -> bool:
-        return hc.host.maintenance_mode == MaintenanceModeType.On.value
+def get_host_groups(cluster, delta, action_host=None):  # pylint: disable=too-many-branches
 
     groups = {}
     all_hosts = HostComponent.objects.filter(cluster=cluster)
     for hc in all_hosts:
-        if in_mm(hc) or (action_host and hc.host.id not in action_host):
+        if action_host and hc.host.id not in action_host:
             continue
 
-        key1 = f'{hc.service.prototype.name}.{hc.component.prototype.name}'
-        if key1 not in groups:
-            groups[key1] = {'hosts': {}}
-        groups[key1]['hosts'][hc.host.fqdn] = get_obj_config(hc.host)
-        groups[key1]['hosts'][hc.host.fqdn].update(get_host_vars(hc.host, hc.component))
+        servce_component_group = f'{hc.service.prototype.name}.{hc.component.prototype.name}'
+        servce_component_mm_group = (
+            f'{hc.service.prototype.name}.{hc.component.prototype.name}.maintenance_mode'
+        )
+        if servce_component_group not in groups:
+            groups[servce_component_group] = {'hosts': {}}
+            groups[servce_component_mm_group] = {'hosts': {}}
+        if not is_host_in_mm(hc.host):
+            groups[servce_component_group]['hosts'][hc.host.fqdn] = get_obj_config(hc.host)
+            groups[servce_component_group]['hosts'][hc.host.fqdn].update(
+                get_host_vars(hc.host, hc.component)
+            )
+        else:
+            groups[servce_component_mm_group]['hosts'][hc.host.fqdn] = get_obj_config(hc.host)
+            groups[servce_component_mm_group]['hosts'][hc.host.fqdn].update(
+                get_host_vars(hc.host, hc.component)
+            )
 
-        key2 = f'{hc.service.prototype.name}'
-        if key2 not in groups:
-            groups[key2] = {'hosts': {}}
-        groups[key2]['hosts'][hc.host.fqdn] = get_obj_config(hc.host)
-        groups[key2]['hosts'][hc.host.fqdn].update(get_host_vars(hc.host, hc.service))
+        service_group = f'{hc.service.prototype.name}'
+        service_mm_group = f'{hc.service.prototype.name}.maintenance_mode'
+        if service_group not in groups:
+            groups[service_group] = {'hosts': {}}
+            groups[service_mm_group] = {'hosts': {}}
+        if not is_host_in_mm(hc.host):
+            groups[service_group]['hosts'][hc.host.fqdn] = get_obj_config(hc.host)
+            groups[service_group]['hosts'][hc.host.fqdn].update(get_host_vars(hc.host, hc.service))
+        else:
+            groups[service_mm_group]['hosts'][hc.host.fqdn] = get_obj_config(hc.host)
+            groups[service_mm_group]['hosts'][hc.host.fqdn].update(
+                get_host_vars(hc.host, hc.service)
+            )
 
     for htype in delta:
         for key in delta[htype]:
@@ -275,7 +297,7 @@ def get_host_groups(cluster, delta, action_host=None):
             for fqdn in delta[htype][key]:
                 host = delta[htype][key][fqdn]
                 # TODO: What is `delta`? Need calculate delta for group_config?
-                if not host.maintenance_mode == MaintenanceModeType.On.value:
+                if not is_host_in_mm(host):
                     groups[lkey]['hosts'][host.fqdn] = get_obj_config(host)
 
     return groups
@@ -284,9 +306,7 @@ def get_host_groups(cluster, delta, action_host=None):
 def get_hosts(host_list, obj, action_host=None):
     group = {}
     for host in host_list:
-        if host.maintenance_mode == MaintenanceModeType.On.value or (
-            action_host and host.id not in action_host
-        ):
+        if action_host and host.id not in action_host:
             continue
         group[host.fqdn] = get_obj_config(host)
         group[host.fqdn]['adcm_hostid'] = host.id
