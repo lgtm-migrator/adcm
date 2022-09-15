@@ -17,17 +17,17 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from api.action.serializers import ActionShort
-from api.utils import check_obj, filter_actions, CommonAPIURL, ObjectURL
 from api.cluster.serializers import BindSerializer
 from api.component.serializers import ComponentUISerializer
 from api.concern.serializers import ConcernItemSerializer, ConcernItemUISerializer
 from api.group_config.serializers import GroupConfigsHyperlinkedIdentityField
 from api.serializers import StringListSerializer
+from api.utils import CommonAPIURL, ObjectURL, check_obj, filter_actions
 from cm import status_api
 from cm.adcm_config import get_main_info
-from cm.api import add_service_to_cluster, multi_bind, bind
+from cm.api import add_service_to_cluster, bind, multi_bind
 from cm.errors import AdcmEx
-from cm.models import Prototype, Action, ServiceComponent, Cluster
+from cm.models import Action, Cluster, Prototype, ServiceComponent
 
 
 class ServiceSerializer(serializers.Serializer):
@@ -50,6 +50,30 @@ class ServiceSerializer(serializers.Serializer):
             return add_service_to_cluster(cluster, prototype)
         except IntegrityError:
             raise AdcmEx('SERVICE_CONFLICT') from None
+
+
+class ServiceUISerializer(ServiceSerializer):
+    action = CommonAPIURL(read_only=True, view_name='object-action')
+    actions = serializers.SerializerMethodField()
+    name = serializers.CharField(read_only=True)
+    version = serializers.SerializerMethodField()
+    concerns = ConcernItemUISerializer(many=True, read_only=True)
+    locked = serializers.BooleanField(read_only=True)
+    status = serializers.SerializerMethodField()
+
+    def get_actions(self, obj):
+        act_set = Action.objects.filter(prototype=obj.prototype)
+        self.context['object'] = obj
+        self.context['service_id'] = obj.id
+        actions = filter_actions(obj, act_set)
+        acts = ActionShort(actions, many=True, context=self.context)
+        return acts.data
+
+    def get_version(self, obj):
+        return obj.prototype.version
+
+    def get_status(self, obj):
+        return status_api.get_service_status(obj)
 
 
 class ClusterServiceSerializer(ServiceSerializer):
@@ -90,13 +114,11 @@ class ServiceDetailSerializer(ServiceSerializer):
         return status_api.get_service_status(obj)
 
 
-class ServiceUISerializer(ServiceDetailSerializer):
+class ServiceDetailUISerializer(ServiceDetailSerializer):
     actions = serializers.SerializerMethodField()
     components = serializers.SerializerMethodField()
     name = serializers.CharField(read_only=True)
     version = serializers.SerializerMethodField()
-    action = CommonAPIURL(view_name='object-action')
-    config = CommonAPIURL(view_name='object-config')
     concerns = ConcernItemUISerializer(many=True, read_only=True)
     main_info = serializers.SerializerMethodField()
 
