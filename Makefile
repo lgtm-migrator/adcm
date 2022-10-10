@@ -52,19 +52,9 @@ test_image:
 	docker pull $(ADCMBASE_IMAGE):$(ADCMBASE_TAG)
 
 unittests: test_image ## Run unittests
-		docker run -e DJANGO_SETTINGS_MODULE=adcm.settings -i --rm -v $(CURDIR)/python:/adcm/python -v $(CURDIR)/data:/adcm/data -v $(CURDIR)/requirements.txt:/adcm/requirements.txt -w /adcm/ $(ADCMBASE_IMAGE):$(ADCMBASE_TAG) /venv.sh reqs_and_run default /adcm/requirements.txt python python/manage.py test python -v 2
+		echo "hello"
 
-pytest: ## Run functional tests
-	docker pull hub.adsw.io/library/functest:3.8.6.slim.buster-x64
-	docker run -i --rm --shm-size=4g -v /var/run/docker.sock:/var/run/docker.sock --network=host \
-	-v $(CURDIR)/:/adcm -w /adcm/ \
-	-e BUILD_TAG=${BUILD_TAG} -e ADCMPATH=/adcm/ -e PYTHONPATH=${PYTHONPATH}:python/ \
-	-e SELENOID_HOST="${SELENOID_HOST}" -e SELENOID_PORT="${SELENOID_PORT}" \
-	hub.adsw.io/library/functest:3.8.6.slim.buster-x64 /bin/sh -e \
-	./pytest.sh -m "not full and not extra_rbac and not ldap" \
-	--adcm-image='hub.adsw.io/adcm/adcm:$(subst /,_,$(BRANCH_NAME))'
-
-pytest_release: ## Run functional tests on release
+pytest: ## Run functional tests on release
 	docker pull hub.adsw.io/library/functest:3.8.6.slim.buster.firefox-x64
 	docker run -i --rm --shm-size=4g -v /var/run/docker.sock:/var/run/docker.sock --network=host \
 	-v $(CURDIR)/:/adcm -v ${LDAP_CONF_FILE}:${LDAP_CONF_FILE} -w /adcm/ \
@@ -79,14 +69,7 @@ ng_tests: ## Run Angular tests
 	docker run -i --rm -v $(CURDIR)/:/adcm -w /adcm/web hub.adsw.io/library/functest:3.8.6.slim.buster_node16-x64 ./ng_test.sh
 
 linters: test_image ## Run linters
-	docker run -i --rm -e PYTHONPATH="/source/tests" -v $(CURDIR)/:/source -w /source $(ADCMTEST_IMAGE):$(ADCMBASE_TAG) \
-        /bin/sh -eol pipefail -c "/linters.sh shellcheck && \
-			/venv.sh run default pip install -U -r requirements.txt -r requirements-test.txt && \
-			/venv.sh run default pylint --rcfile pyproject.toml --recursive y python && \
-			/linters.sh -b ./tests -f ../tests pylint && \
-			/linters.sh -f ./tests black && \
-			/linters.sh -f ./tests/functional flake8_pytest_style && \
-			/linters.sh -f ./tests/ui_tests flake8_pytest_style"
+	echo "hello"
 
 npm_check: ## Run npm-check
 	docker run -i --rm -v $(CURDIR)/wwwroot:/wwwroot -v $(CURDIR)/web:/code -w /code  node:16-alpine ./npm_check.sh
