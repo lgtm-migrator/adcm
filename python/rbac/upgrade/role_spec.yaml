@@ -1486,7 +1486,6 @@ roles:
         - Remove bundle
 
     - name: Manage Maintenance mode
-      display_name: Manage host Maintenance mode
       description: the ability to enable / disable the "MM"
       type: business
       module_name: rbac.roles
