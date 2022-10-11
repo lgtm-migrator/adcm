@@ -1499,7 +1499,7 @@ roles:
       description: the ability to enable / disable the "MM" on the host
       type: hidden
       module_name: rbac.roles
-      class_name: ParentRole
+      class_name: ObjectRole
       apps:
         - label: cm
           models:
