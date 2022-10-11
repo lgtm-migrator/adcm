@@ -56,7 +56,7 @@ class JobShort(EmptySerializer):
     status = CharField(read_only=True)
     start_date = DateTimeField(read_only=True)
     finish_date = DateTimeField(read_only=True)
-    url = hlink("job-details", "id", "job_id")
+    url = HyperlinkedIdentityField(view_name="job-detail", lookup_url_kwarg="job_pk")
 
     @staticmethod
     def get_display_name(obj: JobLog) -> str | None:
