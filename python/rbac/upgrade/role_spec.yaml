@@ -1488,6 +1488,8 @@ roles:
     - name: Manage Maintenance mode
       description: the ability to enable / disable the "MM"
       type: business
+      parametrized_by:
+        - cluster
       module_name: rbac.roles
       class_name: ParentRole
       child:
