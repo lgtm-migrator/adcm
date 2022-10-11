@@ -1498,6 +1498,8 @@ roles:
     - name: Manage host Maintenance mode
       description: the ability to enable / disable the "MM" on the host
       type: hidden
+      parametrized_by:
+        - host
       module_name: rbac.roles
       class_name: ObjectRole
       apps:
