@@ -11,21 +11,22 @@
 # limitations under the License.
 
 from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
 from api.job.views import (
-    JobDetail,
-    JobList,
+    JobViewSet,
     LogFile,
     LogStorageListView,
     LogStorageView,
     download_log_file,
 )
 
+router = DefaultRouter()
+router.register("", JobViewSet, basename="job")
+
 # fmt: off
 urlpatterns = [
-    path('', JobList.as_view(), name='job'),
     path('<int:job_id>/', include([
-        path('', JobDetail.as_view(), name='job-details'),
         path('log/', include([
             path('', LogStorageListView.as_view(), name='log-list'),
             path('<int:log_id>/', include([
@@ -39,5 +40,5 @@ urlpatterns = [
             ),
         ])),
     ])),
-]
+] + router.urls
 # fmt: on

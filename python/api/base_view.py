@@ -80,7 +80,13 @@ class GenericUIView(GenericAPIView):
 
 
 class GenericUIViewSet(ViewSetMixin, GenericUIView):
-    """GenericUIView with expanded for ViewSet"""
+    permission_classes = (DjangoObjectPermissionsAudit,)
+
+    def is_for_ui(self) -> bool:
+        if not self.request:
+            return False
+        view = self.request.query_params.get("view")
+        return view == "interface"
 
 
 class PaginatedView(GenericUIView):
