@@ -72,7 +72,6 @@ from tests.ui_tests.app.page.service.page import (
     ServiceConfigPage,
     ServiceImportPage,
 )
-from tests.ui_tests.conftest import login_over_api
 from tests.ui_tests.utils import (
     wait_and_assert_ui_info,
     check_host_value,
@@ -1404,12 +1403,6 @@ class TestClusterConfigPage:
         with allure.step('Check that save button is disabled'):
             assert cluster_config_page.config.is_save_btn_disabled(), 'Save button should be disabled'
 
-    @pytest.fixture()
-    def clean_cluster(self, sdk_client_ms):
-        """ololo"""
-        yield
-        sdk_client_ms.cluster().delete()
-
     @pytest.mark.full()
     @pytest.mark.parametrize("field_type", TYPES)
     @pytest.mark.parametrize("activatable", [True, False], ids=("activatable", "non-activatable"))
@@ -1428,12 +1421,11 @@ class TestClusterConfigPage:
             pytest.param(False, id="field_non_advanced"),
         ],
     )
-    @pytest.mark.usefixtures("clean_cluster")  # pylint: disable-next=too-many-locals
+    @pytest.mark.usefixtures("login_to_adcm_over_api")  # pylint: disable-next=too-many-locals
     def test_group_configs_fields_invisible_false(
         self,
-        sdk_client_ms: ADCMClient,
-        app_ms,
-        adcm_credentials,
+        sdk_client_fs: ADCMClient,
+        app_fs,
         field_type,
         activatable,
         active,
@@ -1445,7 +1437,6 @@ class TestClusterConfigPage:
         field_advanced,
     ):
         """Test group configs with not-invisible fields"""
-        login_over_api(app_ms, adcm_credentials).wait_config_loaded()
         config, expected, path = prepare_group_config(
             generate_group_configs(
                 field_type=field_type,
@@ -1460,7 +1451,7 @@ class TestClusterConfigPage:
                 field_advanced=field_advanced,
             )
         )
-        _, cluster_config_page = prepare_cluster_and_open_config_page(sdk_client_ms, path, app_ms)
+        _, cluster_config_page = prepare_cluster_and_open_config_page(sdk_client_fs, path, app_fs)
 
         def check_expectations():
             with allure.step('Check that field visible'):

@@ -100,25 +100,12 @@ def skip_firefox(browser: str):
 
 
 @pytest.fixture()
-def app_ms(adcm_ms: ADCM, web_driver: ADCMTest, request):
-    """
-    Attach ADCM API to ADCMTest object and open new tab in browser for test
-    Collect logs on failure and close browser tab after test is done
-    """
-    yield from _app(adcm_ms, web_driver, request)
-
-
-@pytest.fixture()
 def app_fs(adcm_fs: ADCM, web_driver: ADCMTest, request):
     """
     Attach ADCM API to ADCMTest object and open new tab in browser for test
     Collect logs on failure and close browser tab after test is done
     """
-    yield from _app(adcm_fs, web_driver, request)
-
-
-def _app(adcm: ADCM, web_driver: ADCMTest, request):
-    web_driver.attache_adcm(adcm)
+    web_driver.attache_adcm(adcm_fs)
     try:
         web_driver.new_tab()
     except WebDriverException:
