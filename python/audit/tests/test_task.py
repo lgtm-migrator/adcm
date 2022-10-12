@@ -17,7 +17,7 @@ from unittest.mock import patch
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from rest_framework.response import Response
-from rest_framework.status import HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 
 from adcm.tests.base import BaseTestCase
 from audit.models import (
@@ -70,7 +70,7 @@ class TestPolicy(BaseTestCase):
 
     def test_cancel(self):
         with patch("api.job.views.cancel_task"):
-            self.client.put(path=reverse("task-cancel", kwargs={"task_id": self.task.pk}))
+            self.client.put(path=reverse("task-cancel", kwargs={"task_pk": self.task.pk}))
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
@@ -85,12 +85,12 @@ class TestPolicy(BaseTestCase):
     def test_cancel_denied(self):
         with self.no_rights_user_logged_in:
             response: Response = self.client.put(
-                path=reverse("task-cancel", kwargs={"task_id": self.task.pk}),
+                path=reverse("task-cancel", kwargs={"task_pk": self.task.pk}),
             )
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
-        self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, HTTP_403_FORBIDDEN)
         self.check_log(
             log=log,
             operation_name="Task cancelled",
@@ -101,7 +101,7 @@ class TestPolicy(BaseTestCase):
 
     def test_restart(self):
         with patch("api.job.views.restart_task"):
-            self.client.put(path=reverse("task-restart", kwargs={"task_id": self.task.pk}))
+            self.client.put(path=reverse("task-restart", kwargs={"task_pk": self.task.pk}))
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
@@ -116,12 +116,12 @@ class TestPolicy(BaseTestCase):
     def test_restart_denied(self):
         with self.no_rights_user_logged_in:
             response: Response = self.client.put(
-                path=reverse("task-restart", kwargs={"task_id": self.task.pk}),
+                path=reverse("task-restart", kwargs={"task_pk": self.task.pk}),
             )
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
-        self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, HTTP_403_FORBIDDEN)
         self.check_log(
             log=log,
             operation_name=self.task_restarted_str,
@@ -134,7 +134,7 @@ class TestPolicy(BaseTestCase):
         task_pks = TaskLog.objects.all().values_list("pk", flat=True).order_by("-pk")
         with patch("api.job.views.restart_task"):
             response: Response = self.client.put(
-                path=reverse("task-restart", kwargs={"task_id": task_pks[0] + 1}),
+                path=reverse("task-restart", kwargs={"task_pk": task_pks[0] + 1}),
             )
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()

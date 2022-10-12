@@ -16,24 +16,25 @@ import tarfile
 from pathlib import Path
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse
 from guardian.mixins import PermissionListMixin
+from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
-from rest_framework.views import APIView
+from rest_framework.status import HTTP_200_OK
 
 from adcm.utils import str_remove_non_alnum
-from api.base_view import DetailView, GenericUIView, GenericUIViewSet, PaginatedView
+from api.base_view import GenericUIView, GenericUIViewSet, PaginatedView
 from api.job.serializers import (
     JobRetrieveSerializer,
     JobSerializer,
     LogSerializer,
     LogStorageListSerializer,
     LogStorageSerializer,
-    TaskListSerializer,
+    TaskRetrieveSerializer,
     TaskSerializer,
 )
 from api.utils import check_custom_perm, get_object_for_user
@@ -172,7 +173,7 @@ def get_task_download_archive_file_handler(task: TaskLog) -> io.BytesIO:
 
 
 #  pylint:disable-next=too-many-ancestors
-class JobViewSet(ListModelMixin, RetrieveModelMixin, GenericUIViewSet):
+class JobViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, GenericUIViewSet):
     queryset = JobLog.objects.select_related("task", "action").all()
     serializer_class = JobSerializer
     filterset_fields = ("action_id", "task_id", "pid", "status", "start_date", "finish_date")
@@ -251,73 +252,53 @@ class LogFile(GenericUIView):
         return Response(serializer.data)
 
 
-class Task(PermissionListMixin, PaginatedView):
-    queryset = TaskLog.objects.order_by("-id")
-    permission_required = [VIEW_TASKLOG_PERMISSION]
-    serializer_class = TaskListSerializer
-    serializer_class_ui = TaskSerializer
+#  pylint:disable-next=too-many-ancestors
+class TaskViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, GenericUIViewSet):
+    queryset = TaskLog.objects.select_related("action").all()
+    serializer_class = TaskSerializer
     filterset_fields = ("action_id", "pid", "status", "start_date", "finish_date")
     ordering_fields = ("status", "start_date", "finish_date")
+    permission_required = [VIEW_TASKLOG_PERMISSION]
+    lookup_url_kwarg = "task_pk"
 
     def get_queryset(self, *args, **kwargs):
-        if self.request.user.is_superuser:
-            exclude_pks = []
-        else:
-            exclude_pks = TaskLog.get_adcm_tasks_qs().values_list("pk", flat=True)
+        queryset = super().get_queryset(*args, **kwargs)
+        if not self.request.user.is_superuser:
+            # NOT superuser shouldn't have access to ADCM tasks
+            queryset = queryset.filter(
+                object_type=ContentType.objects.get(app_label="cm", model="adcm")
+            )
 
-        return super().get_queryset(*args, **kwargs).exclude(pk__in=exclude_pks)
+        return queryset
 
+    def get_serializer_class(self):
+        if self.is_for_ui() or self.action == "retrieve":
+            return TaskRetrieveSerializer
 
-class TaskDetail(PermissionListMixin, DetailView):
-    queryset = TaskLog.objects.all()
-    permission_required = [VIEW_TASKLOG_PERMISSION]
-    serializer_class = TaskSerializer
-    lookup_field = "id"
-    lookup_url_kwarg = "task_id"
-    error_code = "TASK_NOT_FOUND"
-
-
-class TaskReStart(GenericUIView):
-    queryset = TaskLog.objects.all()
-    permission_classes = (IsAuthenticated,)
-    serializer_class = TaskSerializer
+        return super().get_serializer_class()
 
     @audit
-    def put(self, request, *args, **kwargs):
-        task = get_object_for_user(
-            request.user, VIEW_TASKLOG_PERMISSION, TaskLog, id=kwargs["task_id"]
-        )
+    @action(methods=["put"], detail=True)
+    def restart(self, request: Request, task_pk: int):
+        task = get_object_for_user(request.user, VIEW_TASKLOG_PERMISSION, TaskLog, id=task_pk)
         check_custom_perm(request.user, "change", TaskLog, task)
         restart_task(task)
 
         return Response(status=HTTP_200_OK)
 
-
-class TaskCancel(GenericUIView):
-    queryset = TaskLog.objects.all()
-    permission_classes = (IsAuthenticated,)
-    serializer_class = TaskSerializer
-
     @audit
-    def put(self, request, *args, **kwargs):
-        task = get_object_for_user(
-            request.user, VIEW_TASKLOG_PERMISSION, TaskLog, id=kwargs["task_id"]
-        )
+    @action(methods=["put"], detail=True)
+    def cancel(self, request: Request, task_pk: int):
+        task = get_object_for_user(request.user, VIEW_TASKLOG_PERMISSION, TaskLog, id=task_pk)
         check_custom_perm(request.user, "change", TaskLog, task)
         cancel_task(task)
 
         return Response(status=HTTP_200_OK)
 
-
-class TaskDownload(PermissionListMixin, APIView):
-    permission_required = [VIEW_TASKLOG_PERMISSION]
-
-    @staticmethod
-    def get(request: Request, task_id: int):  # pylint: disable=too-many-locals
-        task = TaskLog.objects.filter(pk=task_id).first()
-        if not task:
-            return Response(status=HTTP_404_NOT_FOUND)
-
+    @audit
+    @action(methods=["get"], detail=True)
+    def download(self, request: Request, task_pk: int):
+        task = get_object_for_user(request.user, VIEW_TASKLOG_PERMISSION, TaskLog, id=task_pk)
         response = HttpResponse(
             content=get_task_download_archive_file_handler(task=task).getvalue(),
             content_type="application/tar+gzip",

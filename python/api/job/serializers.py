@@ -15,9 +15,7 @@ import os
 
 from rest_framework.reverse import reverse
 from rest_framework.serializers import (
-    BooleanField,
     CharField,
-    DateTimeField,
     HyperlinkedIdentityField,
     HyperlinkedModelSerializer,
     IntegerField,
@@ -27,17 +25,11 @@ from rest_framework.serializers import (
 
 from adcm.serializers import EmptySerializer
 from api.concern.serializers import ConcernItemSerializer
-from api.utils import hlink
 from cm.ansible_plugin import get_check_log
 from cm.config import RUN_DIR, Job
 from cm.errors import AdcmEx
 from cm.job import start_task
 from cm.models import JobLog, TaskLog
-
-
-class DataField(CharField):
-    def to_representation(self, value):
-        return value
 
 
 class JobAction(EmptySerializer):
@@ -49,14 +41,13 @@ class JobAction(EmptySerializer):
     prototype_version = CharField(read_only=True)
 
 
-class JobShort(EmptySerializer):
-    id = IntegerField(read_only=True)
-    name = CharField(read_only=True)
-    display_name = SerializerMethodField()
-    status = CharField(read_only=True)
-    start_date = DateTimeField(read_only=True)
-    finish_date = DateTimeField(read_only=True)
+class JobShort(HyperlinkedModelSerializer):
     url = HyperlinkedIdentityField(view_name="job-detail", lookup_url_kwarg="job_pk")
+
+    class Meta:
+        model = JobLog
+        fields = ("id", "status", "start_date", "finish_date", "url")
+        extra_kwargs = {"url": {"lookup_url_kwarg": "job_pk"}}
 
     @staticmethod
     def get_display_name(obj: JobLog) -> str | None:
@@ -68,65 +59,56 @@ class JobShort(EmptySerializer):
             return None
 
 
-class TaskListSerializer(EmptySerializer):
-    id = IntegerField(read_only=True)
-    pid = IntegerField(read_only=True)
-    object_id = IntegerField(read_only=True)
-    action_id = IntegerField(read_only=True)
-    status = CharField(read_only=True)
-    start_date = DateTimeField(read_only=True)
-    finish_date = DateTimeField(read_only=True)
-    url = hlink("task-details", "id", "task_id")
+class TaskSerializer(HyperlinkedModelSerializer):
+    url = HyperlinkedIdentityField(view_name="task-detail", lookup_url_kwarg="task_pk")
+
+    class Meta:
+        model = TaskLog
+        fields = (
+            "id",
+            "pid",
+            "object_id",
+            "action_id",
+            "status",
+            "start_date",
+            "finish_date",
+            "url",
+        )
+        extra_kwargs = {"url": {"lookup_url_kwarg": "job_pk"}}
 
 
-class TaskSerializer(TaskListSerializer):
-    selector = JSONField(read_only=True)
-    config = JSONField(required=False)
-    attr = JSONField(required=False)
-    hc = JSONField(required=False)
-    hosts = JSONField(required=False)
-    verbose = BooleanField(required=False)
+class TaskRetrieveSerializer(HyperlinkedModelSerializer):
+    url = HyperlinkedIdentityField(view_name="task-detail", lookup_url_kwarg="task_pk")
     action_url = SerializerMethodField()
-    action = SerializerMethodField()
+    action = JobAction()
     objects = SerializerMethodField()
-    jobs = SerializerMethodField()
-    restart = hlink("task-restart", "id", "task_id")
+    jobs = JobShort(many=True, source="joblog_set")
     terminatable = SerializerMethodField()
-    cancel = hlink("task-cancel", "id", "task_id")
-    download = hlink("task-download", "id", "task_id")
     object_type = SerializerMethodField()
     lock = ConcernItemSerializer(read_only=True)
+    restart = HyperlinkedIdentityField(view_name="task-restart", lookup_url_kwarg="task_pk")
+    cancel = HyperlinkedIdentityField(view_name="task-cancel", lookup_url_kwarg="task_pk")
+    download = HyperlinkedIdentityField(view_name="task-download", lookup_url_kwarg="task_pk")
 
-    @staticmethod
-    def get_terminatable(obj: TaskLog):
-        if obj.action:
-            allow_to_terminate = obj.action.allow_to_terminate
-        else:
-            allow_to_terminate = False
-
-        if allow_to_terminate and obj.status in [Job.CREATED, Job.RUNNING]:
-            return True
-
-        return False
-
-    def get_jobs(self, obj: TaskLog):
-        return JobShort(obj.joblog_set, many=True, context=self.context).data
-
-    def get_action(self, obj: TaskLog):
-        return JobAction(obj.action, context=self.context).data
-
-    @staticmethod
-    def get_objects(obj: TaskLog) -> list:
-        objects = [{"type": k, **v} for k, v in obj.selector.items()]
-
-        return objects
-
-    @staticmethod
-    def get_object_type(obj: TaskLog):
-        if obj.action:
-            return obj.action.prototype.type
-
-        return None
+    class Meta:
+        model = TaskLog
+        fields = TaskSerializer.Meta.fields + (
+            "selector",
+            "config",
+            "attr",
+            "hosts",
+            "verbose",
+            "action_url",
+            "action",
+            "objects",
+            "jobs",
+            "terminatable",
+            "object_type",
+            "lock",
+            "restart",
+            "cancel",
+            "download",
+        )
 
     def get_action_url(self, obj: TaskLog) -> str | None:
         if not obj.action_id:
@@ -136,8 +118,33 @@ class TaskSerializer(TaskListSerializer):
             "action-details", kwargs={"action_id": obj.action_id}, request=self.context["request"]
         )
 
+    @staticmethod
+    def get_objects(obj: TaskLog) -> list:
+        objects = [{"type": k, **v} for k, v in obj.selector.items()]
 
-class RunTaskSerializer(TaskSerializer):
+        return objects
+
+    @staticmethod
+    def get_terminatable(obj: TaskLog):
+        if obj.action:
+            allow_to_terminate = obj.action.allow_to_terminate
+        else:
+            allow_to_terminate = False
+
+        if allow_to_terminate and obj.status in {Job.CREATED, Job.RUNNING}:
+            return True
+
+        return False
+
+    @staticmethod
+    def get_object_type(obj: TaskLog):
+        if obj.action:
+            return obj.action.prototype.type
+
+        return None
+
+
+class RunTaskRetrieveSerializer(TaskRetrieveSerializer):
     def create(self, validated_data):
         obj = start_task(
             validated_data.get("action"),
@@ -179,11 +186,11 @@ class JobRetrieveSerializer(HyperlinkedModelSerializer):
     objects = SerializerMethodField()
     selector = JSONField(read_only=True)
     log_dir = CharField(read_only=True)
-    log_files = DataField(read_only=True)
+    log_files = JSONField(read_only=True)
     action_url = SerializerMethodField()
     task_url = HyperlinkedIdentityField(
-        view_name="task-details",
-        lookup_url_kwarg="task_id",
+        view_name="task-detail",
+        lookup_url_kwarg="task_pk",
     )
 
     class Meta:

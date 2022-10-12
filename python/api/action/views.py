@@ -24,7 +24,7 @@ from api.action.serializers import (
     ActionUISerializer,
 )
 from api.base_view import GenericUIView
-from api.job.serializers import RunTaskSerializer
+from api.job.serializers import RunTaskRetrieveSerializer
 from api.utils import (
     ActionFilter,
     AdcmFilterBackend,
@@ -182,7 +182,7 @@ class ActionDetail(PermissionListMixin, GenericUIView):
 
 class RunTask(GenericUIView):
     queryset = TaskLog.objects.all()
-    serializer_class = RunTaskSerializer
+    serializer_class = RunTaskRetrieveSerializer
     permission_classes = (IsAuthenticated,)
 
     def has_action_perm(self, action, obj):
