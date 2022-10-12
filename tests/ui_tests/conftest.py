@@ -98,18 +98,10 @@ def skip_firefox(browser: str):
     if browser == 'Firefox':
         pytest.skip("This test shouldn't be launched on Firefox")
 
-
+@allure.title("Data for failure investigation")
 @pytest.fixture()
-def app_ms(adcm_ms: ADCM, web_driver: ADCMTest):
-    yield from _app(adcm_ms, web_driver)
-
-@pytest.fixture()
-def app_fs(adcm_fs: ADCM, web_driver: ADCMTest, request):
-    """
-    Attach ADCM API to ADCMTest object and open new tab in browser for test
-    Collect logs on failure and close browser tab after test is done
-    """
-    yield from _app(adcm_fs, web_driver)
+def attach_debug_info_on_ui_test_fail(request, web_driver):
+    yield
     try:
         if request.node.rep_setup.failed or request.node.rep_call.failed:
             allure.attach(
@@ -157,8 +149,15 @@ def app_fs(adcm_fs: ADCM, web_driver: ADCMTest, request):
         # rep_setup and rep_call attributes are generated in runtime and can be absent
         pass
 
-def _app(adcm: ADCM, web_driver):
-    web_driver.attache_adcm(adcm)
+
+@pytest.fixture()
+def app_fs(adcm_fs: ADCM, web_driver: ADCMTest, attach_debug_info_on_ui_test_fail):
+    """
+    Attach ADCM API to ADCMTest object and open new tab in browser for test
+    Collect logs on failure and close browser tab after test is done
+    """
+    _ = attach_debug_info_on_ui_test_fail
+    web_driver.attache_adcm(adcm_fs)
     try:
         web_driver.new_tab()
     except WebDriverException:
