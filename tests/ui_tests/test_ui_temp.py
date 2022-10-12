@@ -8,8 +8,10 @@ from adcm_pytest_plugin.utils import wait_until_step_succeeds
 
 from tests.ui_tests.app.helpers.configs_generator import prepare_group_config, generate_group_configs, TYPES
 from tests.ui_tests.app.page.service.page import ServiceConfigPage
+from tests.ui_tests.conftest import login_over_api
 from tests.ui_tests.test_cluster_list_page import (
     check_default_field_values_in_configs,
+    prepare_cluster_and_open_config_page,
 )
 
 
@@ -54,11 +56,8 @@ class ParamCombination:
     field_advanced: bool
 
 
-@pytest.mark.full()
-@pytest.mark.usefixtures("login_to_adcm_over_api")  # pylint: disable-next=too-many-locals
-def test_group_configs_fields_invisible_false_222(sdk_client_fs: ADCMClient, app_fs):
-    """Test group configs with not-invisible fields"""
-    combinations = [
+def prepare_combinations():
+    return [
         ParamCombination(
             field_type, group_advanced, is_default, is_required, is_read_only, activatable, active, invisible, advanced
         )
@@ -73,77 +72,49 @@ def test_group_configs_fields_invisible_false_222(sdk_client_fs: ADCMClient, app
         for advanced in (True, False)
     ]
 
-    bundle_entries = []
-    expected_results = []
-    with allure.step("Prepare bundle"):
-        for i, combo in enumerate(combinations):
-            cluster_description, expected_result = generate_group_configs(group_invisible=False, **asdict(combo))
-            bundle_entries.append(
-                {
-                    "config": cluster_description[0]["config"],
-                    "type": "service",
-                    "name": f"service_{i}",
-                    "version": str(i),
-                }
-            )
-            expected_results.append(expected_result)
-        _, _, path = prepare_group_config(
-            (
-                [
-                    {"type": "cluster", "version": "1", "name": "cluster", "config": [*bundle_entries[0]["config"]]},
-                    *bundle_entries,
-                ],
-                None,
-            ),
-            enforce_file=True,
+@pytest.fixture()
+def clean(sdk_client_ms):
+    yield
+    sdk_client_ms.cluster().delete()
+
+
+@pytest.mark.full()
+@pytest.mark.parametrize("combo", prepare_combinations())
+@pytest.mark.usefixtures("clean")  # pylint: disable-next=too-many-locals
+def test_group_configs_fields_invisible_false_222(combo: ParamCombination, adcm_credentials, sdk_client_ms: ADCMClient, app_ms):
+    """Test group configs with not-invisible fields"""
+    login_over_api(app_ms, adcm_credentials).wait_config_loaded()
+    config, expected, path = prepare_group_config(generate_group_configs(group_invisible=False, **asdict(combo)))
+    _, page = prepare_cluster_and_open_config_page(sdk_client_ms, path, app_ms)
+
+    if combo.group_advanced:
+        page.config.check_no_rows_or_groups_on_page()
+    else:
+        check_expectations(
+            page=page,
+            is_group_activatable=combo.activatable,
+            is_invisible=combo.field_invisible,
+            is_advanced=combo.field_advanced,
+            is_default=combo.default,
+            is_read_only=combo.read_only,
+            field_type=combo.field_type,
+            alerts_expected=expected['alerts'],
+            config=config,
         )
-
-    with allure.step("Upload cluster"):
-        cluster = sdk_client_fs.upload_from_fs(path).cluster_create("Awesome Cluster")
-    for i, params in enumerate(zip(combinations, bundle_entries, expected_results)):
-        combo, service_info, expected = params
-        combo: ParamCombination
-        service_name = service_info["name"]
-        # if service_name != "service_94":
-        #     continue
-        # if i > 150:
-        #     break
-        with allure.step(f"Check page of service {service_name}"):
-            allure.attach(pformat(service_info["config"]), name="config")
-            service = cluster.service_add(name=service_name)
-            page = ServiceConfigPage(
-                app_fs.driver, app_fs.adcm.url, cluster_id=service.cluster_id, service_id=service.id
-            ).open()
-            page.wait_page_is_opened()
-
-            if combo.group_advanced:
-                page.config.check_no_rows_or_groups_on_page()
-            else:
-                check_expectations(
-                    page=page,
-                    is_group_activatable=combo.activatable,
-                    is_invisible=combo.field_invisible,
-                    is_advanced=combo.field_advanced,
-                    is_default=combo.default,
-                    is_read_only=combo.read_only,
-                    field_type=combo.field_type,
-                    alerts_expected=expected['alerts'],
-                    config=service_info,
-                )
-            page.config.click_on_advanced()
-            check_expectations(
-                page=page,
-                is_group_activatable=combo.activatable,
-                is_invisible=combo.field_invisible,
-                is_advanced=combo.field_advanced,
-                is_default=combo.default,
-                is_read_only=combo.read_only,
-                field_type=combo.field_type,
-                alerts_expected=expected['alerts'],
-                config=service_info,
-            )
-            if (not combo.read_only) and (not combo.field_invisible) and (not combo.required) and combo.default:
-                _check_save_in_configs(page, combo.field_type, expected["save"], combo.default)
+    page.config.click_on_advanced()
+    check_expectations(
+        page=page,
+        is_group_activatable=combo.activatable,
+        is_invisible=combo.field_invisible,
+        is_advanced=combo.field_advanced,
+        is_default=combo.default,
+        is_read_only=combo.read_only,
+        field_type=combo.field_type,
+        alerts_expected=expected['alerts'],
+        config=config,
+    )
+    if (not combo.read_only) and (not combo.field_invisible) and (not combo.required) and combo.default:
+        _check_save_in_configs(page, combo.field_type, expected["save"], combo.default)
 
 
 # alerts_expected = expected['alerts']
