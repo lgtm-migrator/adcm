@@ -11,7 +11,6 @@
 # limitations under the License.
 
 import io
-import os
 import re
 import tarfile
 from pathlib import Path
@@ -23,7 +22,6 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 from rest_framework.views import APIView
 
@@ -40,9 +38,8 @@ from api.job.serializers import (
 )
 from api.utils import check_custom_perm, get_object_for_user
 from audit.utils import audit
-from cm.config import RUN_DIR
 from cm.errors import AdcmEx
-from cm.job import cancel_task, get_log, restart_task
+from cm.job import cancel_task, restart_task
 from cm.models import ActionType, JobLog, LogStorage, TaskLog
 from rbac.viewsets import DjangoOnlyObjectPermissions
 
@@ -172,53 +169,6 @@ def get_task_download_archive_file_handler(task: TaskLog) -> io.BytesIO:
                     tar_file.addfile(tarinfo=tarinfo, fileobj=body)
 
     return fh
-
-
-class JobList(PermissionListMixin, PaginatedView):
-    queryset = JobLog.objects.order_by("-id")
-    serializer_class = JobSerializer
-    serializer_class_ui = JobRetrieveSerializer
-    filterset_fields = ("action_id", "task_id", "pid", "status", "start_date", "finish_date")
-    ordering_fields = ("status", "start_date", "finish_date")
-    permission_classes = (DjangoModelPermissions,)
-    permission_required = [VIEW_JOBLOG_PERMISSION]
-
-    def get_queryset(self, *args, **kwargs):
-        if self.request.user.is_superuser:
-            exclude_pks = []
-        else:
-            exclude_pks = JobLog.get_adcm_jobs_qs().values_list("pk", flat=True)
-
-        return super().get_queryset(*args, **kwargs).exclude(pk__in=exclude_pks)
-
-
-class JobDetail(PermissionListMixin, GenericUIView):
-    queryset = JobLog.objects.all()
-    permission_classes = (DjangoOnlyObjectPermissions,)
-    permission_required = [VIEW_JOBLOG_PERMISSION]
-    serializer_class = JobRetrieveSerializer
-
-    def get(self, request, *args, **kwargs):
-        """
-        Show job
-        """
-        job = get_object_for_user(request.user, VIEW_JOBLOG_PERMISSION, JobLog, id=kwargs["job_id"])
-        job.log_dir = os.path.join(RUN_DIR, f"{job.id}")
-        logs = get_log(job)
-        for lg in logs:
-            log_id = lg["id"]
-            lg["url"] = reverse(
-                "log-storage", kwargs={"job_id": job.id, "log_id": log_id}, request=request
-            )
-            lg["download_url"] = reverse(
-                "download-log", kwargs={"job_id": job.id, "log_id": log_id}, request=request
-            )
-
-        job.log_files = logs
-        serializer = self.get_serializer(job, data=request.data)
-        serializer.is_valid()
-
-        return Response(serializer.data)
 
 
 #  pylint:disable-next=too-many-ancestors

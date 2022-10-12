@@ -882,7 +882,7 @@ class TestAPI(BaseTestCase):
         self.client.delete(reverse("bundle-details", kwargs={"bundle_id": adh_bundle_id}))
 
 
-class TestApi2(BaseTestCase):
+class TestAPI2(BaseTestCase):
     def setUp(self):
         gen_adcm()
         self.bundle = Bundle.objects.create(
