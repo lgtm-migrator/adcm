@@ -40,8 +40,8 @@ class TestJobAPI(BaseTestCase):
         self.task = TaskLog.objects.create(
             object_id=self.adcm.pk,
             object_type=ContentType.objects.get(app_label="cm", model="adcm"),
-            start_date=datetime.now(),
-            finish_date=datetime.now(),
+            start_date=datetime.now(tz=ZoneInfo("UTC")),
+            finish_date=datetime.now(tz=ZoneInfo("UTC")),
             action=self.action,
         )
         self.job_1 = JobLog.objects.create(
@@ -80,6 +80,12 @@ class TestJobAPI(BaseTestCase):
 
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"][0]["pid"], self.job_1.pid)
+
+    def test_list_filter_status(self):
+        response: Response = self.client.get(reverse("job-list"), {"status": self.job_1.status})
+
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["status"], self.job_1.status)
 
     def test_list_filter_start_date(self):
         response: Response = self.client.get(
