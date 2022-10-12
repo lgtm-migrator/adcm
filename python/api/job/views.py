@@ -21,62 +21,28 @@ from django.http import HttpResponse
 from guardian.mixins import PermissionListMixin
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
-from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
+from rest_framework.permissions import DjangoModelPermissions
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 
 from adcm.utils import str_remove_non_alnum
-from api.base_view import GenericUIView, GenericUIViewSet, PaginatedView
+from api.base_view import GenericUIViewSet
 from api.job.serializers import (
     JobRetrieveSerializer,
     JobSerializer,
-    LogSerializer,
-    LogStorageListSerializer,
+    LogStorageRetrieveSerializer,
     LogStorageSerializer,
     TaskRetrieveSerializer,
     TaskSerializer,
 )
 from api.utils import check_custom_perm, get_object_for_user
 from audit.utils import audit
-from cm.errors import AdcmEx
 from cm.job import cancel_task, restart_task
 from cm.models import ActionType, JobLog, LogStorage, TaskLog
 from rbac.viewsets import DjangoOnlyObjectPermissions
 
-VIEW_JOBLOG_PERMISSION = "cm.view_joblog"
 VIEW_TASKLOG_PERMISSION = "cm.view_tasklog"
-
-
-def download_log_file(request, job_id, log_id):
-    job = JobLog.obj.get(id=job_id)
-    log_storage = LogStorage.obj.get(id=log_id, job=job)
-
-    if log_storage.type in ["stdout", "stderr"]:
-        filename = f"{job.id}-{log_storage.name}-{log_storage.type}.{log_storage.format}"
-    else:
-        filename = f"{job.id}-{log_storage.name}.{log_storage.format}"
-
-    filename = re.sub(r"\s+", "_", filename)
-    if log_storage.format == "txt":
-        mime_type = "text/plain"
-    else:
-        mime_type = "application/json"
-
-    if log_storage.body is None:
-        body = ""
-        length = 0
-    else:
-        body = log_storage.body
-        length = len(body)
-
-    response = HttpResponse(body)
-    response["Content-Type"] = mime_type
-    response["Content-Length"] = length
-    response["Content-Encoding"] = "UTF-8"
-    response["Content-Disposition"] = f"attachment; filename={filename}"
-
-    return response
 
 
 def get_task_download_archive_name(task: TaskLog) -> str:
@@ -178,7 +144,7 @@ class JobViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Generi
     serializer_class = JobSerializer
     filterset_fields = ("action_id", "task_id", "pid", "status", "start_date", "finish_date")
     ordering_fields = ("status", "start_date", "finish_date")
-    permission_required = [VIEW_JOBLOG_PERMISSION]
+    permission_required = ["cm.view_joblog"]
     lookup_url_kwarg = "job_pk"
 
     def get_permissions(self):
@@ -194,62 +160,6 @@ class JobViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Generi
             return JobRetrieveSerializer
 
         return super().get_serializer_class()
-
-
-class LogStorageListView(PermissionListMixin, PaginatedView):
-    queryset = LogStorage.objects.all()
-    permission_required = ["cm.view_logstorage"]
-    serializer_class = LogStorageListSerializer
-    filterset_fields = ("name", "type", "format")
-    ordering_fields = ("id", "name")
-
-    def get_queryset(self, *args, **kwargs):
-        queryset = super().get_queryset(*args, **kwargs)
-        if "job_id" not in self.kwargs:
-            return queryset
-
-        return queryset.filter(job_id=self.kwargs["job_id"])
-
-
-class LogStorageView(PermissionListMixin, GenericUIView):
-    queryset = LogStorage.objects.all()
-    permission_classes = (IsAuthenticated,)
-    permission_required = ["cm.view_logstorage"]
-    serializer_class = LogStorageSerializer
-
-    def get(self, request, *args, **kwargs):
-        job = get_object_for_user(request.user, VIEW_JOBLOG_PERMISSION, JobLog, id=kwargs["job_id"])
-        try:
-            log_storage = self.get_queryset().get(id=kwargs["log_id"], job=job)
-        except LogStorage.DoesNotExist as e:
-            raise AdcmEx(
-                "LOG_NOT_FOUND", f"log {kwargs['log_id']} not found for job {kwargs['job_id']}"
-            ) from e
-
-        serializer = self.get_serializer(log_storage)
-
-        return Response(serializer.data)
-
-
-class LogFile(GenericUIView):
-    permission_classes = (IsAuthenticated,)
-    queryset = LogStorage.objects.all()
-    serializer_class = LogSerializer
-
-    def get(self, request, job_id, tag, level, log_type):
-        """
-        Show log file
-        """
-        if tag == "ansible":
-            _type = f"std{level}"
-        else:
-            _type = "check"
-            tag = "ansible"
-
-        ls = LogStorage.obj.get(job_id=job_id, name=tag, type=_type, format=log_type)
-        serializer = self.get_serializer(ls)
-
-        return Response(serializer.data)
 
 
 #  pylint:disable-next=too-many-ancestors
@@ -279,7 +189,7 @@ class TaskViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Gener
 
     @audit
     @action(methods=["put"], detail=True)
-    def restart(self, request: Request, task_pk: int):
+    def restart(self, request: Request, task_pk: int) -> Response:
         task = get_object_for_user(request.user, VIEW_TASKLOG_PERMISSION, TaskLog, id=task_pk)
         check_custom_perm(request.user, "change", TaskLog, task)
         restart_task(task)
@@ -288,7 +198,7 @@ class TaskViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Gener
 
     @audit
     @action(methods=["put"], detail=True)
-    def cancel(self, request: Request, task_pk: int):
+    def cancel(self, request: Request, task_pk: int) -> Response:
         task = get_object_for_user(request.user, VIEW_TASKLOG_PERMISSION, TaskLog, id=task_pk)
         check_custom_perm(request.user, "change", TaskLog, task)
         cancel_task(task)
@@ -297,7 +207,7 @@ class TaskViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Gener
 
     @audit
     @action(methods=["get"], detail=True)
-    def download(self, request: Request, task_pk: int):
+    def download(self, request: Request, task_pk: int) -> Response:
         task = get_object_for_user(request.user, VIEW_TASKLOG_PERMISSION, TaskLog, id=task_pk)
         response = HttpResponse(
             content=get_task_download_archive_file_handler(task=task).getvalue(),
@@ -306,5 +216,61 @@ class TaskViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Gener
         response[
             "Content-Disposition"
         ] = f'attachment; filename="{get_task_download_archive_name(task=task)}"'
+
+        return response
+
+
+#  pylint:disable-next=too-many-ancestors
+class LogStorageViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, GenericUIViewSet):
+    queryset = LogStorage.objects.all()
+    serializer_class = LogStorageSerializer
+    filterset_fields = ("name", "type", "format")
+    ordering_fields = ("id", "name")
+    permission_required = ["cm.view_logstorage"]
+    lookup_url_kwarg = "log_pk"
+
+    def get_queryset(self, *args, **kwargs):
+        queryset = super().get_queryset(*args, **kwargs)
+        if "job_pk" in self.kwargs:
+            queryset = queryset.filter(job_id=self.kwargs["job_pk"])
+
+        return queryset
+
+    def get_serializer_class(self):
+        if self.is_for_ui() or self.action == "retrieve":
+            return LogStorageRetrieveSerializer
+
+        return super().get_serializer_class()
+
+    @staticmethod
+    @audit
+    @action(methods=["get"], detail=True)
+    def download(request: Request, job_pk: int, log_pk: int):
+        job = JobLog.obj.get(id=job_pk)
+        log_storage = LogStorage.obj.get(id=log_pk, job=job)
+
+        if log_storage.type in ["stdout", "stderr"]:
+            filename = f"{job.id}-{log_storage.name}-{log_storage.type}.{log_storage.format}"
+        else:
+            filename = f"{job.id}-{log_storage.name}.{log_storage.format}"
+
+        filename = re.sub(r"\s+", "_", filename)
+        if log_storage.format == "txt":
+            mime_type = "text/plain"
+        else:
+            mime_type = "application/json"
+
+        if log_storage.body is None:
+            body = ""
+            length = 0
+        else:
+            body = log_storage.body
+            length = len(body)
+
+        response = HttpResponse(body)
+        response["Content-Type"] = mime_type
+        response["Content-Length"] = length
+        response["Content-Encoding"] = "UTF-8"
+        response["Content-Disposition"] = f"attachment; filename={filename}"
 
         return response

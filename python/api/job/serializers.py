@@ -18,32 +18,20 @@ from rest_framework.serializers import (
     CharField,
     HyperlinkedIdentityField,
     HyperlinkedModelSerializer,
-    IntegerField,
     JSONField,
     SerializerMethodField,
 )
 
-from adcm.serializers import EmptySerializer
+from api.action.serializers import ActionJobSerializer
 from api.concern.serializers import ConcernItemSerializer
 from cm.ansible_plugin import get_check_log
 from cm.config import RUN_DIR, Job
 from cm.errors import AdcmEx
 from cm.job import start_task
-from cm.models import JobLog, TaskLog
+from cm.models import JobLog, LogStorage, TaskLog
 
 
-class JobAction(EmptySerializer):
-    name = CharField(read_only=True)
-    display_name = CharField(read_only=True)
-    prototype_id = IntegerField(read_only=True)
-    prototype_name = CharField(read_only=True)
-    prototype_type = CharField(read_only=True)
-    prototype_version = CharField(read_only=True)
-
-
-class JobShort(HyperlinkedModelSerializer):
-    url = HyperlinkedIdentityField(view_name="job-detail", lookup_url_kwarg="job_pk")
-
+class JobShortSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = JobLog
         fields = ("id", "status", "start_date", "finish_date", "url")
@@ -60,8 +48,6 @@ class JobShort(HyperlinkedModelSerializer):
 
 
 class TaskSerializer(HyperlinkedModelSerializer):
-    url = HyperlinkedIdentityField(view_name="task-detail", lookup_url_kwarg="task_pk")
-
     class Meta:
         model = TaskLog
         fields = (
@@ -74,21 +60,20 @@ class TaskSerializer(HyperlinkedModelSerializer):
             "finish_date",
             "url",
         )
-        extra_kwargs = {"url": {"lookup_url_kwarg": "job_pk"}}
+        extra_kwargs = {"url": {"lookup_url_kwarg": "task_pk"}}
 
 
 class TaskRetrieveSerializer(HyperlinkedModelSerializer):
-    url = HyperlinkedIdentityField(view_name="task-detail", lookup_url_kwarg="task_pk")
     action_url = SerializerMethodField()
-    action = JobAction()
+    action = ActionJobSerializer()
     objects = SerializerMethodField()
-    jobs = JobShort(many=True, source="joblog_set")
+    jobs = JobShortSerializer(many=True, source="joblog_set")
     terminatable = SerializerMethodField()
     object_type = SerializerMethodField()
     lock = ConcernItemSerializer(read_only=True)
-    restart = HyperlinkedIdentityField(view_name="task-restart", lookup_url_kwarg="task_pk")
-    cancel = HyperlinkedIdentityField(view_name="task-cancel", lookup_url_kwarg="task_pk")
-    download = HyperlinkedIdentityField(view_name="task-download", lookup_url_kwarg="task_pk")
+    restart = HyperlinkedIdentityField(view_name="tasklog-restart", lookup_url_kwarg="task_pk")
+    cancel = HyperlinkedIdentityField(view_name="tasklog-cancel", lookup_url_kwarg="task_pk")
+    download = HyperlinkedIdentityField(view_name="tasklog-download", lookup_url_kwarg="task_pk")
 
     class Meta:
         model = TaskLog
@@ -109,6 +94,7 @@ class TaskRetrieveSerializer(HyperlinkedModelSerializer):
             "cancel",
             "download",
         )
+        extra_kwargs = {"url": {"lookup_url_kwarg": "task_pk"}}
 
     def get_action_url(self, obj: TaskLog) -> str | None:
         if not obj.action_id:
@@ -161,8 +147,6 @@ class RunTaskRetrieveSerializer(TaskRetrieveSerializer):
 
 
 class JobSerializer(HyperlinkedModelSerializer):
-    url = HyperlinkedIdentityField(view_name="job-detail", lookup_url_kwarg="job_pk")
-
     class Meta:
         model = JobLog
         fields = (
@@ -180,8 +164,7 @@ class JobSerializer(HyperlinkedModelSerializer):
 
 
 class JobRetrieveSerializer(HyperlinkedModelSerializer):
-    url = HyperlinkedIdentityField(view_name="job-detail", lookup_url_kwarg="job_pk")
-    action = SerializerMethodField()
+    action = ActionJobSerializer()
     display_name = SerializerMethodField()
     objects = SerializerMethodField()
     selector = JSONField(read_only=True)
@@ -189,7 +172,7 @@ class JobRetrieveSerializer(HyperlinkedModelSerializer):
     log_files = JSONField(read_only=True)
     action_url = SerializerMethodField()
     task_url = HyperlinkedIdentityField(
-        view_name="task-detail",
+        view_name="tasklog-detail",
         lookup_url_kwarg="task_pk",
     )
 
@@ -206,9 +189,6 @@ class JobRetrieveSerializer(HyperlinkedModelSerializer):
             "task_url",
         )
         extra_kwargs = {"url": {"lookup_url_kwarg": "job_pk"}}
-
-    def get_action(self, obj):
-        return JobAction(obj.action, context=self.context).data
 
     @staticmethod
     def get_objects(obj: JobLog) -> list | None:
@@ -234,12 +214,19 @@ class JobRetrieveSerializer(HyperlinkedModelSerializer):
         )
 
 
-class LogStorageSerializer(EmptySerializer):
-    id = IntegerField(read_only=True)
-    name = CharField(read_only=True)
-    type = CharField(read_only=True)
-    format = CharField(read_only=True)
+class LogStorageRetrieveSerializer(HyperlinkedModelSerializer):
     content = SerializerMethodField()
+
+    class Meta:
+        model = LogStorage
+        fields = (
+            "id",
+            "name",
+            "type",
+            "format",
+            "content",
+        )
+        extra_kwargs = {"url": {"lookup_url_kwarg": "log_pk"}}
 
     @staticmethod
     def _get_ansible_content(obj):
@@ -251,82 +238,39 @@ class LogStorageSerializer(EmptySerializer):
             msg = f'File "{obj.name}-{obj.type}.{obj.format}" not found'
 
             raise AdcmEx("LOG_NOT_FOUND", msg) from e
+
         return content
 
-    def get_content(self, obj):
-        content = obj.body
-
-        if obj.type in ["stdout", "stderr"]:
-            if content is None:
-                content = self._get_ansible_content(obj)
+    def get_content(self, obj: LogStorage) -> str:
+        if obj.type in {"stdout", "stderr"}:
+            if obj.body is None:
+                obj.body = self._get_ansible_content(obj)
         elif obj.type == "check":
-            if content is None:
-                content = get_check_log(obj.job_id)
-            if isinstance(content, str):
-                content = json.loads(content)
+            if obj.body is None:
+                obj.body = get_check_log(obj.job_id)
+            if isinstance(obj.body, str):
+                obj.body = json.loads(obj.body)
         elif obj.type == "custom":
-            if obj.format == "json" and isinstance(content, str):
+            if obj.format == "json" and isinstance(obj.body, str):
                 try:
-                    custom_content = json.loads(content)
-                    custom_content = json.dumps(custom_content, indent=4)
-                    content = custom_content
+                    custom_content = json.loads(obj.body)
+                    obj.body = json.dumps(custom_content, indent=4)
                 except json.JSONDecodeError:
                     pass
 
-        return content
+        return obj.body
 
 
-class LogStorageListSerializer(LogStorageSerializer):
+class LogStorageSerializer(LogStorageRetrieveSerializer):
     url = SerializerMethodField()
+
+    class Meta:
+        model = LogStorage
+        fields = LogStorageRetrieveSerializer.Meta.fields + ("url",)
 
     def get_url(self, obj):
         return reverse(
-            "log-storage",
-            kwargs={"job_id": obj.job_id, "log_id": obj.id},
+            "joblog-detail",
+            kwargs={"job_pk": obj.job_id, "log_pk": obj.id},
             request=self.context["request"],
         )
-
-
-class LogSerializer(EmptySerializer):
-    tag = SerializerMethodField()
-    level = SerializerMethodField()
-    type = SerializerMethodField()
-    content = SerializerMethodField()
-
-    @staticmethod
-    def get_tag(obj):
-        if obj.type == "check":
-            return obj.type
-
-        return obj.name
-
-    @staticmethod
-    def get_level(obj):
-        if obj.type == "check":
-            return "out"
-
-        return obj.type[3:]
-
-    @staticmethod
-    def get_type(obj):
-        return obj.format
-
-    @staticmethod
-    def get_content(obj):
-        content = obj.body
-
-        if obj.type in ["stdout", "stderr"]:
-            if content is None:
-                path_file = os.path.join(
-                    RUN_DIR, f"{obj.job.id}", f"{obj.name}-{obj.type}.{obj.format}"
-                )
-                with open(path_file, "r", encoding="utf_8") as f:
-                    content = f.read()
-        elif obj.type == "check":
-            if content is None:
-                content = get_check_log(obj.job_id)
-
-            if isinstance(content, str):
-                content = json.loads(content)
-
-        return content

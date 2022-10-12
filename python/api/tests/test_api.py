@@ -162,7 +162,7 @@ class TestAPI(BaseTestCase):
     def test_access(self):
         self.client.logout()
 
-        api = [reverse("cluster"), reverse("host"), reverse("task-list")]
+        api = [reverse("cluster"), reverse("host"), reverse("tasklog-list")]
         for url in api:
             response: Response = self.client.get(url)
 

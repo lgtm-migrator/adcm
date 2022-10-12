@@ -15,5 +15,5 @@ from rest_framework.routers import DefaultRouter
 from api.job.views import TaskViewSet
 
 router = DefaultRouter()
-router.register("", TaskViewSet, basename="task")
+router.register("", TaskViewSet)
 urlpatterns = router.urls
