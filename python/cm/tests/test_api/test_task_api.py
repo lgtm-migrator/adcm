@@ -11,14 +11,16 @@
 # limitations under the License.
 
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 from unittest.mock import patch
+from zoneinfo import ZoneInfo
+
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
+
 from adcm.tests.base import BaseTestCase
-from cm.models import Action, ActionType, ADCM, Bundle, Prototype, TaskLog
+from cm.models import ADCM, Action, ActionType, Bundle, Prototype, TaskLog
 
 
 class TestTaskAPI(BaseTestCase):
