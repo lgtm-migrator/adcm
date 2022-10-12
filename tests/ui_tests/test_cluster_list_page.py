@@ -17,66 +17,36 @@ import os
 import allure
 import pytest
 from _pytest.fixtures import SubRequest
-from adcm_client.objects import (
-    ADCMClient,
-    Bundle,
-    Provider,
-    Cluster,
-    Host,
-)
-from adcm_pytest_plugin import params
-from adcm_pytest_plugin import utils
-from adcm_pytest_plugin.utils import get_data_dir
-from adcm_pytest_plugin.utils import parametrize_by_data_subdirs
-from adcm_pytest_plugin.utils import random_string
+from adcm_client.objects import ADCMClient, Bundle, Cluster, Host, Provider
+from adcm_pytest_plugin import params, utils
+from adcm_pytest_plugin.utils import get_data_dir, parametrize_by_data_subdirs, random_string
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.remote.webdriver import WebElement
 
 from tests.library.status import ADCMObjectStatusChanger
-from tests.ui_tests.app.helpers.configs_generator import (
-    generate_configs,
-    prepare_config,
-    TYPES,
-    generate_group_configs,
-    prepare_group_config,
-)
+from tests.ui_tests.app.helpers.configs_generator import generate_configs, prepare_config
 from tests.ui_tests.app.page.admin.page import AdminIntroPage
 from tests.ui_tests.app.page.cluster.page import (
-    ClusterImportPage,
-    ClusterConfigPage,
-    ClusterGroupConfigPage,
-    ClusterMainPage,
-    ClusterHostPage,
-    ClusterServicesPage,
     ClusterComponentsPage,
-    ClusterStatusPage,
+    ClusterConfigPage,
     ClusterGroupConfigConfig,
     ClusterGroupConfigHosts,
+    ClusterGroupConfigPage,
+    ClusterHostPage,
+    ClusterImportPage,
+    ClusterMainPage,
+    ClusterServicesPage,
+    ClusterStatusPage,
 )
 from tests.ui_tests.app.page.cluster_list.page import ClusterListPage
 from tests.ui_tests.app.page.common.configuration.page import CONFIG_ITEMS
 from tests.ui_tests.app.page.common.group_config_list.page import GroupConfigRowInfo
 from tests.ui_tests.app.page.common.host_components.page import ComponentsHostRowInfo
 from tests.ui_tests.app.page.common.import_page.page import ImportItemInfo
-from tests.ui_tests.app.page.common.status.page import (
-    SUCCESS_COLOR,
-    NEGATIVE_COLOR,
-)
-from tests.ui_tests.app.page.common.status.page import StatusRowInfo
-from tests.ui_tests.app.page.host.page import (
-    HostMainPage,
-    HostConfigPage,
-)
-from tests.ui_tests.app.page.service.page import (
-    ServiceMainPage,
-    ServiceConfigPage,
-    ServiceImportPage,
-)
-from tests.ui_tests.utils import (
-    wait_and_assert_ui_info,
-    check_host_value,
-    wrap_in_dict,
-)
+from tests.ui_tests.app.page.common.status.page import NEGATIVE_COLOR, SUCCESS_COLOR, StatusRowInfo
+from tests.ui_tests.app.page.host.page import HostConfigPage, HostMainPage
+from tests.ui_tests.app.page.service.page import ServiceConfigPage, ServiceImportPage, ServiceMainPage
+from tests.ui_tests.utils import check_host_value, wait_and_assert_ui_info, wrap_in_dict
 
 RANGE_VALUES = [
     ("float", 0.15),
@@ -1099,46 +1069,6 @@ class TestClusterConfigPage:
         cluster_config_page = ClusterConfigPage(app_fs.driver, app_fs.adcm.url, cluster.id).open()
         for item in CONFIG_ITEMS:
             cluster_config_page.config.check_text_in_tooltip(item, f"Test description {item}")
-
-    @pytest.mark.full()
-    @pytest.mark.usefixtures("login_to_adcm_over_api")
-    def test_configs_fields_invisible_true(self, sdk_client_fs: ADCMClient, app_fs):
-        """Check RO field with invisible true
-        Scenario:
-        1. Check that field invisible
-        2. Check that save button not active
-        3. Click advanced
-        4. Check that field invisible
-        """
-        res = [
-            generate_configs(
-                field_type=field_type,
-                advanced=is_advanced,
-                default=is_default,
-                required=is_required,
-                read_only=is_read_only,
-                config_group_customization=config_group_customization,
-                group_customization=group_customization,
-            )[0]
-            for field_type in TYPES
-            for is_advanced in (True, False)
-            for is_default in (True, False)
-            for is_required in (True, False)
-            for is_read_only in (True, False)
-            for config_group_customization in (True, False)
-            for group_customization in (True, False)
-        ]
-        full_config = [
-            {**combination[0]["config"][0], "name": f"{combination[0]['config'][0]['name']}_{i}"}
-            for i, combination in enumerate(res)
-        ]
-        _, _, path = prepare_config(([{**res[0][0], "config": full_config}], None), enforce_file=True)
-
-        _, cluster_config_page = prepare_cluster_and_open_config_page(sdk_client_fs, path, app_fs)
-        cluster_config_page.config.check_no_rows_or_groups_on_page()
-        cluster_config_page.config.check_no_rows_or_groups_on_page_with_advanced()
-        with allure.step('Check that save button is disabled'):
-            assert cluster_config_page.config.is_save_btn_disabled(), 'Save button should be disabled'
 
     # pylint: enable=too-many-locals
     @pytest.mark.full()
