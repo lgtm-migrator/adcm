@@ -88,13 +88,13 @@ Functional tests:
     - curl -LJ https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64 --output ./allurectl
     - chmod +x ./allurectl
   script:
-    - printenv
     - >
         curl --request POST --header "Private-Token: $GITLAB_PERSONAL_API_PRIVATE_TOKEN"
         --data "body=Allure report $(./allurectl job-run env | grep ALLURE_LAUNCH_URL | awk -F '=' '{print $2}')"
         https://gitlab.adsw.io/api/v4/projects/$CI_PROJECT_ID/merge_requests/${CI_OPEN_MERGE_REQUESTS#*!}/notes
     - ./allurectl job-run plan --output-file ${ALLURE_TESTPLAN_PATH}
     - if test -f ${ALLURE_TESTPLAN_PATH}; then cat ${ALLURE_TESTPLAN_PATH}; fi
+    - sleep 600
     - export SELENOID_HOST=$(ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
     - EXIT=0
     - |
