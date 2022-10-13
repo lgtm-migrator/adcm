@@ -75,9 +75,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Checker for licence existing and fix it if need")
     parser.add_argument("--fix", nargs="?", const=True, default=False,
                         help="Flag to fix absent license in file (default will only find it)")
+    parser.add_argument("--folders", nargs="+", help="Folders to check")
     args = parser.parse_args()
     empty_licence = []
-    empty_licence.extend(read_files(args.fix, "."))
+    for folder in args.folders:
+        empty_licence.extend(read_files(args.fix, folder))
     if empty_licence:
         sys.stdout.write(
             f"Licence not detected in the following files: {', '.join(empty_licence)} \n"
