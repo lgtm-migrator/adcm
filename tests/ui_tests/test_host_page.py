@@ -354,7 +354,7 @@ class TestHostListPage:
             ], f"Action list with MM ON should be with action {INIT_ACTION}"
 
 
-@pytest.mark.usefixtures('login_to_adcm_over_api')
+@pytest.mark.usefixtures('_login_to_adcm_over_api')
 class TestHostMainPage:
     """Tests for the /host/{}/config page"""
 
@@ -532,7 +532,7 @@ class TestHostConfigPage:
             host_page.config.check_text_in_tooltip(item, f"Test description {item}")
 
 
-@pytest.mark.usefixtures('login_to_adcm_over_api')
+@pytest.mark.usefixtures('_login_to_adcm_over_api')
 class TestHostStatusPage:
     """Tests for the /host/{}/status page"""
 
