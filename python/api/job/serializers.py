@@ -65,9 +65,9 @@ class TaskSerializer(HyperlinkedModelSerializer):
 
 class TaskRetrieveSerializer(HyperlinkedModelSerializer):
     action_url = SerializerMethodField()
-    action = ActionJobSerializer()
+    action = ActionJobSerializer(read_only=True)
     objects = SerializerMethodField()
-    jobs = JobShortSerializer(many=True, source="joblog_set")
+    jobs = JobShortSerializer(many=True, source="joblog_set", read_only=True)
     terminatable = SerializerMethodField()
     object_type = SerializerMethodField()
     lock = ConcernItemSerializer(read_only=True)
@@ -94,6 +94,7 @@ class TaskRetrieveSerializer(HyperlinkedModelSerializer):
             "cancel",
             "download",
         )
+        read_only_fields = ("object_id", "status", "start_date", "finish_date")
         extra_kwargs = {"url": {"lookup_url_kwarg": "task_pk"}}
 
     def get_action_url(self, obj: TaskLog) -> str | None:

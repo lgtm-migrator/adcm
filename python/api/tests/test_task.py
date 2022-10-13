@@ -17,10 +17,10 @@ from zoneinfo import ZoneInfo
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 
 from adcm.tests.base import BaseTestCase
-from cm.models import ADCM, Action, ActionType, Bundle, Prototype, TaskLog
+from cm.models import ADCM, Action, ActionType, Bundle, Cluster, Prototype, TaskLog
 
 
 class TestTaskAPI(BaseTestCase):
@@ -28,6 +28,10 @@ class TestTaskAPI(BaseTestCase):
         super().setUp()
 
         bundle = Bundle.objects.create()
+        self.cluster = Cluster.objects.create(
+            name="test_cluster",
+            prototype=Prototype.objects.create(bundle=bundle, type="cluster"),
+        )
         self.adcm_prototype = Prototype.objects.create(bundle=bundle, type="adcm")
         self.adcm = ADCM.objects.create(
             prototype=self.adcm_prototype,
@@ -173,3 +177,14 @@ class TestTaskAPI(BaseTestCase):
             )
 
         self.assertEqual(response.status_code, HTTP_200_OK)
+
+    def test_run(self):
+        with patch("api.action.views.create", return_value=Response(status=HTTP_201_CREATED)):
+            response: Response = self.client.post(
+                reverse(
+                    "run-task",
+                    kwargs={"cluster_id": self.cluster.pk, "action_id": self.action.pk},
+                )
+            )
+
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
