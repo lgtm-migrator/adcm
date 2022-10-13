@@ -109,6 +109,7 @@ Functional tests:
           export PYTEST_MARK_VALUE="\"not full and not extra_rbac and not ldap\""
           ./allurectl watch -- make pytest || EXIT=1
         fi
+    - sleep 600
     - |
         if test -f ${ALLURE_TESTPLAN_PATH}
         then
