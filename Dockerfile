@@ -6,6 +6,8 @@ RUN apk update && \
         linux-headers && \
     apk add \
         bash \
+        openssl \
+        libc6-compat \
         openldap-dev \
         git \
         runit \
