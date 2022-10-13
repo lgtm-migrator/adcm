@@ -115,7 +115,7 @@ Functional tests:
           /scripts/check_allure_launch_result.py \
             --launch-id $(./allurectl job-run env | grep ALLURE_LAUNCH_ID | awk -F '=' '{print $2}') \
             --username $ALLURE_USER \
-            --password $ALLURE_PASS || EXIT=1
+            --password $ALLURE_PASSWORD || EXIT=1
         fi
     - exit $EXIT
   rules:
@@ -197,3 +197,4 @@ Generate docs:
     - if: $CI_PIPELINE_SOURCE == "api"
       when: never
     - if: $CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "master"
+
