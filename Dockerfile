@@ -1,13 +1,13 @@
-FROM python:3.10-slim
-RUN apt update && \
-    apt upgrade -y --no-install-recommends &&  \
-    apt install -y --no-install-recommends \
+FROM python:3.10-alpine
+RUN apk update && \
+    apk upgrade && \
+    apk add --virtual .build-deps \
+        build-base \
+        linux-headers && \
+    apk add \
+        openldap-dev \
         git \
-        gcc \
-        libldap2-dev \
-        libsasl2-dev \
         runit \
-        cron \
         nginx \
         openssh-client \
         logrotate
@@ -23,6 +23,7 @@ RUN pip install --upgrade pip &&  \
     . /adcm/venv/default/bin/activate && \
     pip install --no-cache-dir -r /adcm/requirements-venv-default.txt && \
     deactivate
+RUN apk del .build-deps
 COPY . /adcm
 RUN mkdir -p /adcm/data/log && \
     mkdir -p /usr/share/ansible/plugins/modules && \
