@@ -5,6 +5,7 @@ RUN apk update && \
         build-base \
         linux-headers && \
     apk add \
+        bash \
         openldap-dev \
         git \
         runit \
