@@ -1,4 +1,197 @@
-include:
-  - project: 'arenadata/infrastructure/code/ci/gitlab_ci_files'
-    ref: master
-    file: '/development/adcm.yml'
+stages:
+  - checks_and_build
+  - tests
+  - deploy
+  - generate_docs
+
+default:
+  image: hub.adsw.io/library/docker:20.10.17_python3-x64
+  interruptible: true
+
+.checks_and_build_template:
+  stage: checks_and_build
+  variables:
+    GIT_STRATEGY: clone
+    GIT_CLEAN_FLAGS: -ffdx
+  tags:
+    - common-builds
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "api"
+      when: never
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+
+.tests_template:
+  stage: tests
+  variables:
+    GIT_STRATEGY: clone
+    GIT_CLEAN_FLAGS: -ffdx
+  tags:
+    - functest_host_network_selenoid
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "api"
+      when: never
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+
+Linters:
+  extends:
+    - .checks_and_build_template
+  script:
+    - make linters
+
+Unittests:
+  extends:
+    - .checks_and_build_template
+  script:
+    - make unittests
+
+Build:
+  extends:
+    - .checks_and_build_template
+  before_script:
+    - docker login hub.adsw.io -u $HUB_ADSW_IO_LOGIN -p $HUB_ADSW_IO_PASSWORD
+  script:
+    - export APP_IMAGE=hub.adsw.io/adcm/adcm
+    - export APP_TAG=${CI_COMMIT_BRANCH//\//_}
+    - make build
+    - docker push ${APP_IMAGE}:${APP_TAG}
+    - docker tag ${APP_IMAGE}:${APP_TAG} ${APP_IMAGE}:${APP_TAG}_${CI_COMMIT_SHORT_SHA}
+    - docker push ${APP_IMAGE}:${APP_TAG}_${CI_COMMIT_SHORT_SHA}
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "api"
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+Npmcheck:
+  extends:
+    - .checks_and_build_template
+  allow_failure: true
+  script:
+    - make npm_check
+
+Angular tests:
+  extends:
+    - .tests_template
+  tags:
+    - common-builds
+  script:
+    - make ng_tests
+
+Functional tests:
+  extends:
+    - .tests_template
+  variables:
+    ALLURE_PROJECT_ID: 3
+    ALLURE_RESULTS: "allure-results"
+    ALLURE_TESTPLAN_PATH: "./testplan.json"
+    BRANCH_NAME: $CI_COMMIT_BRANCH
+  before_script:
+    - curl -LJ https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64 --output ./allurectl
+    - chmod +x ./allurectl
+  script:
+    - printenv
+    - >
+        curl --request POST --header "Private-Token: $GITLAB_PERSONAL_API_PRIVATE_TOKEN"
+        --data "body=Allure report $(./allurectl job-run env | grep ALLURE_LAUNCH_URL | awk -F '=' '{print $2}')"
+        https://gitlab.adsw.io/api/v4/projects/$CI_PROJECT_ID/merge_requests/${CI_OPEN_MERGE_REQUESTS#*!}/notes
+    - ./allurectl job-run plan --output-file ${ALLURE_TESTPLAN_PATH}
+    - if test -f ${ALLURE_TESTPLAN_PATH}; then cat ${ALLURE_TESTPLAN_PATH}; fi
+    - export SELENOID_HOST=$(ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
+    - EXIT=0
+    - |
+        if [ "${CI_COMMIT_BRANCH}" = "master" ] || [ "${CI_COMMIT_BRANCH}" = "develop" ]
+        then
+          ./allurectl watch -- make pytest_release || EXIT=1
+        else
+          export PYTEST_MARK_KEY="-m"
+          export PYTEST_MARK_VALUE="\"not full and not extra_rbac and not ldap\""
+          ./allurectl watch -- make pytest || EXIT=1
+        fi
+    - |
+        if test -f ${ALLURE_TESTPLAN_PATH}
+        then
+          /scripts/check_allure_launch_result.py \
+            --launch-id $ALLURE_LAUNCH_ID \
+            --username $ALLURE_USER \
+            --password $ALLURE_PASS || EXIT=1
+        fi
+    - exit $EXIT
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "api"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+
+Deploy:
+  stage: deploy
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - docker login hub.adsw.io -u $HUB_ADSW_IO_LOGIN -p $HUB_ADSW_IO_PASSWORD
+  script:
+    - export APP_IMAGE=hub.adsw.io/adcm/adcm
+    - export APP_TAG=${CI_COMMIT_BRANCH//\//_}
+    - docker pull ${APP_IMAGE}:${APP_TAG}
+    - docker tag  ${APP_IMAGE}:${APP_TAG} ${APP_IMAGE}:latest
+    - docker push ${APP_IMAGE}:latest
+  tags:
+    - common-builds
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "api"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "master"
+
+Generate docs:
+  stage: generate_docs
+  image: python:3
+  variables:
+    GIT_STRATEGY: clone
+    GIT_CLEAN_FLAGS: -ffdx
+    REPO_NAME: docs_adcm
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo "$BENDER_SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H 'ssh.gitlab.adsw.io' >> ~/.ssh/known_hosts
+    - ssh-keyscan -H 'github.com' >> ~/.ssh/known_hosts
+    - echo "StrictHostKeyChecking no" > ~/.ssh/config
+    - git config --global user.email "jira@arenadata.io"
+    - git config --global user.name "Bender Rodriguez"
+    - git clone -b $CI_COMMIT_BRANCH git@github.com:arenadata/${REPO_NAME}.git
+  script:
+    - set -ex
+    - pip3 install --user --quiet -r ./requirements.txt
+    - ./python/manage.py migrate
+    - nohup python ./python/manage.py runserver > /dev/null 2>&1 & sleep 1
+    - sleep 5
+    - |
+        wget --quiet http://localhost:8000/api/v1/docs/md/ -O- | sed 's/#\\ Intro/##\\ Intro/g'| awk '
+          function trim(field){
+              gsub(/^ +| +$/,"", field);
+              return field
+            }
+            BEGIN {a=0}
+            /<h4>/ {a=1}
+            a==0 {print $0;}
+            a==1 &&  $0 !~  /^\\ *$/ {print trim($0);}
+            /<\\/table>/ {a=0}
+          ' > ${REPO_NAME}/docs/sdk/api/api.md
+          if [[ $(wc -l <"${REPO_NAME}/docs/sdk/api/api.md") -eq 0 ]]
+          then
+            exit 1
+          fi
+    - mkdir -p ~/.ssh/
+    - cd ${REPO_NAME}
+    - git add docs/
+    - git status
+    - git config --global user.email "jira@arendata.io"
+    - git config --global user.name "Bender Arenadata"
+    - git commit -m "${CI_JOB_URL}" --allow-empty
+    - git remote -v
+    - git push origin ${CI_COMMIT_BRANCH}
+  tags:
+    - common-builds
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "api"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "master"
+
