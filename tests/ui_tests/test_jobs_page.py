@@ -69,7 +69,7 @@ COMPONENT_NAME = 'test_component'
 @pytest.fixture()
 @allure.title("Open /task page")
 # pylint: disable-next=unused-argument
-def page(app_fs: ADCMTest, login_to_adcm_over_api) -> JobListPage:
+def page(app_fs: ADCMTest, _login_to_adcm_over_api) -> JobListPage:
     """Open /task page"""
     return JobListPage(app_fs.driver, app_fs.adcm.url).open()
 
