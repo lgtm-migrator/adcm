@@ -60,9 +60,9 @@ linters: build_base
 		isort /adcm/python && \
 		pylint --rcfile /adcm/pyproject.toml --recursive y /adcm/python && \
 		pylint /adcm/tests --rcfile /adcm/tests/pyproject.toml && \
-		black /adcm/tests && \
-		flake8_pytest_style /adcm/tests/functional && \
-		flake8_pytest_style /adcm/tests/ui_tests"
+		black --check --diff --exclude '\.git|__pycache__|docs/source/conf\.py|old|build|dist' /adcm/tests && \
+		flake8 /adcm/tests/functional --max-line-length=120 && \
+		flake8 /adcm/tests/ui_tests --max-line-length=120"
 
 npm_check:
 	docker run -i --rm -v $(CURDIR)/wwwroot:/wwwroot -v $(CURDIR)/web:/code -w /code  node:16-alpine ./npm_check.sh

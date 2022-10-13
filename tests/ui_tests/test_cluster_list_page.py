@@ -109,7 +109,8 @@ DISCLAIMER_TEXT = "Are you really want to click me?"
 
 
 # pylint: disable=redefined-outer-name,unused-argument,too-many-lines,too-many-public-methods
-# pylint: disable=too-many-arguments,too-many-boolean-expressions,too-many-branches,too-many-nested-blocks,too-many-locals
+# pylint: disable=too-many-arguments,too-many-boolean-expressions
+# pylint: disable=too-many-branches,too-many-nested-blocks,too-many-locals
 
 pytestmark = pytest.mark.usefixtures("login_to_adcm_over_api")
 
