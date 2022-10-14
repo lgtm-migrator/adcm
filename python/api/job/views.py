@@ -140,7 +140,7 @@ def get_task_download_archive_file_handler(task: TaskLog) -> io.BytesIO:
 
 #  pylint:disable-next=too-many-ancestors
 class JobViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, GenericUIViewSet):
-    queryset = JobLog.objects.select_related("task", "action").all()
+    queryset = JobLog.objects.select_related("task", "action").order_by("-id").all()
     serializer_class = JobSerializer
     filterset_fields = ("action_id", "task_id", "pid", "status", "start_date", "finish_date")
     ordering_fields = ("status", "start_date", "finish_date")
