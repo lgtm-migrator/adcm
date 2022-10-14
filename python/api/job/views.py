@@ -261,8 +261,18 @@ class LogStorageViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin,
             mime_type = "application/json"
 
         if log_storage.body is None:
-            body = ""
-            length = 0
+            file_path = Path(
+                settings.RUN_DIR,
+                f"{job_pk}",
+                f"{log_storage.name}-{log_storage.type}.{log_storage.format}",
+            )
+            if Path.is_file(file_path):
+                with open(file_path, "r", encoding="utf_8") as f:
+                    body = f.read()
+                    length = len(body)
+            else:
+                body = ""
+                length = 0
         else:
             body = log_storage.body
             length = len(body)
