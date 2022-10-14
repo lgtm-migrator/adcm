@@ -1502,7 +1502,7 @@ roles:
     - name: Manage Maintenance mode
       display_name: Manage host Maintenance mode
       description: the ability to enable / disable the "MM" on the host
-      type: hidden
+      type: business
       parametrized_by:
         - host
       module_name: rbac.roles
@@ -1517,7 +1517,7 @@ roles:
 
     - name: Manage service Maintenance mode
       description: the ability to enable / disable the "MM" on the service
-      type: hidden
+      type: business
       parametrized_by:
         - service
       module_name: rbac.roles
@@ -1532,7 +1532,7 @@ roles:
 
     - name: Manage component Maintenance mode
       description: the ability to enable / disable the "MM" on the component
-      type: hidden
+      type: business
       parametrized_by:
         - component
       module_name: rbac.roles
