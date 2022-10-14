@@ -93,7 +93,7 @@ def web_driver(browser, downloads_directory):
 
 
 @pytest.fixture()
-def skip_firefox(browser: str):
+def _skip_firefox(browser: str):
     """Skip one test on firefox"""
     if browser == 'Firefox':
         pytest.skip("This test shouldn't be launched on Firefox")
@@ -101,7 +101,7 @@ def skip_firefox(browser: str):
 
 @allure.title("Data for failure investigation")
 @pytest.fixture()
-def attach_debug_info_on_ui_test_fail(request, web_driver):
+def _attach_debug_info_on_ui_test_fail(request, web_driver):
     """Attach screenshot, etc. to allure + cleanup for firefox"""
     yield
     try:
@@ -153,12 +153,12 @@ def attach_debug_info_on_ui_test_fail(request, web_driver):
 
 
 @pytest.fixture()
-def app_fs(adcm_fs: ADCM, web_driver: ADCMTest, attach_debug_info_on_ui_test_fail):
+def app_fs(adcm_fs: ADCM, web_driver: ADCMTest, _attach_debug_info_on_ui_test_fail):
     """
     Attach ADCM API to ADCMTest object and open new tab in browser for test
     Collect logs on failure and close browser tab after test is done
     """
-    _ = attach_debug_info_on_ui_test_fail
+    _ = _attach_debug_info_on_ui_test_fail
     web_driver.attache_adcm(adcm_fs)
     try:
         web_driver.new_tab()
@@ -166,7 +166,7 @@ def app_fs(adcm_fs: ADCM, web_driver: ADCMTest, attach_debug_info_on_ui_test_fai
         # this exception could be raised in case
         # when driver was crashed for some reason
         web_driver.create_driver()
-    yield web_driver
+    return web_driver
 
 
 @pytest.fixture(scope='session')
