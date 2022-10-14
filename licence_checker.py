@@ -47,20 +47,22 @@ APACHE_LICENCE_GO = [
 ]
 
 
-def check_licence(file: str, fix: bool, licence: list[str]) -> bool:
+def check_licence(file: str, fix: bool, lic: list[str]) -> bool:
     """Return False in case of empty licence"""
     try:
         with open(file, "r+", encoding="utf-8") as f:
             lines = f.readlines()
             if len(lines) < 10:
                 if fix:
-                    update_files(f, lines, licence)
+                    update_files(f, lines, lic)
                 return False
-            if (lines[0] == licence[0]) and (lines[10] == licence[10]) \
-                    or (lines[1] == licence[0]) and (lines[11] == licence[10]):
+            if (
+                    (lines[0] == lic[0] and lines[10] == lic[10])
+                    or (lines[1] == lic[0] and lines[11] == lic[10])
+            ):
                 return True
             if fix:
-                update_files(f, lines, licence)
+                update_files(f, lines, lic)
             return False
     except PermissionError:
         sys.stdout.write(f"file {file} unreachable \n")
@@ -70,17 +72,17 @@ def check_licence(file: str, fix: bool, licence: list[str]) -> bool:
 def read_files(fixed: int, skipped: int, fix: bool, root: str = "") -> tuple[int, int]:
     root_path = Path(root)
     for path in os.listdir(root_path):
-        licence = None
+        lic = None
         path = os.path.join(root_path, path)
         if os.path.isdir(path):
             fixed, skipped = read_files(fixed, skipped, fix, path)
         if os.path.isfile(path):
             if path.endswith(".py"):
-                licence = APACHE_LICENCE_PY
+                lic = APACHE_LICENCE_PY
             elif path.endswith(".go") or path.endswith("go.mod"):
-                licence = APACHE_LICENCE_GO
-            if licence:
-                if not check_licence(path, fix, licence):
+                lic = APACHE_LICENCE_GO
+            if lic:
+                if not check_licence(path, fix, lic):
                     sys.stdout.write(f"{path} has no license\n")
                     if fix:
                         fixed += 1
@@ -89,8 +91,8 @@ def read_files(fixed: int, skipped: int, fix: bool, root: str = "") -> tuple[int
     return fixed, skipped
 
 
-def update_files(f: TextIO, lines: list, licence: list[str]):
-    lines.insert(0, "".join(licence))
+def update_files(f: TextIO, lines: list, lic: list[str]):
+    lines.insert(0, "".join(lic))
     f.seek(0)
     f.writelines(lines)
 
@@ -110,7 +112,7 @@ if __name__ == "__main__":
         sys.stdout.write("Licence is present in all python and go files \n")
         sys.exit(0)
     sys.stdout.write(
-        f"Updating licence skipped in {number_of_skipped} files." \
+        f"Updating licence skipped in {number_of_skipped} files."
         f" Licence was updated in {number_of_fixed} files \n"
     )
     sys.exit(1)
