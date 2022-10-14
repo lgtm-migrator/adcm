@@ -9,17 +9,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from django.urls import include, path
-from rest_framework.routers import DefaultRouter
-
-from api.adcm.views import ADCMViewSet
-
-router = DefaultRouter()
-router.register("", ADCMViewSet)
-
-urlpatterns = [
-    *router.urls,
-    path(r"<int:adcm_pk>/config/", include("api.config.urls"), {"object_type": "adcm"}),
-    path(r"<int:adcm_pk>/action/", include("api.action.urls"), {"object_type": "adcm"}),
-]
