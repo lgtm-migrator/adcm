@@ -17,7 +17,7 @@ from unittest.mock import patch
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from rest_framework.response import Response
-from rest_framework.status import HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 
 from adcm.tests.base import BaseTestCase
 from audit.models import (
@@ -90,7 +90,7 @@ class TestPolicy(BaseTestCase):
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
-        self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, HTTP_403_FORBIDDEN)
         self.check_log(
             log=log,
             operation_name="Task cancelled",
@@ -121,7 +121,7 @@ class TestPolicy(BaseTestCase):
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
-        self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, HTTP_403_FORBIDDEN)
         self.check_log(
             log=log,
             operation_name=self.task_restarted_str,
