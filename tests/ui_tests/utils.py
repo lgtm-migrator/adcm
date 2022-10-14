@@ -333,7 +333,8 @@ def expect_rows_amount_change(get_all_rows: Callable[[], Sized]):
 @allure.step("Prepare cluster and open config page")
 def prepare_cluster_and_open_config_page(sdk_client: ADCMClient, path: os.PathLike, app):
     """Upload bundle, create cluster and open config page"""
-    from tests.ui_tests.app.page.cluster.page import ClusterConfigPage
+    from tests.ui_tests.app.page.cluster.page import ClusterConfigPage  # pylint: disable=import-outside-toplevel
+
     bundle = sdk_client.upload_from_fs(path)
     cluster = bundle.cluster_create(name=f"Test cluster {random_string()}")
     config = ClusterConfigPage(app.driver, app.adcm.url, cluster.cluster_id).open()

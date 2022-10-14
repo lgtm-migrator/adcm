@@ -91,6 +91,7 @@ def check_save_in_configs(cluster_config_page, field_type, expected_state, is_de
 @dataclass()
 class ParamCombination:  # pylint: disable=too-many-instance-attributes
     """Container for params used in test to generate config"""
+
     field_type: str
     activatable: bool
     active: bool
