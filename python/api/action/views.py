@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
 from itertools import compress
 
@@ -48,7 +49,8 @@ from rbac.viewsets import DjangoOnlyObjectPermissions
 
 def get_object_type_id(**kwargs):
     object_type = kwargs.get('object_type')
-    object_id = kwargs.get(f'{object_type}_id')
+    # TODO: this is a temporary patch for `action` endpoint
+    object_id = kwargs.get(f"{object_type}_id") or kwargs.get(f"{object_type}_pk")
     action_id = kwargs.get('action_id', None)
 
     return object_type, object_id, action_id
