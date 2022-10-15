@@ -3,18 +3,17 @@
 adcm-client
 adwp-events==0.1.8
 coreapi==2.3.3
+social-auth-app-django==5.0.0
 Django==3.2.15
+django-auth-ldap==4.1.0
 django-cors-headers==3.13.0
 django-filter==22.1
+git+https://github.com/arenadata/django-generate-secret-key.git
 django-guardian==2.4.0
 django-rest-swagger==2.2.0
 djangorestframework==3.13.1
 drf-flex-fields==0.9.1
 drf-extensions==0.7.1
-django-auth-ldap==4.1.0
-social-auth-app-django==5.0.0
-git+https://github.com/arenadata/django-generate-secret-key.git
-virtualenv==20.15.1
 Jinja2
 jsonschema==4.6.1
 MarkupSafe
@@ -25,4 +24,5 @@ ruyaml==0.91.0
 toml==0.10.2
 uWSGI==2.0.20
 version-utils==0.3.2
+virtualenv==20.15.1
 yspec==0.1.0
