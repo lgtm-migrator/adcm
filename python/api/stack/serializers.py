@@ -26,8 +26,7 @@ from adcm.serializers import EmptySerializer
 from api.action.serializers import StackActionDetailSerializer
 from api.config.serializers import ConfigSerializer
 from api.serializers import UpgradeSerializer
-from cm.config import DOWNLOAD_DIR
-from cm.models import Bundle, ClusterObject, Prototype
+from cm.models import ClusterObject, Prototype
 
 
 class LoadBundleSerializer(EmptySerializer):
@@ -36,15 +35,6 @@ class LoadBundleSerializer(EmptySerializer):
 
 class UploadBundleSerializer(EmptySerializer):
     file = FileField(help_text="bundle file for upload")
-
-    def create(self, validated_data):
-        fd = self.context["request"].data["file"]
-        fname = f"{DOWNLOAD_DIR}/{fd}"
-        with open(fname, "wb+") as dest:
-            for chunk in fd.chunks():
-                dest.write(chunk)
-
-        return Bundle()
 
 
 class BundleSerializer(EmptySerializer):

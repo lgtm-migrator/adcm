@@ -10,11 +10,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pathlib import Path
+
+from django.conf import settings
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.status import (
@@ -82,14 +86,17 @@ class UploadBundle(GenericUIView):
     parser_classes = (MultiPartParser,)
 
     @audit
-    def post(self, request):
+    def post(self, request: Request):
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
-            return Response(status=HTTP_201_CREATED)
+        fd = request.data["file"]
+        with open(Path(settings.DOWNLOAD_DIR, fd.name), "wb+") as f:
+            for chunk in fd.chunks():
+                f.write(chunk)
 
-        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+        return Response(status=HTTP_201_CREATED)
 
 
 class LoadBundle(CreateModelMixin, GenericUIViewSet):
