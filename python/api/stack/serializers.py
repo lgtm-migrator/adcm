@@ -15,6 +15,7 @@ from rest_framework.serializers import (
     CharField,
     DateTimeField,
     FileField,
+    HyperlinkedIdentityField,
     IntegerField,
     JSONField,
     ModelSerializer,
@@ -25,24 +26,24 @@ from adcm.serializers import EmptySerializer
 from api.action.serializers import StackActionDetailSerializer
 from api.config.serializers import ConfigSerializer
 from api.serializers import UpgradeSerializer
-from api.utils import hlink
-from cm import config
+from cm.config import DOWNLOAD_DIR
 from cm.models import Bundle, ClusterObject, Prototype
 
 
-class LoadBundle(EmptySerializer):
+class LoadBundleSerializer(EmptySerializer):
     bundle_file = CharField()
 
 
-class UploadBundle(EmptySerializer):
-    file = FileField(help_text='bundle file for upload')
+class UploadBundleSerializer(EmptySerializer):
+    file = FileField(help_text="bundle file for upload")
 
     def create(self, validated_data):
-        fd = self.context['request'].data['file']
-        fname = f'{config.DOWNLOAD_DIR}/{fd}'
-        with open(fname, 'wb+') as dest:
+        fd = self.context["request"].data["file"]
+        fname = f"{DOWNLOAD_DIR}/{fd}"
+        with open(fname, "wb+") as dest:
             for chunk in fd.chunks():
                 dest.write(chunk)
+
         return Bundle()
 
 
@@ -57,22 +58,31 @@ class BundleSerializer(EmptySerializer):
     license_hash = CharField(read_only=True)
     description = CharField(required=False)
     date = DateTimeField(read_only=True)
-    url = hlink('bundle-details', 'id', 'bundle_id')
-    license_url = hlink('bundle-license', 'id', 'bundle_id')
-    update = hlink('bundle-update', 'id', 'bundle_id')
+    url = HyperlinkedIdentityField(
+        view_name="bundle-details", lookup_field="id", lookup_url_kwarg="bundle_id"
+    )
+    license_url = HyperlinkedIdentityField(
+        view_name="bundle-license", lookup_field="id", lookup_url_kwarg="bundle_id"
+    )
+    update = HyperlinkedIdentityField(
+        view_name="bundle-update", lookup_field="id", lookup_url_kwarg="bundle_id"
+    )
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         proto = Prototype.objects.filter(bundle=instance, name=instance.name)
-        data['adcm_min_version'] = proto[0].adcm_min_version
-        data['display_name'] = proto[0].display_name
+        data["adcm_min_version"] = proto[0].adcm_min_version
+        data["display_name"] = proto[0].display_name
+
         return data
 
 
 class LicenseSerializer(EmptySerializer):
     license = CharField(read_only=True)
     text = CharField(read_only=True)
-    accept = hlink('accept-license', 'id', 'bundle_id')
+    accept = HyperlinkedIdentityField(
+        view_name="accept-license", lookup_field="id", lookup_url_kwarg="bundle_id"
+    )
 
 
 class PrototypeSerializer(EmptySerializer):
@@ -86,38 +96,46 @@ class PrototypeSerializer(EmptySerializer):
     description = CharField(required=False)
     type = CharField(read_only=True)
     required = BooleanField(read_only=True)
-    url = hlink('prototype-details', 'id', 'prototype_id')
+    url = HyperlinkedIdentityField(
+        view_name="prototype-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+    )
 
     @staticmethod
     def get_bundle_edition(obj):
         return obj.bundle.edition
 
 
-def get_constraint(self, obj):
-    if obj.type == 'component':
-        return obj.constraint
-    return []
+class PrototypeSerializerMixin:
+    @staticmethod
+    def get_constraint(obj):
+        if obj.type == "component":
+            return obj.constraint
+
+        return []
+
+    @staticmethod
+    def get_service_name(obj):
+        if obj.type == "component":
+            return obj.parent.name
+
+        return ""
+
+    @staticmethod
+    def get_service_display_name(obj):
+        if obj.type == "component":
+            return obj.parent.display_name
+
+        return ""
+
+    @staticmethod
+    def get_service_id(obj):
+        if obj.type == "component":
+            return obj.parent.id
+
+        return None
 
 
-def get_service_name(self, obj):
-    if obj.type == 'component':
-        return obj.parent.name
-    return ''
-
-
-def get_service_display_name(self, obj):
-    if obj.type == 'component':
-        return obj.parent.display_name
-    return ''
-
-
-def get_service_id(self, obj):
-    if obj.type == 'component':
-        return obj.parent.id
-    return None
-
-
-class PrototypeUISerializer(PrototypeSerializer):
+class PrototypeUISerializer(PrototypeSerializer, PrototypeSerializerMixin):
     parent_id = IntegerField(read_only=True)
     version_order = IntegerField(read_only=True)
     shared = BooleanField(read_only=True)
@@ -133,16 +151,20 @@ class PrototypeUISerializer(PrototypeSerializer):
     service_display_name = SerializerMethodField(read_only=True)
     service_id = SerializerMethodField(read_only=True)
 
-    get_constraint = get_constraint
-    get_service_name = get_service_name
-    get_service_display_name = get_service_display_name
-    get_service_id = get_service_id
+
+class PrototypeDetailSerializer(PrototypeSerializer, PrototypeSerializerMixin):
+    constraint = SerializerMethodField()
+    actions = StackActionDetailSerializer(many=True, read_only=True)
+    config = ConfigSerializer(many=True, read_only=True)
+    service_name = SerializerMethodField(read_only=True)
+    service_display_name = SerializerMethodField(read_only=True)
+    service_id = SerializerMethodField(read_only=True)
 
 
 class PrototypeShort(ModelSerializer):
     class Meta:
         model = Prototype
-        fields = ('name',)
+        fields = ("name",)
 
 
 class ExportSerializer(EmptySerializer):
@@ -166,13 +188,17 @@ class ComponentTypeSerializer(PrototypeSerializer):
     requires = JSONField(required=False)
     bound_to = JSONField(required=False)
     monitoring = CharField(read_only=True)
-    url = hlink('component-type-details', 'id', 'prototype_id')
+    url = HyperlinkedIdentityField(
+        view_name="component-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+    )
 
 
 class ServiceSerializer(PrototypeSerializer):
     shared = BooleanField(read_only=True)
     monitoring = CharField(read_only=True)
-    url = hlink('service-type-details', 'id', 'prototype_id')
+    url = HyperlinkedIdentityField(
+        view_name="service-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+    )
 
 
 class ServiceDetailSerializer(ServiceSerializer):
@@ -187,21 +213,26 @@ class BundleServiceUISerializer(ServiceSerializer):
     selected = SerializerMethodField()
 
     def get_selected(self, obj):
-        cluster = self.context.get('cluster')
+        cluster = self.context.get("cluster")
         try:
             ClusterObject.objects.get(cluster=cluster, prototype=obj)
+
             return True
         except ClusterObject.DoesNotExist:
             return False
 
 
 class AdcmTypeSerializer(PrototypeSerializer):
-    url = hlink('adcm-type-details', 'id', 'prototype_id')
+    url = HyperlinkedIdentityField(
+        view_name="adcm-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+    )
 
 
 class ClusterTypeSerializer(PrototypeSerializer):
     license = SerializerMethodField()
-    url = hlink('cluster-type-details', 'id', 'prototype_id')
+    url = HyperlinkedIdentityField(
+        view_name="cluster-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+    )
 
     @staticmethod
     def get_license(obj):
@@ -210,30 +241,20 @@ class ClusterTypeSerializer(PrototypeSerializer):
 
 class HostTypeSerializer(PrototypeSerializer):
     monitoring = CharField(read_only=True)
-    url = hlink('host-type-details', 'id', 'prototype_id')
+    url = HyperlinkedIdentityField(
+        view_name="host-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+    )
 
 
 class ProviderTypeSerializer(PrototypeSerializer):
     license = SerializerMethodField()
-    url = hlink('provider-type-details', 'id', 'prototype_id')
+    url = HyperlinkedIdentityField(
+        view_name="provider-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+    )
 
     @staticmethod
     def get_license(obj):
         return obj.bundle.license
-
-
-class PrototypeDetailSerializer(PrototypeSerializer):
-    constraint = SerializerMethodField()
-    actions = StackActionDetailSerializer(many=True, read_only=True)
-    config = ConfigSerializer(many=True, read_only=True)
-    service_name = SerializerMethodField(read_only=True)
-    service_display_name = SerializerMethodField(read_only=True)
-    service_id = SerializerMethodField(read_only=True)
-
-    get_constraint = get_constraint
-    get_service_name = get_service_name
-    get_service_display_name = get_service_display_name
-    get_service_id = get_service_id
 
 
 class ProviderTypeDetailSerializer(ProviderTypeSerializer):

@@ -12,62 +12,87 @@
 
 from django.urls import include, path
 
-from api.stack import root, views
+from api.stack.root import StackRoot
+from api.stack.views import (
+    AcceptLicense,
+    AdcmTypeDetail,
+    AdcmTypeList,
+    BundleDetail,
+    BundleLicense,
+    BundleList,
+    BundleUpdate,
+    ClusterTypeDetail,
+    ClusterTypeList,
+    ComponentList,
+    ComponentTypeDetail,
+    HostTypeDetail,
+    HostTypeList,
+    LoadBundle,
+    ProtoActionDetail,
+    PrototypeDetail,
+    PrototypeList,
+    ProviderTypeDetail,
+    ProviderTypeList,
+    ServiceDetail,
+    ServiceList,
+    ServiceProtoActionList,
+    UploadBundle,
+)
 
-PROTOTYPE_ID = '<int:prototype_id>/'
+PROTOTYPE_ID = "<int:prototype_id>/"
 
 
 # fmt: off
 urlpatterns = [
-    path('', root.StackRoot.as_view(), name='stack'),
-    path('upload/', views.UploadBundle.as_view(), name='upload-bundle'),
-    path('load/', views.LoadBundle.as_view({'post': 'create'}), name='load-bundle'),
+    path("", StackRoot.as_view(), name="stack"),
+    path("upload/", UploadBundle.as_view(), name="upload-bundle"),
+    path("load/", LoadBundle.as_view({"post": "create"}), name="load-bundle"),
     path(
-        'load/servicemap/', views.LoadBundle.as_view({'put': 'servicemap'}), name='load-servicemap'
+        "load/servicemap/", LoadBundle.as_view({"put": "servicemap"}), name="load-servicemap"
     ),
     path(
-        'load/hostmap/', views.LoadBundle.as_view({'put': 'hostmap'}), name='load-hostmap'
+        "load/hostmap/", LoadBundle.as_view({"put": "hostmap"}), name="load-hostmap"
     ),
-    path('bundle/', include([
-        path('', views.BundleList.as_view(), name='bundle'),
-        path('<int:bundle_id>/', include([
-            path('', views.BundleDetail.as_view(), name='bundle-details'),
-            path('update/', views.BundleUpdate.as_view(), name='bundle-update'),
-            path('license/', views.BundleLicense.as_view(), name='bundle-license'),
-            path('license/accept/', views.AcceptLicense.as_view(), name='accept-license'),
+    path("bundle/", include([
+        path("", BundleList.as_view(), name="bundle"),
+        path("<int:bundle_id>/", include([
+            path("", BundleDetail.as_view(), name="bundle-details"),
+            path("update/", BundleUpdate.as_view(), name="bundle-update"),
+            path("license/", BundleLicense.as_view(), name="bundle-license"),
+            path("license/accept/", AcceptLicense.as_view(), name="accept-license"),
         ])),
     ])),
-    path('action/<int:action_id>/', views.ProtoActionDetail.as_view(), name='action-details'),
-    path('prototype/', include([
-        path('', views.PrototypeList.as_view(), name='prototype'),
-        path(PROTOTYPE_ID, views.PrototypeDetail.as_view(), name='prototype-details')
+    path("action/<int:action_id>/", ProtoActionDetail.as_view(), name="action-details"),
+    path("prototype/", include([
+        path("", PrototypeList.as_view(), name="prototype"),
+        path(PROTOTYPE_ID, PrototypeDetail.as_view(), name="prototype-details")
     ])),
-    path('service/', include([
-        path('', views.ServiceList.as_view(), name='service-type'),
+    path("service/", include([
+        path("", ServiceList.as_view(), name="service-type"),
         path(PROTOTYPE_ID, include([
-            path('', views.ServiceDetail.as_view(), name='service-type-details'),
-            path('action/', views.ServiceProtoActionList.as_view(), name='service-actions'),
+            path("", ServiceDetail.as_view(), name="service-type-details"),
+            path("action/", ServiceProtoActionList.as_view(), name="service-actions"),
         ])),
     ])),
-    path('component/', include([
-        path('', views.ComponentList.as_view(), name='component-type'),
-        path(PROTOTYPE_ID, views.ComponentTypeDetail.as_view(), name='component-type-details'),
+    path("component/", include([
+        path("", ComponentList.as_view(), name="component-type"),
+        path(PROTOTYPE_ID, ComponentTypeDetail.as_view(), name="component-type-details"),
     ])),
-    path('provider/', include([
-        path('', views.ProviderTypeList.as_view(), name='provider-type'),
-        path(PROTOTYPE_ID, views.ProviderTypeDetail.as_view(), name='provider-type-details'),
+    path("provider/", include([
+        path("", ProviderTypeList.as_view(), name="provider-type"),
+        path(PROTOTYPE_ID, ProviderTypeDetail.as_view(), name="provider-type-details"),
     ])),
-    path('host/', include([
-        path('', views.HostTypeList.as_view(), name='host-type'),
-        path(PROTOTYPE_ID, views.HostTypeDetail.as_view(), name='host-type-details'),
+    path("host/", include([
+        path("", HostTypeList.as_view(), name="host-type"),
+        path(PROTOTYPE_ID, HostTypeDetail.as_view(), name="host-type-details"),
     ])),
-    path('cluster/', include([
-        path('', views.ClusterTypeList.as_view(), name='cluster-type'),
-        path(PROTOTYPE_ID, views.ClusterTypeDetail.as_view(), name='cluster-type-details'),
+    path("cluster/", include([
+        path("", ClusterTypeList.as_view(), name="cluster-type"),
+        path(PROTOTYPE_ID, ClusterTypeDetail.as_view(), name="cluster-type-details"),
     ])),
-    path('adcm/', include([
-        path('', views.AdcmTypeList.as_view(), name='adcm-type'),
-        path(PROTOTYPE_ID, views.AdcmTypeDetail.as_view(), name='adcm-type-details'),
+    path("adcm/", include([
+        path("", AdcmTypeList.as_view(), name="adcm-type"),
+        path(PROTOTYPE_ID, AdcmTypeDetail.as_view(), name="adcm-type-details"),
     ])),
 ]
 # fmt: on

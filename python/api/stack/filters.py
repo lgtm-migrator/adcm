@@ -11,19 +11,19 @@
 # limitations under the License.
 
 
-from django_filters import rest_framework as drf_filters
+from django_filters.rest_framework import BaseInFilter, CharFilter, FilterSet
 
 from cm.models import Prototype
 
 
-class StringInFilter(drf_filters.BaseInFilter, drf_filters.CharFilter):
+class StringInFilter(BaseInFilter, CharFilter):
     pass
 
 
-class PrototypeListFilter(drf_filters.FilterSet):
-    name = StringInFilter(label='name', field_name='name', lookup_expr='in')
-    parent_name = StringInFilter(label='parent_name', field_name='parent', lookup_expr='name__in')
+class PrototypeListFilter(FilterSet):
+    name = StringInFilter(label="name", field_name="name", lookup_expr="in")
+    parent_name = StringInFilter(label="parent_name", field_name="parent", lookup_expr="name__in")
 
     class Meta:
         model = Prototype
-        fields = ['bundle_id', 'type']
+        fields = ["bundle_id", "type"]
