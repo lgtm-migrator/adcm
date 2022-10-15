@@ -11,8 +11,10 @@
 # limitations under the License.
 
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import patch
 
+from django.conf import settings
 from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
@@ -131,6 +133,8 @@ class TestBundle(BaseTestCase):
             log=log, operation_result=AuditLogOperationResult.Success, user=self.test_user
         )
 
+        Path(settings.DOWNLOAD_DIR, self.test_bundle_filename).unlink()
+
     def test_upload_fail(self):
         with open(self.test_bundle_path, encoding="utf-8") as f:
             self.client.post(
@@ -149,7 +153,7 @@ class TestBundle(BaseTestCase):
             with self.no_rights_user_logged_in:
                 response: Response = self.client.post(
                     path=reverse("upload-bundle"),
-                    data={"no_file": f},
+                    data={"file": f},
                 )
 
         log: AuditLog = AuditLog.objects.first()

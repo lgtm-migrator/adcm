@@ -29,12 +29,12 @@ from api.serializers import UpgradeSerializer
 from cm.models import ClusterObject, Prototype
 
 
-class LoadBundleSerializer(EmptySerializer):
-    bundle_file = CharField()
-
-
 class UploadBundleSerializer(EmptySerializer):
     file = FileField(help_text="bundle file for upload")
+
+
+class LoadBundleSerializer(EmptySerializer):
+    bundle_file = CharField()
 
 
 class BundleSerializer(EmptySerializer):

@@ -26,7 +26,9 @@ from rest_framework.status import (
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
+    HTTP_403_FORBIDDEN,
 )
+from rest_framework.views import APIView
 
 from adcm.permissions import DjangoObjectPermissionsAudit
 from api.action.serializers import StackActionSerializer
@@ -79,15 +81,16 @@ class CsrfOffSessionAuthentication(SessionAuthentication):
         return
 
 
-class UploadBundle(GenericUIView):
-    queryset = Bundle.objects.all()
-    serializer_class = UploadBundleSerializer
+class UploadBundle(APIView):
     authentication_classes = (CsrfOffSessionAuthentication, TokenAuthentication)
     parser_classes = (MultiPartParser,)
 
     @audit
     def post(self, request: Request):
-        serializer = self.get_serializer(data=request.data)
+        if not request.user.has_perm("cm.add_bundle"):
+            return Response(status=HTTP_403_FORBIDDEN)
+
+        serializer = UploadBundleSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 

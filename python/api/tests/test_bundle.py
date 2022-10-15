@@ -21,9 +21,6 @@ from adcm.tests.base import BaseTestCase
 
 
 class TestBundle(BaseTestCase):
-    def tearDown(self) -> None:
-        Path(settings.DOWNLOAD_DIR, self.test_bundle_filename).unlink()
-
     def test_upload_bundle(self) -> None:
         with open(self.test_bundle_path, encoding="utf-8") as f:
             response: Response = self.client.post(
@@ -33,3 +30,5 @@ class TestBundle(BaseTestCase):
 
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         self.assertTrue(Path(settings.DOWNLOAD_DIR, self.test_bundle_filename).exists())
+
+        Path(settings.DOWNLOAD_DIR, self.test_bundle_filename).unlink()
