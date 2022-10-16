@@ -296,7 +296,7 @@ class TestAPI(BaseTestCase):
         self.assertEqual(response.json()["code"], "CLUSTER_NOT_FOUND")
 
         response: Response = self.client.delete(
-            reverse("bundle-details", kwargs={"bundle_id": bundle_id})
+            reverse("bundle-detail", kwargs={"bundle_pk": bundle_id})
         )
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
@@ -357,7 +357,7 @@ class TestAPI(BaseTestCase):
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
         response: Response = self.client.delete(
-            reverse("bundle-details", kwargs={"bundle_id": bundle_id})
+            reverse("bundle-detail", kwargs={"bundle_pk": bundle_id})
         )
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
@@ -424,13 +424,13 @@ class TestAPI(BaseTestCase):
         self.client.delete(reverse("cluster-details", kwargs={"cluster_id": cluster_id2}))
         self.client.delete(reverse("host-details", kwargs={"host_id": host_id}))
         response: Response = self.client.delete(
-            reverse("bundle-details", kwargs={"bundle_id": adh_bundle_id})
+            reverse("bundle-detail", kwargs={"bundle_pk": adh_bundle_id})
         )
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
         response: Response = self.client.delete(
-            reverse("bundle-details", kwargs={"bundle_id": ssh_bundle_id})
+            reverse("bundle-detail", kwargs={"bundle_pk": ssh_bundle_id})
         )
 
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
@@ -465,7 +465,7 @@ class TestAPI(BaseTestCase):
         bundle_id = response.json()["bundle_id"]
 
         response: Response = self.client.delete(
-            reverse("bundle-details", kwargs={"bundle_id": bundle_id})
+            reverse("bundle-detail", kwargs={"bundle_pk": bundle_id})
         )
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
@@ -540,7 +540,7 @@ class TestAPI(BaseTestCase):
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
         response: Response = self.client.delete(
-            reverse("bundle-details", kwargs={"bundle_id": bundle_id})
+            reverse("bundle-detail", kwargs={"bundle_pk": bundle_id})
         )
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
@@ -714,13 +714,13 @@ class TestAPI(BaseTestCase):
         self.client.delete(reverse("cluster-details", kwargs={"cluster_id": cluster_id2}))
         self.client.delete(reverse("host-details", kwargs={"host_id": host_id}))
         response: Response = self.client.delete(
-            reverse("bundle-details", kwargs={"bundle_id": adh_bundle_id})
+            reverse("bundle-detail", kwargs={"bundle_pk": adh_bundle_id})
         )
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
         response: Response = self.client.delete(
-            reverse("bundle-details", kwargs={"bundle_id": ssh_bundle_id})
+            reverse("bundle-detail", kwargs={"bundle_pk": ssh_bundle_id})
         )
 
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
@@ -879,7 +879,7 @@ class TestAPI(BaseTestCase):
         self.assertEqual(len(response.json()), 2)
 
         self.client.delete(reverse("cluster-details", kwargs={"cluster_id": cluster_id}))
-        self.client.delete(reverse("bundle-details", kwargs={"bundle_id": adh_bundle_id}))
+        self.client.delete(reverse("bundle-detail", kwargs={"bundle_pk": adh_bundle_id}))
 
 
 class TestAPI2(BaseTestCase):

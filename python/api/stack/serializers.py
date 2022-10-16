@@ -13,9 +13,9 @@
 from rest_framework.serializers import (
     BooleanField,
     CharField,
-    DateTimeField,
     FileField,
     HyperlinkedIdentityField,
+    HyperlinkedModelSerializer,
     IntegerField,
     JSONField,
     ModelSerializer,
@@ -26,7 +26,7 @@ from adcm.serializers import EmptySerializer
 from api.action.serializers import StackActionDetailSerializer
 from api.config.serializers import ConfigSerializer
 from api.serializers import UpgradeSerializer
-from cm.models import ClusterObject, Prototype
+from cm.models import Bundle, ClusterObject, Prototype
 
 
 class UploadBundleSerializer(EmptySerializer):
@@ -37,26 +37,33 @@ class LoadBundleSerializer(EmptySerializer):
     bundle_file = CharField()
 
 
-class BundleSerializer(EmptySerializer):
-    id = IntegerField(read_only=True)
-    name = CharField(read_only=True)
-    version = CharField(read_only=True)
-    edition = CharField(read_only=True)
-    hash = CharField(read_only=True)
-    license = CharField(read_only=True)
-    license_path = CharField(read_only=True)
-    license_hash = CharField(read_only=True)
-    description = CharField(required=False)
-    date = DateTimeField(read_only=True)
-    url = HyperlinkedIdentityField(
-        view_name="bundle-details", lookup_field="id", lookup_url_kwarg="bundle_id"
-    )
+class BundleSerializer(HyperlinkedModelSerializer):
     license_url = HyperlinkedIdentityField(
-        view_name="bundle-license", lookup_field="id", lookup_url_kwarg="bundle_id"
+        view_name="bundle-license", lookup_field="pk", lookup_url_kwarg="bundle_pk"
     )
     update = HyperlinkedIdentityField(
-        view_name="bundle-update", lookup_field="id", lookup_url_kwarg="bundle_id"
+        view_name="bundle-update", lookup_field="pk", lookup_url_kwarg="bundle_pk"
     )
+
+    class Meta:
+        model = Bundle
+        fields = (
+            "id",
+            "name",
+            "version",
+            "edition",
+            "license",
+            "license_path",
+            "license_hash",
+            "hash",
+            "description",
+            "date",
+            "license_url",
+            "update",
+            "url",
+        )
+        read_only_fields = fields
+        extra_kwargs = {"url": {"lookup_url_kwarg": "bundle_pk"}}
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -65,14 +72,6 @@ class BundleSerializer(EmptySerializer):
         data["display_name"] = proto[0].display_name
 
         return data
-
-
-class LicenseSerializer(EmptySerializer):
-    license = CharField(read_only=True)
-    text = CharField(read_only=True)
-    accept = HyperlinkedIdentityField(
-        view_name="accept-license", lookup_field="id", lookup_url_kwarg="bundle_id"
-    )
 
 
 class PrototypeSerializer(EmptySerializer):

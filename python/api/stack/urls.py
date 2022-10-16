@@ -11,23 +11,20 @@
 # limitations under the License.
 
 from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
 from api.stack.root import StackRoot
 from api.stack.views import (
-    AcceptLicense,
     AdcmTypeDetail,
     AdcmTypeList,
-    BundleDetail,
-    BundleLicense,
-    BundleList,
-    BundleUpdate,
+    BundleViewSet,
     ClusterTypeDetail,
     ClusterTypeList,
     ComponentList,
     ComponentTypeDetail,
     HostTypeDetail,
     HostTypeList,
-    LoadBundle,
+    LoadBundleView,
     ProtoActionDetail,
     PrototypeDetail,
     PrototypeList,
@@ -36,61 +33,106 @@ from api.stack.views import (
     ServiceDetail,
     ServiceList,
     ServiceProtoActionList,
-    UploadBundle,
-    load_hostmap,
-    load_servicemap,
+    UploadBundleView,
+    load_hostmap_view,
+    load_servicemap_view,
 )
 
 PROTOTYPE_ID = "<int:prototype_id>/"
 
+router = DefaultRouter()
+router.register("bundle", BundleViewSet)
 
-# fmt: off
+
 urlpatterns = [
+    *router.urls,
     path("", StackRoot.as_view(), name="stack"),
-    path("upload/", UploadBundle.as_view(), name="upload-bundle"),
-    path("load/", LoadBundle.as_view(), name="load-bundle"),
-    path("load/servicemap/", load_servicemap, name="load-servicemap"),
-    path("load/hostmap/", load_hostmap, name="load-hostmap"),
-    path("bundle/", include([
-        path("", BundleList.as_view(), name="bundle"),
-        path("<int:bundle_id>/", include([
-            path("", BundleDetail.as_view(), name="bundle-details"),
-            path("update/", BundleUpdate.as_view(), name="bundle-update"),
-            path("license/", BundleLicense.as_view(), name="bundle-license"),
-            path("license/accept/", AcceptLicense.as_view(), name="accept-license"),
-        ])),
-    ])),
+    path("upload/", UploadBundleView.as_view(), name="upload-bundle"),
+    path("load/", LoadBundleView.as_view(), name="load-bundle"),
+    path("load/servicemap/", load_servicemap_view, name="load-servicemap"),
+    path("load/hostmap/", load_hostmap_view, name="load-hostmap"),
+    path(
+        "bundle/<int:bundle_pk>/update/",
+        BundleViewSet.as_view({"put": "update_bundle"}),
+        name="bundle-update",
+    ),
+    path(
+        "bundle/<int:bundle_pk>/license/accept/",
+        BundleViewSet.as_view({"put": "accept_license"}),
+        name="accept-license",
+    ),
     path("action/<int:action_id>/", ProtoActionDetail.as_view(), name="action-details"),
-    path("prototype/", include([
-        path("", PrototypeList.as_view(), name="prototype"),
-        path(PROTOTYPE_ID, PrototypeDetail.as_view(), name="prototype-details")
-    ])),
-    path("service/", include([
-        path("", ServiceList.as_view(), name="service-type"),
-        path(PROTOTYPE_ID, include([
-            path("", ServiceDetail.as_view(), name="service-type-details"),
-            path("action/", ServiceProtoActionList.as_view(), name="service-actions"),
-        ])),
-    ])),
-    path("component/", include([
-        path("", ComponentList.as_view(), name="component-type"),
-        path(PROTOTYPE_ID, ComponentTypeDetail.as_view(), name="component-type-details"),
-    ])),
-    path("provider/", include([
-        path("", ProviderTypeList.as_view(), name="provider-type"),
-        path(PROTOTYPE_ID, ProviderTypeDetail.as_view(), name="provider-type-details"),
-    ])),
-    path("host/", include([
-        path("", HostTypeList.as_view(), name="host-type"),
-        path(PROTOTYPE_ID, HostTypeDetail.as_view(), name="host-type-details"),
-    ])),
-    path("cluster/", include([
-        path("", ClusterTypeList.as_view(), name="cluster-type"),
-        path(PROTOTYPE_ID, ClusterTypeDetail.as_view(), name="cluster-type-details"),
-    ])),
-    path("adcm/", include([
-        path("", AdcmTypeList.as_view(), name="adcm-type"),
-        path(PROTOTYPE_ID, AdcmTypeDetail.as_view(), name="adcm-type-details"),
-    ])),
+    path(
+        "prototype/",
+        include(
+            [
+                path("", PrototypeList.as_view(), name="prototype"),
+                path(PROTOTYPE_ID, PrototypeDetail.as_view(), name="prototype-details"),
+            ]
+        ),
+    ),
+    path(
+        "service/",
+        include(
+            [
+                path("", ServiceList.as_view(), name="service-type"),
+                path(
+                    PROTOTYPE_ID,
+                    include(
+                        [
+                            path("", ServiceDetail.as_view(), name="service-type-details"),
+                            path(
+                                "action/", ServiceProtoActionList.as_view(), name="service-actions"
+                            ),
+                        ]
+                    ),
+                ),
+            ]
+        ),
+    ),
+    path(
+        "component/",
+        include(
+            [
+                path("", ComponentList.as_view(), name="component-type"),
+                path(PROTOTYPE_ID, ComponentTypeDetail.as_view(), name="component-type-details"),
+            ]
+        ),
+    ),
+    path(
+        "provider/",
+        include(
+            [
+                path("", ProviderTypeList.as_view(), name="provider-type"),
+                path(PROTOTYPE_ID, ProviderTypeDetail.as_view(), name="provider-type-details"),
+            ]
+        ),
+    ),
+    path(
+        "host/",
+        include(
+            [
+                path("", HostTypeList.as_view(), name="host-type"),
+                path(PROTOTYPE_ID, HostTypeDetail.as_view(), name="host-type-details"),
+            ]
+        ),
+    ),
+    path(
+        "cluster/",
+        include(
+            [
+                path("", ClusterTypeList.as_view(), name="cluster-type"),
+                path(PROTOTYPE_ID, ClusterTypeDetail.as_view(), name="cluster-type-details"),
+            ]
+        ),
+    ),
+    path(
+        "adcm/",
+        include(
+            [
+                path("", AdcmTypeList.as_view(), name="adcm-type"),
+                path(PROTOTYPE_ID, AdcmTypeDetail.as_view(), name="adcm-type-details"),
+            ]
+        ),
+    ),
 ]
-# fmt: on

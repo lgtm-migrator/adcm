@@ -15,6 +15,7 @@ from pathlib import Path
 from django.conf import settings
 from django.http import HttpResponse
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -29,6 +30,7 @@ from rest_framework.status import (
     HTTP_405_METHOD_NOT_ALLOWED,
 )
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 
 from api.action.serializers import StackActionSerializer
 from api.base_view import (
@@ -48,7 +50,6 @@ from api.stack.serializers import (
     ComponentTypeSerializer,
     HostTypeDetailSerializer,
     HostTypeSerializer,
-    LicenseSerializer,
     LoadBundleSerializer,
     PrototypeDetailSerializer,
     PrototypeSerializer,
@@ -74,7 +75,7 @@ from cm.models import (
 )
 
 
-def load_servicemap(request: Request) -> Response:
+def load_servicemap_view(request: Request) -> Response:
     if request.method != "PUT":
         return HttpResponse(status=HTTP_405_METHOD_NOT_ALLOWED)
 
@@ -83,7 +84,7 @@ def load_servicemap(request: Request) -> Response:
     return HttpResponse(status=HTTP_200_OK)
 
 
-def load_hostmap(request: Request) -> Response:
+def load_hostmap_view(request: Request) -> Response:
     if request.method != "PUT":
         return HttpResponse(status=HTTP_405_METHOD_NOT_ALLOWED)
 
@@ -97,7 +98,7 @@ class CsrfOffSessionAuthentication(SessionAuthentication):
         return
 
 
-class UploadBundle(APIView):
+class UploadBundleView(APIView):
     authentication_classes = (CsrfOffSessionAuthentication, TokenAuthentication)
     parser_classes = (MultiPartParser,)
 
@@ -126,7 +127,7 @@ class UploadBundle(APIView):
         return Response(status=HTTP_201_CREATED)
 
 
-class LoadBundle(APIView):
+class LoadBundleView(APIView):
     def is_for_ui(self) -> bool:
         if not self.request:
             return False
@@ -149,68 +150,61 @@ class LoadBundle(APIView):
         return Response(BundleSerializer(bundle, context={"request": request}).data)
 
 
-class BundleList(PaginatedView):
-    queryset = Bundle.objects.exclude(hash="adcm")
-    serializer_class = BundleSerializer
-    permission_classes = (IsAuthenticated,)
-    filterset_fields = ("name", "version")
-    ordering_fields = ("name", "version_order")
-
-
-class BundleDetail(DetailView):
+class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors
     queryset = Bundle.objects.all()
     serializer_class = BundleSerializer
-    permission_classes = (ModelPermOrReadOnlyForAuth,)
-    lookup_field = "id"
-    lookup_url_kwarg = "bundle_id"
-    error_code = "BUNDLE_NOT_FOUND"
+    filterset_fields = ("name", "version")
+    ordering_fields = ("name", "version_order")
+    lookup_url_kwarg = "bundle_pk"
+
+    def get_permissions(self):
+        if self.action == "list":
+            permission_classes = (IsAuthenticated,)
+        else:
+            permission_classes = (ModelPermOrReadOnlyForAuth,)
+
+        return [permission() for permission in permission_classes]
+
+    def get_queryset(self):
+        if self.action == "list":
+            return Bundle.objects.exclude(hash="adcm")
+
+        return super().get_queryset()
 
     @audit
-    def delete(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         bundle = self.get_object()
         delete_bundle(bundle)
 
         return Response(status=HTTP_204_NO_CONTENT)
 
-
-class BundleUpdate(GenericUIView):
-    queryset = Bundle.objects.all()
-    serializer_class = BundleSerializer
-
     @audit
-    def put(self, request, bundle_id):
-        bundle = check_obj(Bundle, bundle_id, "BUNDLE_NOT_FOUND")
+    @action(methods=["put"], detail=True)
+    def update_bundle(self, request, *args, **kwargs):
+        bundle = check_obj(Bundle, kwargs["bundle_pk"], "BUNDLE_NOT_FOUND")
         update_bundle(bundle)
         serializer = self.get_serializer(bundle)
 
         return Response(serializer.data)
 
-
-class BundleLicense(GenericUIView):
-    action = "retrieve"
-    queryset = Bundle.objects.all()
-    serializer_class = LicenseSerializer
-    permission_classes = (IsAuthenticated,)
-
     @staticmethod
-    def get(request, bundle_id):
-        bundle = check_obj(Bundle, bundle_id, "BUNDLE_NOT_FOUND")
+    @action(methods=["get"], detail=True)
+    def license(request, *args, **kwargs):
+        bundle = check_obj(Bundle, kwargs["bundle_pk"], "BUNDLE_NOT_FOUND")
         body = get_license(bundle)
-        url = reverse("accept-license", kwargs={"bundle_id": bundle.id}, request=request)
+        url = reverse("accept-license", kwargs={"bundle_pk": bundle.id}, request=request)
 
         return Response({"license": bundle.license, "accept": url, "text": body})
 
-
-class AcceptLicense(GenericUIView):
-    queryset = Bundle.objects.all()
-    serializer_class = LicenseSerializer
-
     @audit
-    def put(self, request, bundle_id):
-        bundle = check_obj(Bundle, bundle_id, "BUNDLE_NOT_FOUND")
+    @action(methods=["put"], detail=True)
+    def accept_license(self, request, *args, **kwargs):
+        # self is necessary for audit
+
+        bundle = check_obj(Bundle, kwargs["bundle_pk"], "BUNDLE_NOT_FOUND")
         accept_license(bundle)
 
-        return Response(status=HTTP_200_OK)
+        return Response()
 
 
 class PrototypeList(PaginatedView):

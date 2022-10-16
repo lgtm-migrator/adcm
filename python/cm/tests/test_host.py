@@ -230,7 +230,7 @@ class TestHostAPI(BaseTestCase):
         self.assertEqual(response.json()["code"], "HOST_NOT_FOUND")
 
         response: Response = self.client.delete(
-            path=reverse("bundle-details", kwargs={"bundle_id": ssh_bundle_id})
+            path=reverse("bundle-detail", kwargs={"bundle_pk": ssh_bundle_id})
         )
 
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
@@ -244,7 +244,7 @@ class TestHostAPI(BaseTestCase):
 
         self.provider.delete()
         response: Response = self.client.delete(
-            path=reverse("bundle-details", kwargs={"bundle_id": ssh_bundle_id})
+            path=reverse("bundle-detail", kwargs={"bundle_pk": ssh_bundle_id})
         )
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
