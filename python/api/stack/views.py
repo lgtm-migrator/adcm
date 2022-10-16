@@ -13,9 +13,8 @@
 from pathlib import Path
 
 from django.conf import settings
+from django.http import HttpResponse
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-from rest_framework.decorators import action
-from rest_framework.mixins import CreateModelMixin
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -27,15 +26,14 @@ from rest_framework.status import (
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_403_FORBIDDEN,
+    HTTP_405_METHOD_NOT_ALLOWED,
 )
 from rest_framework.views import APIView
 
-from adcm.permissions import DjangoObjectPermissionsAudit
 from api.action.serializers import StackActionSerializer
 from api.base_view import (
     DetailView,
     GenericUIView,
-    GenericUIViewSet,
     ModelPermOrReadOnlyForAuth,
     PaginatedView,
 )
@@ -76,6 +74,24 @@ from cm.models import (
 )
 
 
+def load_servicemap(request: Request) -> Response:
+    if request.method != "PUT":
+        return HttpResponse(status=HTTP_405_METHOD_NOT_ALLOWED)
+
+    load_service_map()
+
+    return HttpResponse(status=HTTP_200_OK)
+
+
+def load_hostmap(request: Request) -> Response:
+    if request.method != "PUT":
+        return HttpResponse(status=HTTP_405_METHOD_NOT_ALLOWED)
+
+    load_host_map()
+
+    return HttpResponse(status=HTTP_200_OK)
+
+
 class CsrfOffSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return
@@ -84,6 +100,14 @@ class CsrfOffSessionAuthentication(SessionAuthentication):
 class UploadBundle(APIView):
     authentication_classes = (CsrfOffSessionAuthentication, TokenAuthentication)
     parser_classes = (MultiPartParser,)
+
+    def is_for_ui(self) -> bool:
+        if not self.request:
+            return False
+
+        view = self.request.query_params.get("view")
+
+        return view == "interface"
 
     @audit
     def post(self, request: Request):
@@ -102,33 +126,27 @@ class UploadBundle(APIView):
         return Response(status=HTTP_201_CREATED)
 
 
-class LoadBundle(CreateModelMixin, GenericUIViewSet):
-    queryset = Prototype.objects.all()
-    serializer_class = LoadBundleSerializer
-    permission_classes = (DjangoObjectPermissionsAudit,)
+class LoadBundle(APIView):
+    def is_for_ui(self) -> bool:
+        if not self.request:
+            return False
 
-    @action(methods=["put"], detail=False)
-    def servicemap(self, request):
-        load_service_map()
+        view = self.request.query_params.get("view")
 
-        return Response(status=HTTP_200_OK)
-
-    @action(methods=["put"], detail=False)
-    def hostmap(self, request):
-        load_host_map()
-
-        return Response(status=HTTP_200_OK)
+        return view == "interface"
 
     @audit
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            bundle = load_bundle(serializer.validated_data.get("bundle_file"))
-            srl = BundleSerializer(bundle, context={"request": request})
+    def post(self, request, *args, **kwargs):
+        if not request.user.has_perm("cm.add_bundle"):
+            return Response(status=HTTP_403_FORBIDDEN)
 
-            return Response(srl.data)
-        else:
+        serializer = LoadBundleSerializer(data=request.data)
+        if not serializer.is_valid():
             return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+        bundle = load_bundle(serializer.validated_data["bundle_file"])
+
+        return Response(BundleSerializer(bundle, context={"request": request}).data)
 
 
 class BundleList(PaginatedView):

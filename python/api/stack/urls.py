@@ -37,6 +37,8 @@ from api.stack.views import (
     ServiceList,
     ServiceProtoActionList,
     UploadBundle,
+    load_hostmap,
+    load_servicemap,
 )
 
 PROTOTYPE_ID = "<int:prototype_id>/"
@@ -46,13 +48,9 @@ PROTOTYPE_ID = "<int:prototype_id>/"
 urlpatterns = [
     path("", StackRoot.as_view(), name="stack"),
     path("upload/", UploadBundle.as_view(), name="upload-bundle"),
-    path("load/", LoadBundle.as_view({"post": "create"}), name="load-bundle"),
-    path(
-        "load/servicemap/", LoadBundle.as_view({"put": "servicemap"}), name="load-servicemap"
-    ),
-    path(
-        "load/hostmap/", LoadBundle.as_view({"put": "hostmap"}), name="load-hostmap"
-    ),
+    path("load/", LoadBundle.as_view(), name="load-bundle"),
+    path("load/servicemap/", load_servicemap, name="load-servicemap"),
+    path("load/hostmap/", load_hostmap, name="load-hostmap"),
     path("bundle/", include([
         path("", BundleList.as_view(), name="bundle"),
         path("<int:bundle_id>/", include([
