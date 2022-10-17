@@ -175,7 +175,7 @@ class TaskViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Gener
         queryset = super().get_queryset(*args, **kwargs)
         if not self.request.user.is_superuser:
             # NOT superuser shouldn't have access to ADCM tasks
-            queryset = queryset.filter(
+            queryset = queryset.exclude(
                 object_type=ContentType.objects.get(app_label="cm", model="adcm")
             )
 

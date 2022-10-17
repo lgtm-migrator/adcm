@@ -32,6 +32,8 @@ from cm.models import (
     Prototype,
     TaskLog,
 )
+from rbac.models import Policy, Role
+from rbac.upgrade.role import init_roles
 
 
 class TestJobAPI(BaseTestCase):
@@ -193,3 +195,44 @@ class TestJobAPI(BaseTestCase):
         )
 
         self.assertEqual(len(response.data["log_files"]), 2)
+
+    def test_task_permissions(self):
+        bundle = self.upload_and_load_bundle(
+            path=Path(
+                settings.BASE_DIR,
+                "python/api/tests/files/no-log-files.tar",
+            ),
+        )
+
+        action = Action.objects.get(name="adcm_check")
+        cluster_prototype = Prototype.objects.get(bundle=bundle, type="cluster")
+        cluster = Cluster.objects.create(name="test_cluster", prototype=cluster_prototype)
+
+        init_roles()
+        role = Role.objects.get(name="Cluster Administrator")
+        policy = Policy.objects.create(name="test_policy", role=role)
+        policy.user.add(self.no_rights_user)
+        policy.add_object(cluster)
+        policy.apply()
+
+        with self.no_rights_user_logged_in:
+            with patch("cm.job.run_task"):
+                response: Response = self.client.post(
+                    path=reverse(
+                        "run-task", kwargs={"cluster_id": cluster.pk, "action_id": action.pk}
+                    )
+                )
+
+            response: Response = self.client.get(reverse("joblog-list"))
+
+            self.assertIn(
+                JobLog.objects.get(action=action).pk,
+                {job_data["id"] for job_data in response.data["results"]},
+            )
+
+            response: Response = self.client.get(reverse("tasklog-list"))
+
+            self.assertIn(
+                TaskLog.objects.get(action=action).pk,
+                {job_data["id"] for job_data in response.data["results"]},
+            )

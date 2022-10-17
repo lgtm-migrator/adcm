@@ -72,13 +72,15 @@ class TaskRetrieveSerializer(HyperlinkedModelSerializer):
     terminatable = SerializerMethodField()
     object_type = SerializerMethodField()
     lock = ConcernItemSerializer(read_only=True)
+    hc = JSONField(required=False)
     restart = HyperlinkedIdentityField(view_name="tasklog-restart", lookup_url_kwarg="task_pk")
     cancel = HyperlinkedIdentityField(view_name="tasklog-cancel", lookup_url_kwarg="task_pk")
     download = HyperlinkedIdentityField(view_name="tasklog-download", lookup_url_kwarg="task_pk")
 
     class Meta:
         model = TaskLog
-        fields = TaskSerializer.Meta.fields + (
+        fields = (
+            *TaskSerializer.Meta.fields,
             "selector",
             "config",
             "attr",
@@ -91,6 +93,7 @@ class TaskRetrieveSerializer(HyperlinkedModelSerializer):
             "terminatable",
             "object_type",
             "lock",
+            "hc",
             "restart",
             "cancel",
             "download",
