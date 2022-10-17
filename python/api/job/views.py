@@ -41,8 +41,9 @@ from api.utils import check_custom_perm, get_object_for_user
 from audit.utils import audit
 from cm.config import RUN_DIR
 from cm.errors import AdcmEx
+from cm.issue import update_hierarchy_issues
 from cm.job import cancel_task, get_log, restart_task
-from cm.models import ActionType, JobLog, LogStorage, TaskLog
+from cm.models import ActionType, JobLog, LogStorage, TaskLog, FINAL_JOB_STATUSES
 from rbac.viewsets import DjangoOnlyObjectPermissions
 
 VIEW_JOBLOG_PERMISSION = "cm.view_joblog"
@@ -300,6 +301,15 @@ class TaskDetail(PermissionListMixin, DetailView):
     lookup_field = "id"
     lookup_url_kwarg = "task_id"
     error_code = "TASK_NOT_FOUND"
+
+    def get(self, request, *args, **kwargs):
+        obj = self.get_object()
+        serializer = self.get_serializer(obj)
+
+        if serializer.data["status"] in FINAL_JOB_STATUSES:
+            update_hierarchy_issues(obj.task_object)
+
+        return Response(serializer.data)
 
 
 class TaskReStart(GenericUIView):
