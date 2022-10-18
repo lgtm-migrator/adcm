@@ -1515,7 +1515,7 @@ roles:
                 - view
                 - change
 
-    - name: Manage host Maintenance mode
+    - name: Manage host Maintenance mode hidden
       description: the ability to enable / disable the "MM" on the host
       type: hidden
       parametrized_by:
