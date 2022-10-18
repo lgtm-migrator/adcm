@@ -182,7 +182,7 @@ class TaskViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Gener
         return queryset
 
     def get_serializer_class(self):
-        if self.is_for_ui() or self.action == "retrieve":
+        if self.is_for_ui() or self.action in {"retrieve", "restart", "cancel", "download"}:
             return TaskRetrieveSerializer
 
         return super().get_serializer_class()
