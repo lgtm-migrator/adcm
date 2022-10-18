@@ -20,7 +20,16 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 
 from adcm.tests.base import BaseTestCase
-from cm.models import ADCM, Action, ActionType, Bundle, Cluster, Prototype, TaskLog
+from cm.models import (
+    ADCM,
+    Action,
+    ActionType,
+    Bundle,
+    Cluster,
+    JobLog,
+    Prototype,
+    TaskLog,
+)
 
 
 class TestTaskAPI(BaseTestCase):
@@ -59,6 +68,12 @@ class TestTaskAPI(BaseTestCase):
             action=self.action,
             status="failed",
             pid=self.task_1.pid + 1,
+        )
+        JobLog.objects.create(
+            status="created",
+            start_date=datetime.now(tz=ZoneInfo("UTC")),
+            finish_date=datetime.now(tz=ZoneInfo("UTC")) + timedelta(days=1),
+            task=self.task_2,
         )
 
     def test_list(self):
@@ -153,6 +168,10 @@ class TestTaskAPI(BaseTestCase):
         )
 
         self.assertEqual(response.data["id"], self.task_2.pk)
+        self.assertSetEqual(
+            set(response.data["jobs"][0].keys()),
+            {"display_name", "finish_date", "id", "start_date", "status", "url"},
+        )
 
     def test_restart(self):
         with patch("api.job.views.restart_task"):

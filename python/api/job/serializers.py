@@ -33,9 +33,11 @@ from cm.models import JobLog, LogStorage, TaskLog
 
 
 class JobShortSerializer(HyperlinkedModelSerializer):
+    display_name = SerializerMethodField()
+
     class Meta:
         model = JobLog
-        fields = ("id", "status", "start_date", "finish_date", "url")
+        fields = ("id", "display_name", "status", "start_date", "finish_date", "url")
         extra_kwargs = {"url": {"lookup_url_kwarg": "job_pk"}}
 
     @staticmethod
