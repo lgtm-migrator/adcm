@@ -1298,9 +1298,6 @@ JOB_STATUS = (
 )
 
 
-FINAL_JOB_STATUSES = ("success", "failed")
-
-
 class UserProfile(ADCMModel):
     login = models.CharField(max_length=32, unique=True)
     profile = models.JSONField(default=str)
