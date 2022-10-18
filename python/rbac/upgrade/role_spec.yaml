@@ -1463,7 +1463,7 @@ roles:
         - Create host
         - Upload bundle
         - Remove bundle
-        - Manage Maintenance mode
+        - Manage host Maintenance mode
         - Manage service Maintenance mode
         - Manage component Maintenance mode
 
@@ -1487,7 +1487,7 @@ roles:
         - Upload bundle
         - Remove bundle
 
-    - name: Manage Maintenance mode of all objects
+    - name: Manage cluster Maintenance mode
       description: the ability to enable / disable the "MM"
       type: business
       parametrized_by:
@@ -1495,7 +1495,7 @@ roles:
       module_name: rbac.roles
       class_name: ParentRole
       child:
-        - Manage Maintenance mode
+        - Manage host Maintenance mode
         - Manage service Maintenance mode
         - Manage component Maintenance mode
 
@@ -1515,9 +1515,24 @@ roles:
                 - view
                 - change
 
+    - name: Manage host Maintenance mode
+      description: the ability to enable / disable the "MM" on the host
+      type: hidden
+      parametrized_by:
+        - host
+      module_name: rbac.roles
+      class_name: ObjectRole
+      apps:
+        - label: cm
+          models:
+            - name: host
+              codenames:
+                - view
+                - change
+
     - name: Manage service Maintenance mode
       description: the ability to enable / disable the "MM" on the service
-      type: business
+      type: hidden
       parametrized_by:
         - service
       module_name: rbac.roles
@@ -1532,7 +1547,7 @@ roles:
 
     - name: Manage component Maintenance mode
       description: the ability to enable / disable the "MM" on the component
-      type: business
+      type: hidden
       parametrized_by:
         - component
       module_name: rbac.roles
