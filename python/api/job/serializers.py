@@ -302,7 +302,7 @@ class LogStorageSerializer(LogStorageRetrieveSerializer):
 
     class Meta:
         model = LogStorage
-        fields = LogStorageRetrieveSerializer.Meta.fields + ("url",)
+        fields = (*LogStorageRetrieveSerializer.Meta.fields, "url")
 
     def get_url(self, obj):
         return reverse(
