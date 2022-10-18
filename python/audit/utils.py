@@ -257,12 +257,17 @@ def audit(func):
 
             if not deleted_obj:
                 status_code = exc.status_code
-                if (
-                    status_code == HTTP_404_NOT_FOUND
-                    and kwargs.get("action_id")
-                    and Action.objects.filter(pk=kwargs["action_id"]).exists()
-                ):
-                    status_code = HTTP_403_FORBIDDEN
+                if status_code == HTTP_404_NOT_FOUND:
+                    action_perm_denied = (
+                        kwargs.get("action_id")
+                        and Action.objects.filter(pk=kwargs["action_id"]).exists()
+                    )
+                    task_perm_denied = (
+                        kwargs.get("task_pk")
+                        and TaskLog.objects.filter(pk=kwargs["task_pk"]).exists()
+                    )
+                    if action_perm_denied or task_perm_denied:
+                        status_code = HTTP_403_FORBIDDEN
 
             else:  # when denied returns 404 from PermissionListMixin
                 if getattr(exc, "msg", None) and (  # pylint: disable=too-many-boolean-expressions
