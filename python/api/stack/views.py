@@ -37,8 +37,8 @@ from adcm.permissions import IsAuthenticatedAudit
 from api.action.serializers import StackActionSerializer
 from api.base_view import GenericUIViewSet, ModelPermOrReadOnlyForAuth
 from api.stack.serializers import (
-    AdcmPrototypeDetailSerializer,
-    AdcmPrototypeSerializer,
+    ADCMPrototypeDetailSerializer,
+    ADCMPrototypeSerializer,
     BundleSerializer,
     ClusterPrototypeDetailSerializer,
     ClusterPrototypeSerializer,
@@ -362,12 +362,12 @@ class ClusterPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
 #  pylint:disable-next=too-many-ancestors
 class ADCMPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     queryset = Prototype.objects.filter(type="adcm")
-    serializer_class = AdcmPrototypeSerializer
+    serializer_class = ADCMPrototypeSerializer
     filterset_fields = ("bundle_id",)
     lookup_url_kwarg = "prototype_pk"
 
     def get_serializer_class(self):
         if self.action == "retrieve":
-            return AdcmPrototypeDetailSerializer
+            return ADCMPrototypeDetailSerializer
 
         return super().get_serializer_class()
