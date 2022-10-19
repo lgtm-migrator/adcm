@@ -162,7 +162,7 @@ class TestAPI(BaseTestCase):
     def test_access(self):
         self.client.logout()
 
-        api = [reverse("cluster"), reverse("host"), reverse("job"), reverse("task")]
+        api = [reverse("cluster"), reverse("host"), reverse("tasklog-list")]
         for url in api:
             response: Response = self.client.get(url)
 
@@ -882,7 +882,7 @@ class TestAPI(BaseTestCase):
         self.client.delete(reverse("bundle-details", kwargs={"bundle_id": adh_bundle_id}))
 
 
-class TestApi2(BaseTestCase):
+class TestAPI2(BaseTestCase):
     def setUp(self):
         gen_adcm()
         self.bundle = Bundle.objects.create(

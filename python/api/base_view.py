@@ -83,7 +83,9 @@ class GenericUIViewSet(ViewSetMixin, GenericAPIView):
     def is_for_ui(self) -> bool:
         if not self.request:
             return False
+
         view = self.request.query_params.get("view")
+
         return view == "interface"
 
 
