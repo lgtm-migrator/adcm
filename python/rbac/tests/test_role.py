@@ -576,6 +576,7 @@ class RoleFunctionalTestRBAC(RBACBaseTestCase):
         self.assertEqual(sa_role_count, 6, "Roles missing from base roles")
 
 
+# pylint: disable=too-many-instance-attributes
 class TestMMRoles(RBACBaseTestCase):
     def setUp(self) -> None:
         init_adcm()
