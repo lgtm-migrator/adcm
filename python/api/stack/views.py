@@ -16,6 +16,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.decorators import action
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -32,32 +33,27 @@ from rest_framework.status import (
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
+from adcm.permissions import IsAuthenticatedAudit
 from api.action.serializers import StackActionSerializer
-from api.base_view import (
-    DetailView,
-    GenericUIView,
-    ModelPermOrReadOnlyForAuth,
-    PaginatedView,
-)
-from api.stack.filters import PrototypeListFilter
+from api.base_view import GenericUIViewSet, ModelPermOrReadOnlyForAuth
 from api.stack.serializers import (
-    AdcmTypeDetailSerializer,
-    AdcmTypeSerializer,
+    AdcmPrototypeDetailSerializer,
+    AdcmPrototypeSerializer,
     BundleSerializer,
-    ClusterTypeDetailSerializer,
-    ClusterTypeSerializer,
-    ComponentTypeDetailSerializer,
-    ComponentTypeSerializer,
-    HostTypeDetailSerializer,
-    HostTypeSerializer,
+    ClusterPrototypeDetailSerializer,
+    ClusterPrototypeSerializer,
+    ComponentPrototypeDetailSerializer,
+    ComponentPrototypeSerializer,
+    HostPrototypeDetailSerializer,
+    HostPrototypeSerializer,
     LoadBundleSerializer,
     PrototypeDetailSerializer,
     PrototypeSerializer,
     PrototypeUISerializer,
-    ProviderTypeDetailSerializer,
-    ProviderTypeSerializer,
-    ServiceDetailSerializer,
-    ServiceSerializer,
+    ProviderPrototypeDetailSerializer,
+    ProviderPrototypeSerializer,
+    ServiceDetailPrototypeSerializer,
+    ServicePrototypeSerializer,
     UploadBundleSerializer,
 )
 from api.utils import check_obj
@@ -91,6 +87,31 @@ def load_hostmap_view(request: Request) -> Response:
     load_host_map()
 
     return HttpResponse(status=HTTP_200_OK)
+
+
+class PrototypeRetrieveViewSet(RetrieveModelMixin, GenericUIViewSet):
+    def get_object(self):
+        instance = super().get_object()
+        instance.actions = []
+        for adcm_action in Action.objects.filter(prototype__id=instance.id):
+            adcm_action.config = PrototypeConfig.objects.filter(
+                prototype__id=instance.id,
+                action=adcm_action,
+            )
+            instance.actions.append(adcm_action)
+
+        instance.config = PrototypeConfig.objects.filter(prototype=instance, action=None)
+        instance.imports = PrototypeImport.objects.filter(prototype=instance)
+        instance.exports = PrototypeExport.objects.filter(prototype=instance)
+        instance.upgrade = Upgrade.objects.filter(bundle=instance.bundle)
+
+        return instance
+
+    def retrieve(self, request: Request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+
+        return Response(serializer.data)
 
 
 class CsrfOffSessionAuthentication(SessionAuthentication):
@@ -207,153 +228,145 @@ class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors
         return Response()
 
 
-class PrototypeList(PaginatedView):
+#  pylint:disable-next=too-many-ancestors
+class PrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     queryset = Prototype.objects.all()
     serializer_class = PrototypeSerializer
-    serializer_class_ui = PrototypeUISerializer
-    filterset_class = PrototypeListFilter
     ordering_fields = ("display_name", "version_order")
+    lookup_url_kwarg = "prototype_pk"
+
+    def get_serializer_class(self):
+        if self.is_for_ui():
+            return PrototypeUISerializer
+        elif self.action == "retrieve":
+            return PrototypeDetailSerializer
+
+        return super().get_serializer_class()
 
 
-class ServiceList(PaginatedView):
-    queryset = Prototype.objects.filter(type="service")
-    serializer_class = ServiceSerializer
-    filterset_fields = ("name", "bundle_id")
-    ordering_fields = ("display_name", "version_order")
-
-
-class ServiceDetail(DetailView):
-    queryset = Prototype.objects.filter(type="service")
-    serializer_class = ServiceDetailSerializer
-    lookup_field = "id"
-    lookup_url_kwarg = "prototype_id"
-    error_code = "SERVICE_NOT_FOUND"
-
-    def get_object(self):
-        service = super().get_object()
-        service.actions = Action.objects.filter(prototype__type="service", prototype__id=service.id)
-        service.components = Prototype.objects.filter(parent=service, type="component")
-        service.config = PrototypeConfig.objects.filter(prototype=service, action=None).order_by(
-            "id"
-        )
-        service.exports = PrototypeExport.objects.filter(prototype=service)
-        service.imports = PrototypeImport.objects.filter(prototype=service)
-
-        return service
-
-
-class ProtoActionDetail(GenericUIView):
+class ProtoActionViewSet(RetrieveModelMixin, GenericUIViewSet):
     queryset = Action.objects.all()
     serializer_class = StackActionSerializer
+    lookup_url_kwarg = "action_pk"
 
-    def get(self, request, action_id):
-        obj = check_obj(Action, action_id, "ACTION_NOT_FOUND")
+    def retrieve(self, request: Request, *args, **kwargs):
+        obj = check_obj(Action, kwargs["action_pk"], "ACTION_NOT_FOUND")
         serializer = self.get_serializer(obj)
 
         return Response(serializer.data)
 
 
-class ServiceProtoActionList(GenericUIView):
-    queryset = Action.objects.filter(prototype__type="service")
-    serializer_class = StackActionSerializer
+#  pylint:disable-next=too-many-ancestors
+class ServicePrototypeViewSet(ListModelMixin, RetrieveModelMixin, GenericUIViewSet):
+    queryset = Prototype.objects.filter(type="service")
+    serializer_class = ServicePrototypeSerializer
+    filterset_fields = ("name", "bundle_id")
+    ordering_fields = ("display_name", "version_order")
+    lookup_url_kwarg = "prototype_pk"
 
-    def get(self, request, prototype_id):
-        obj = self.get_queryset().filter(prototype_id=prototype_id)
-        serializer = self.get_serializer(obj, many=True)
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ServiceDetailPrototypeSerializer
+        elif self.action == "action":
+            return StackActionSerializer
+
+        return super().get_serializer_class()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.actions = Action.objects.filter(
+            prototype__type="service", prototype__id=instance.id
+        )
+        instance.components = Prototype.objects.filter(parent=instance, type="component")
+        instance.config = PrototypeConfig.objects.filter(prototype=instance, action=None).order_by(
+            "id"
+        )
+        instance.exports = PrototypeExport.objects.filter(prototype=instance)
+        instance.imports = PrototypeImport.objects.filter(prototype=instance)
+        serializer = self.get_serializer(instance)
 
         return Response(serializer.data)
 
+    @action(methods=["get"], detail=True)
+    def actions(self, request: Request, prototype_pk: int) -> Response:
+        return Response(
+            StackActionSerializer(
+                Action.objects.filter(prototype__type="service", prototype_id=prototype_pk),
+                many=True,
+            ).data,
+        )
 
-class ComponentList(PaginatedView):
+
+#  pylint:disable-next=too-many-ancestors
+class ComponentPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     queryset = Prototype.objects.filter(type="component")
-    serializer_class = ComponentTypeSerializer
+    serializer_class = ComponentPrototypeSerializer
     filterset_fields = ("name", "bundle_id")
     ordering_fields = ("display_name", "version_order")
+    lookup_url_kwarg = "prototype_pk"
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ComponentPrototypeDetailSerializer
+
+        return super().get_serializer_class()
 
 
-class HostTypeList(PaginatedView):
-    queryset = Prototype.objects.filter(type="host")
-    serializer_class = HostTypeSerializer
-    filterset_fields = ("name", "bundle_id")
-    ordering_fields = ("display_name", "version_order")
-
-
-class ProviderTypeList(PaginatedView):
+#  pylint:disable-next=too-many-ancestors
+class ProviderPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     queryset = Prototype.objects.filter(type="provider")
-    serializer_class = ProviderTypeSerializer
+    serializer_class = ProviderPrototypeSerializer
     filterset_fields = ("name", "bundle_id", "display_name")
     ordering_fields = ("display_name", "version_order")
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticatedAudit,)
+    lookup_url_kwarg = "prototype_pk"
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ProviderPrototypeDetailSerializer
+
+        return super().get_serializer_class()
 
 
-class ClusterTypeList(PaginatedView):
+#  pylint:disable-next=too-many-ancestors
+class HostPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
+    queryset = Prototype.objects.filter(type="host")
+    serializer_class = HostPrototypeSerializer
+    filterset_fields = ("name", "bundle_id")
+    ordering_fields = ("display_name", "version_order")
+    lookup_url_kwarg = "prototype_pk"
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return HostPrototypeDetailSerializer
+
+        return super().get_serializer_class()
+
+
+#  pylint:disable-next=too-many-ancestors
+class ClusterPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     queryset = Prototype.objects.filter(type="cluster")
-    serializer_class = ClusterTypeSerializer
+    serializer_class = ClusterPrototypeSerializer
     filterset_fields = ("name", "bundle_id", "display_name")
     ordering_fields = ("display_name", "version_order")
+    lookup_url_kwarg = "prototype_pk"
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ClusterPrototypeDetailSerializer
+
+        return super().get_serializer_class()
 
 
-class AdcmTypeList(GenericUIView):
+#  pylint:disable-next=too-many-ancestors
+class ADCMPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     queryset = Prototype.objects.filter(type="adcm")
-    serializer_class = AdcmTypeSerializer
+    serializer_class = AdcmPrototypeSerializer
     filterset_fields = ("bundle_id",)
+    lookup_url_kwarg = "prototype_pk"
 
-    def get(self, request, *args, **kwargs):
-        obj = self.get_queryset()
-        serializer = self.get_serializer(obj, many=True)
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return AdcmPrototypeDetailSerializer
 
-        return Response(serializer.data)
-
-
-class AbstractPrototypeDetail(DetailView):
-    lookup_field = "id"
-    lookup_url_kwarg = "prototype_id"
-    error_code = "PROTOTYPE_NOT_FOUND"
-
-    def get_object(self):
-        obj_type = super().get_object()
-        act_set = []
-        for adcm_action in Action.objects.filter(prototype__id=obj_type.id):
-            adcm_action.config = PrototypeConfig.objects.filter(
-                prototype__id=obj_type.id,
-                action=adcm_action,
-            )
-            act_set.append(adcm_action)
-
-        obj_type.actions = act_set
-        obj_type.config = PrototypeConfig.objects.filter(prototype=obj_type, action=None)
-        obj_type.imports = PrototypeImport.objects.filter(prototype=obj_type)
-        obj_type.exports = PrototypeExport.objects.filter(prototype=obj_type)
-        obj_type.upgrade = Upgrade.objects.filter(bundle=obj_type.bundle)
-
-        return obj_type
-
-
-class PrototypeDetail(AbstractPrototypeDetail):
-    queryset = Prototype.objects.all()
-    serializer_class = PrototypeDetailSerializer
-
-
-class AdcmTypeDetail(AbstractPrototypeDetail):
-    queryset = Prototype.objects.filter(type="adcm")
-    serializer_class = AdcmTypeDetailSerializer
-
-
-class ClusterTypeDetail(AbstractPrototypeDetail):
-    queryset = Prototype.objects.filter(type="cluster")
-    serializer_class = ClusterTypeDetailSerializer
-
-
-class ComponentTypeDetail(AbstractPrototypeDetail):
-    queryset = Prototype.objects.filter(type="component")
-    serializer_class = ComponentTypeDetailSerializer
-
-
-class HostTypeDetail(AbstractPrototypeDetail):
-    queryset = Prototype.objects.filter(type="host")
-    serializer_class = HostTypeDetailSerializer
-
-
-class ProviderTypeDetail(AbstractPrototypeDetail):
-    queryset = Prototype.objects.filter(type="provider")
-    serializer_class = ProviderTypeDetailSerializer
+        return super().get_serializer_class()

@@ -10,38 +10,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.urls import include, path
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from api.stack.root import StackRoot
 from api.stack.views import (
-    AdcmTypeDetail,
-    AdcmTypeList,
+    ADCMPrototypeViewSet,
     BundleViewSet,
-    ClusterTypeDetail,
-    ClusterTypeList,
-    ComponentList,
-    ComponentTypeDetail,
-    HostTypeDetail,
-    HostTypeList,
+    ClusterPrototypeViewSet,
+    ComponentPrototypeViewSet,
+    HostPrototypeViewSet,
     LoadBundleView,
-    ProtoActionDetail,
-    PrototypeDetail,
-    PrototypeList,
-    ProviderTypeDetail,
-    ProviderTypeList,
-    ServiceDetail,
-    ServiceList,
-    ServiceProtoActionList,
+    ProtoActionViewSet,
+    PrototypeViewSet,
+    ProviderPrototypeViewSet,
+    ServicePrototypeViewSet,
     UploadBundleView,
     load_hostmap_view,
     load_servicemap_view,
 )
 
-PROTOTYPE_ID = "<int:prototype_id>/"
-
 router = DefaultRouter()
 router.register("bundle", BundleViewSet)
+router.register("prototype", PrototypeViewSet)
+router.register("action", ProtoActionViewSet)
+router.register("service", ServicePrototypeViewSet, basename="service-prototype")
+router.register("component", ComponentPrototypeViewSet, basename="component-prototype")
+router.register("provider", ProviderPrototypeViewSet, basename="provider-prototype")
+router.register("host", HostPrototypeViewSet, basename="host-prototype")
+router.register("cluster", ClusterPrototypeViewSet, basename="cluster-prototype")
+router.register("adcm", ADCMPrototypeViewSet, basename="adcm-prototype")
 
 
 urlpatterns = [
@@ -60,79 +58,5 @@ urlpatterns = [
         "bundle/<int:bundle_pk>/license/accept/",
         BundleViewSet.as_view({"put": "accept_license"}),
         name="accept-license",
-    ),
-    path("action/<int:action_id>/", ProtoActionDetail.as_view(), name="action-details"),
-    path(
-        "prototype/",
-        include(
-            [
-                path("", PrototypeList.as_view(), name="prototype"),
-                path(PROTOTYPE_ID, PrototypeDetail.as_view(), name="prototype-details"),
-            ]
-        ),
-    ),
-    path(
-        "service/",
-        include(
-            [
-                path("", ServiceList.as_view(), name="service-type"),
-                path(
-                    PROTOTYPE_ID,
-                    include(
-                        [
-                            path("", ServiceDetail.as_view(), name="service-type-details"),
-                            path(
-                                "action/", ServiceProtoActionList.as_view(), name="service-actions"
-                            ),
-                        ]
-                    ),
-                ),
-            ]
-        ),
-    ),
-    path(
-        "component/",
-        include(
-            [
-                path("", ComponentList.as_view(), name="component-type"),
-                path(PROTOTYPE_ID, ComponentTypeDetail.as_view(), name="component-type-details"),
-            ]
-        ),
-    ),
-    path(
-        "provider/",
-        include(
-            [
-                path("", ProviderTypeList.as_view(), name="provider-type"),
-                path(PROTOTYPE_ID, ProviderTypeDetail.as_view(), name="provider-type-details"),
-            ]
-        ),
-    ),
-    path(
-        "host/",
-        include(
-            [
-                path("", HostTypeList.as_view(), name="host-type"),
-                path(PROTOTYPE_ID, HostTypeDetail.as_view(), name="host-type-details"),
-            ]
-        ),
-    ),
-    path(
-        "cluster/",
-        include(
-            [
-                path("", ClusterTypeList.as_view(), name="cluster-type"),
-                path(PROTOTYPE_ID, ClusterTypeDetail.as_view(), name="cluster-type-details"),
-            ]
-        ),
-    ),
-    path(
-        "adcm/",
-        include(
-            [
-                path("", AdcmTypeList.as_view(), name="adcm-type"),
-                path(PROTOTYPE_ID, AdcmTypeDetail.as_view(), name="adcm-type-details"),
-            ]
-        ),
     ),
 ]

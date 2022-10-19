@@ -81,19 +81,19 @@ class TestHostAPI(BaseTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
 
     def get_host_proto_id(self):
-        response: Response = self.client.get(reverse("host-type"))
+        response: Response = self.client.get(reverse("host-prototype-list"))
 
         self.assertEqual(response.status_code, HTTP_200_OK)
 
-        for host in response.json():
+        for host in response.json()["results"]:
             return host["bundle_id"], host["id"]
 
     def get_host_provider_proto_id(self):
-        response: Response = self.client.get(reverse("provider-type"))
+        response: Response = self.client.get(reverse("provider-prototype-list"))
 
         self.assertEqual(response.status_code, HTTP_200_OK)
 
-        for provider in response.json():
+        for provider in response.json()["results"]:
             return provider["bundle_id"], provider["id"]
 
     def check_incorrect_fqdn_update(self, response: Response, expected_fqdn: str):

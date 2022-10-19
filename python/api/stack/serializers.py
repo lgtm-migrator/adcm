@@ -86,7 +86,7 @@ class PrototypeSerializer(EmptySerializer):
     type = CharField(read_only=True)
     required = BooleanField(read_only=True)
     url = HyperlinkedIdentityField(
-        view_name="prototype-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+        view_name="prototype-detail", lookup_field="pk", lookup_url_kwarg="prototype_pk"
     )
 
     @staticmethod
@@ -172,33 +172,33 @@ class ImportSerializer(EmptySerializer):
     multibind = BooleanField(read_only=True)
 
 
-class ComponentTypeSerializer(PrototypeSerializer):
+class ComponentPrototypeSerializer(PrototypeSerializer):
     constraint = JSONField(required=False)
     requires = JSONField(required=False)
     bound_to = JSONField(required=False)
     monitoring = CharField(read_only=True)
     url = HyperlinkedIdentityField(
-        view_name="component-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+        view_name="component-prototype-detail", lookup_field="pk", lookup_url_kwarg="prototype_pk"
     )
 
 
-class ServiceSerializer(PrototypeSerializer):
+class ServicePrototypeSerializer(PrototypeSerializer):
     shared = BooleanField(read_only=True)
     monitoring = CharField(read_only=True)
     url = HyperlinkedIdentityField(
-        view_name="service-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+        view_name="service-prototype-detail", lookup_field="pk", lookup_url_kwarg="prototype_pk"
     )
 
 
-class ServiceDetailSerializer(ServiceSerializer):
+class ServiceDetailPrototypeSerializer(ServicePrototypeSerializer):
     actions = StackActionDetailSerializer(many=True, read_only=True)
-    components = ComponentTypeSerializer(many=True, read_only=True)
+    components = ComponentPrototypeSerializer(many=True, read_only=True)
     config = ConfigSerializer(many=True, read_only=True)
     exports = ExportSerializer(many=True, read_only=True)
     imports = ImportSerializer(many=True, read_only=True)
 
 
-class BundleServiceUISerializer(ServiceSerializer):
+class BundleServiceUIPrototypeSerializer(ServicePrototypeSerializer):
     selected = SerializerMethodField()
 
     def get_selected(self, obj):
@@ -211,16 +211,16 @@ class BundleServiceUISerializer(ServiceSerializer):
             return False
 
 
-class AdcmTypeSerializer(PrototypeSerializer):
+class AdcmPrototypeSerializer(PrototypeSerializer):
     url = HyperlinkedIdentityField(
-        view_name="adcm-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+        view_name="adcm-prototype-detail", lookup_field="pk", lookup_url_kwarg="prototype_pk"
     )
 
 
-class ClusterTypeSerializer(PrototypeSerializer):
+class ClusterPrototypeSerializer(PrototypeSerializer):
     license = SerializerMethodField()
     url = HyperlinkedIdentityField(
-        view_name="cluster-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+        view_name="cluster-prototype-detail", lookup_field="pk", lookup_url_kwarg="prototype_pk"
     )
 
     @staticmethod
@@ -228,17 +228,17 @@ class ClusterTypeSerializer(PrototypeSerializer):
         return obj.bundle.license
 
 
-class HostTypeSerializer(PrototypeSerializer):
+class HostPrototypeSerializer(PrototypeSerializer):
     monitoring = CharField(read_only=True)
     url = HyperlinkedIdentityField(
-        view_name="host-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+        view_name="host-prototype-detail", lookup_field="pk", lookup_url_kwarg="prototype_pk"
     )
 
 
-class ProviderTypeSerializer(PrototypeSerializer):
+class ProviderPrototypeSerializer(PrototypeSerializer):
     license = SerializerMethodField()
     url = HyperlinkedIdentityField(
-        view_name="provider-type-details", lookup_field="id", lookup_url_kwarg="prototype_id"
+        view_name="provider-prototype-detail", lookup_field="pk", lookup_url_kwarg="prototype_pk"
     )
 
     @staticmethod
@@ -246,28 +246,28 @@ class ProviderTypeSerializer(PrototypeSerializer):
         return obj.bundle.license
 
 
-class ProviderTypeDetailSerializer(ProviderTypeSerializer):
+class ProviderPrototypeDetailSerializer(ProviderPrototypeSerializer):
     actions = StackActionDetailSerializer(many=True, read_only=True)
     config = ConfigSerializer(many=True, read_only=True)
     upgrade = UpgradeSerializer(many=True, read_only=True)
 
 
-class HostTypeDetailSerializer(HostTypeSerializer):
+class HostPrototypeDetailSerializer(HostPrototypeSerializer):
     actions = StackActionDetailSerializer(many=True, read_only=True)
     config = ConfigSerializer(many=True, read_only=True)
 
 
-class ComponentTypeDetailSerializer(ComponentTypeSerializer):
+class ComponentPrototypeDetailSerializer(ComponentPrototypeSerializer):
     actions = StackActionDetailSerializer(many=True, read_only=True)
     config = ConfigSerializer(many=True, read_only=True)
 
 
-class AdcmTypeDetailSerializer(AdcmTypeSerializer):
+class AdcmPrototypeDetailSerializer(AdcmPrototypeSerializer):
     actions = StackActionDetailSerializer(many=True, read_only=True)
     config = ConfigSerializer(many=True, read_only=True)
 
 
-class ClusterTypeDetailSerializer(ClusterTypeSerializer):
+class ClusterPrototypeDetailSerializer(ClusterPrototypeSerializer):
     actions = StackActionDetailSerializer(many=True, read_only=True)
     config = ConfigSerializer(many=True, read_only=True)
     upgrade = UpgradeSerializer(many=True, read_only=True)

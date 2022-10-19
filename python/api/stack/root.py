@@ -23,8 +23,8 @@ class StackRoot(APIRootView):
         "upload": "upload-bundle",
         "bundle": "bundle",
         "prototype": "prototype",
-        "service": "service-type",
-        "host": "host-type",
-        "provider": "provider-type",
-        "cluster": "cluster-type",
+        "service": "service-prototype",
+        "host": "host-prototype",
+        "provider": "provider-prototype",
+        "cluster": "cluster-prototype",
     }
