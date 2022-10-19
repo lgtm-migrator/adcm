@@ -13,7 +13,7 @@
 """Test synchronization and test connection with LDAP"""
 import time
 from contextlib import contextmanager
-from typing import Optional, Tuple
+from typing import Callable, Optional, Tuple
 
 import allure
 import pytest
@@ -35,7 +35,7 @@ from tests.functional.ldap_auth.utils import (
     login_should_fail,
 )
 from tests.functional.rbac.conftest import BusinessRoles, RbacRoles
-from tests.library.assertions import expect_api_error, expect_no_api_error
+from tests.library.assertions import expect_api_error, expect_no_api_error, sets_are_equal
 from tests.library.ldap_interactions import LDAPTestConfig, configure_adcm_for_ldap
 
 # pylint: disable=redefined-outer-name
@@ -346,6 +346,23 @@ class TestKnownSyncBugs:
         user_2["dn"] = ldap_ad.create_user(custom_base_dn=users_ou, **user_2)
         return user_1, user_2
 
+    @pytest.fixture()
+    def set_adcm_ldap_config(self, sdk_client_fs, ad_config) -> Callable[[str, str], None]:
+        """Prepare method for settings ADCM LDAP settings passing only user and group bases"""
+
+        def wrapped(users_base, group_base):
+            configure_adcm_for_ldap(
+                user_base=users_base,
+                group_base=group_base,
+                client=sdk_client_fs,
+                config=ad_config,
+                ssl_on=False,
+                ssl_cert=None,
+                extra_config={"sync_interval": 0},
+            )
+
+        return wrapped
+
     @allure.issue(url="https://tracker.yandex.ru/ADCM-3274")
     @pytest.mark.usefixtures("configure_adcm_ldap_ad")
     def test_sync_no_group_in_group_search_base(self, sdk_client_fs, two_users_wo_group):
@@ -363,6 +380,36 @@ class TestKnownSyncBugs:
         with allure.step("Check no LDAP user can login"):
             for user in two_users_wo_group:
                 login_should_fail(f"login as {user['name']}", sdk_client_fs, user["name"], user["password"])
+
+    def test_sync_add_group_search_base(self, set_adcm_ldap_config, two_users_wo_group, ldap_basic_ous, sdk_client_fs):
+        """
+        Test on bug when users aren't deactivated when no group is found
+        when group search base provided during the second sync
+        """
+        groups_ou, users_ou = ldap_basic_ous
+        ldap_usernames = {user["name"] for user in two_users_wo_group}
+
+        with allure.step("Configure LDAP only with user base and run sync"):
+            set_adcm_ldap_config(users_base=users_ou, group_base="")
+            _run_sync(sdk_client_fs)
+
+        with allure.step("Check LDAP users appeared and are active"):
+            sets_are_equal(
+                actual={u.username for u in sdk_client_fs.user_list() if u.type == "ldap" and u.is_active},
+                expected=ldap_usernames,
+                message="Incorrect users from LDAP are active",
+            )
+
+        with allure.step("Add group search to LDAP settings and "):
+            set_adcm_ldap_config(users_base=users_ou, group_base=groups_ou)
+            _run_sync(sdk_client_fs)
+
+        with allure.step("Check LDAP users stayed, but are inactive"):
+            sets_are_equal(
+                actual={u.username for u in sdk_client_fs.user_list() if u.type == "ldap" and not u.is_active},
+                expected=ldap_usernames,
+                message="Incorrect users from LDAP are inactive",
+            )
 
 
 @contextmanager
