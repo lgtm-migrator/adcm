@@ -175,14 +175,14 @@ class TaskViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Gener
         queryset = super().get_queryset(*args, **kwargs)
         if not self.request.user.is_superuser:
             # NOT superuser shouldn't have access to ADCM tasks
-            queryset = queryset.filter(
+            queryset = queryset.exclude(
                 object_type=ContentType.objects.get(app_label="cm", model="adcm")
             )
 
         return queryset
 
     def get_serializer_class(self):
-        if self.is_for_ui() or self.action == "retrieve":
+        if self.is_for_ui() or self.action in {"retrieve", "restart", "cancel", "download"}:
             return TaskRetrieveSerializer
 
         return super().get_serializer_class()
@@ -242,14 +242,15 @@ class LogStorageViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin,
 
         return super().get_serializer_class()
 
-    @staticmethod
     @audit
     @action(methods=["get"], detail=True)
-    def download(request: Request, job_pk: int, log_pk: int):
-        job = JobLog.obj.get(id=job_pk)
-        log_storage = LogStorage.obj.get(id=log_pk, job=job)
+    def download(self, request: Request, job_pk: int, log_pk: int):
+        # self is necessary for audit
 
-        if log_storage.type in ["stdout", "stderr"]:
+        job = JobLog.obj.get(id=job_pk)
+        log_storage = LogStorage.obj.get(pk=log_pk, job=job)
+
+        if log_storage.type in {"stdout", "stderr"}:
             filename = f"{job.id}-{log_storage.name}-{log_storage.type}.{log_storage.format}"
         else:
             filename = f"{job.id}-{log_storage.name}.{log_storage.format}"

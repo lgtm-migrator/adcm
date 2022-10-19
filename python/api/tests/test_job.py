@@ -11,14 +11,29 @@
 # limitations under the License.
 
 from datetime import datetime, timedelta
+from pathlib import Path
+from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from rest_framework.response import Response
+from rest_framework.status import HTTP_201_CREATED
 
 from adcm.tests.base import BaseTestCase
-from cm.models import ADCM, Action, ActionType, Bundle, JobLog, Prototype, TaskLog
+from cm.models import (
+    ADCM,
+    Action,
+    ActionType,
+    Bundle,
+    Cluster,
+    JobLog,
+    Prototype,
+    TaskLog,
+)
+from rbac.models import Policy, Role
+from rbac.upgrade.role import init_roles
 
 
 class TestJobAPI(BaseTestCase):
@@ -153,3 +168,71 @@ class TestJobAPI(BaseTestCase):
         )
 
         self.assertEqual(response.data["id"], self.job_2.pk)
+
+    def test_log_files(self):
+        bundle = self.upload_and_load_bundle(
+            path=Path(
+                settings.BASE_DIR,
+                "python/api/tests/files/no-log-files.tar",
+            ),
+        )
+
+        action = Action.objects.get(name="adcm_check")
+        cluster_prototype = Prototype.objects.get(bundle=bundle, type="cluster")
+        cluster = Cluster.objects.create(name="test_cluster", prototype=cluster_prototype)
+
+        with patch("cm.job.run_task"):
+            response: Response = self.client.post(
+                path=reverse("run-task", kwargs={"cluster_id": cluster.pk, "action_id": action.pk})
+            )
+
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+
+        job = JobLog.objects.get(action=action)
+
+        response: Response = self.client.get(
+            reverse("joblog-detail", kwargs={"job_pk": job.pk}),
+        )
+
+        self.assertEqual(len(response.data["log_files"]), 2)
+
+    def test_task_permissions(self):
+        bundle = self.upload_and_load_bundle(
+            path=Path(
+                settings.BASE_DIR,
+                "python/api/tests/files/no-log-files.tar",
+            ),
+        )
+
+        action = Action.objects.get(name="adcm_check")
+        cluster_prototype = Prototype.objects.get(bundle=bundle, type="cluster")
+        cluster = Cluster.objects.create(name="test_cluster", prototype=cluster_prototype)
+
+        init_roles()
+        role = Role.objects.get(name="Cluster Administrator")
+        policy = Policy.objects.create(name="test_policy", role=role)
+        policy.user.add(self.no_rights_user)
+        policy.add_object(cluster)
+        policy.apply()
+
+        with self.no_rights_user_logged_in:
+            with patch("cm.job.run_task"):
+                response: Response = self.client.post(
+                    path=reverse(
+                        "run-task", kwargs={"cluster_id": cluster.pk, "action_id": action.pk}
+                    )
+                )
+
+            response: Response = self.client.get(reverse("joblog-list"))
+
+            self.assertIn(
+                JobLog.objects.get(action=action).pk,
+                {job_data["id"] for job_data in response.data["results"]},
+            )
+
+            response: Response = self.client.get(reverse("tasklog-list"))
+
+            self.assertIn(
+                TaskLog.objects.get(action=action).pk,
+                {job_data["id"] for job_data in response.data["results"]},
+            )

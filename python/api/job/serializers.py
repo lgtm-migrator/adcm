@@ -12,10 +12,11 @@
 
 import json
 import os
+from pathlib import Path
 
+from django.conf import settings
 from rest_framework.reverse import reverse
 from rest_framework.serializers import (
-    CharField,
     HyperlinkedIdentityField,
     HyperlinkedModelSerializer,
     JSONField,
@@ -32,9 +33,11 @@ from cm.models import JobLog, LogStorage, TaskLog
 
 
 class JobShortSerializer(HyperlinkedModelSerializer):
+    display_name = SerializerMethodField()
+
     class Meta:
         model = JobLog
-        fields = ("id", "status", "start_date", "finish_date", "url")
+        fields = ("id", "display_name", "status", "start_date", "finish_date", "url")
         extra_kwargs = {"url": {"lookup_url_kwarg": "job_pk"}}
 
     @staticmethod
@@ -71,13 +74,15 @@ class TaskRetrieveSerializer(HyperlinkedModelSerializer):
     terminatable = SerializerMethodField()
     object_type = SerializerMethodField()
     lock = ConcernItemSerializer(read_only=True)
+    hc = JSONField(required=False)
     restart = HyperlinkedIdentityField(view_name="tasklog-restart", lookup_url_kwarg="task_pk")
     cancel = HyperlinkedIdentityField(view_name="tasklog-cancel", lookup_url_kwarg="task_pk")
     download = HyperlinkedIdentityField(view_name="tasklog-download", lookup_url_kwarg="task_pk")
 
     class Meta:
         model = TaskLog
-        fields = TaskSerializer.Meta.fields + (
+        fields = (
+            *TaskSerializer.Meta.fields,
             "selector",
             "config",
             "attr",
@@ -90,6 +95,7 @@ class TaskRetrieveSerializer(HyperlinkedModelSerializer):
             "terminatable",
             "object_type",
             "lock",
+            "hc",
             "restart",
             "cancel",
             "download",
@@ -168,9 +174,9 @@ class JobRetrieveSerializer(HyperlinkedModelSerializer):
     action = ActionJobSerializer()
     display_name = SerializerMethodField()
     objects = SerializerMethodField()
-    selector = JSONField(read_only=True)
-    log_dir = CharField(read_only=True)
-    log_files = JSONField(read_only=True)
+    selector = JSONField()
+    log_dir = SerializerMethodField()
+    log_files = SerializerMethodField()
     action_url = SerializerMethodField()
     task_url = HyperlinkedIdentityField(
         view_name="tasklog-detail",
@@ -179,7 +185,8 @@ class JobRetrieveSerializer(HyperlinkedModelSerializer):
 
     class Meta:
         model = JobLog
-        fields = JobSerializer.Meta.fields + (
+        fields = (
+            *JobSerializer.Meta.fields,
             "action",
             "display_name",
             "objects",
@@ -206,13 +213,41 @@ class JobRetrieveSerializer(HyperlinkedModelSerializer):
         else:
             return None
 
-    def get_action_url(self, obj: TaskLog) -> str | None:
+    def get_action_url(self, obj: JobLog) -> str | None:
         if not obj.action_id:
             return None
 
         return reverse(
             "action-details", kwargs={"action_id": obj.action_id}, request=self.context["request"]
         )
+
+    @staticmethod
+    def get_log_dir(obj: JobLog) -> str:
+        return str(Path(settings.RUN_DIR, str(obj.pk)))
+
+    def get_log_files(self, obj: JobLog) -> list[dict[str, str]]:
+        logs = []
+        for log_storage in LogStorage.objects.filter(job=obj):
+            logs.append(
+                {
+                    "name": log_storage.name,
+                    "type": log_storage.type,
+                    "format": log_storage.format,
+                    "id": log_storage.pk,
+                    "url": reverse(
+                        "joblog-detail",
+                        kwargs={"job_pk": obj.pk, "log_pk": log_storage.pk},
+                        request=self.context["request"],
+                    ),
+                    "download_url": reverse(
+                        "joblog-download",
+                        kwargs={"job_pk": obj.pk, "log_pk": log_storage.pk},
+                        request=self.context["request"],
+                    ),
+                }
+            )
+
+        return logs
 
 
 class LogStorageRetrieveSerializer(HyperlinkedModelSerializer):
@@ -267,7 +302,7 @@ class LogStorageSerializer(LogStorageRetrieveSerializer):
 
     class Meta:
         model = LogStorage
-        fields = LogStorageRetrieveSerializer.Meta.fields + ("url",)
+        fields = (*LogStorageRetrieveSerializer.Meta.fields, "url")
 
     def get_url(self, obj):
         return reverse(

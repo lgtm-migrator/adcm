@@ -28,7 +28,7 @@ urlpatterns = [
     ),
     path(
         "<int:job_pk>/log/<int:log_pk>/download/",
-        LogStorageViewSet.as_view({"get": "retrieve"}),
+        LogStorageViewSet.as_view({"get": "download"}),
         name="joblog-download",
     ),
     path(

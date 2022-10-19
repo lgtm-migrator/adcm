@@ -506,7 +506,7 @@ def task_status_attr():
 @pytest.fixture()
 def job_task_id_attr(host_ok_action: Action):
     """Get task task_id attr"""
-    return {'task_id': host_ok_action.task().task_id}
+    return {'task_id': host_ok_action.task().id}
 
 
 @pytest.mark.parametrize(
