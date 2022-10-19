@@ -32,6 +32,7 @@ from tests.functional.ldap_auth.utils import (
     check_existing_users,
     get_ldap_group_from_adcm,
     get_ldap_user_from_adcm,
+    login_should_fail,
 )
 from tests.functional.rbac.conftest import BusinessRoles, RbacRoles
 from tests.library.assertions import expect_api_error, expect_no_api_error
@@ -330,6 +331,38 @@ class TestPeriodicSync:
             assert (
                 actual_amount := len(sync_tasks)
             ) == expected_amount, f"Not enough sync tasks: {actual_amount}.\nExpected: {expected_amount}"
+
+
+class TestKnownSyncBugs:
+    """Test known bugs with LDAP sync"""
+
+    @pytest.fixture()
+    def two_users_wo_group(self, ldap_ad, ldap_basic_ous) -> tuple[dict[str, str], dict[str, str]]:
+        """Create two users without group"""
+        _, users_ou = ldap_basic_ous
+        user_1 = {"name": f"coolguy-{random_string(4)}", "password": random_string(16)}
+        user_1["dn"] = ldap_ad.create_user(custom_base_dn=users_ou, **user_1)
+        user_2 = {"name": f"coolguy2-{random_string(4)}", "password": random_string(16)}
+        user_2["dn"] = ldap_ad.create_user(custom_base_dn=users_ou, **user_2)
+        return user_1, user_2
+
+    @allure.issue(url="https://tracker.yandex.ru/ADCM-3274")
+    @pytest.mark.usefixtures("configure_adcm_ldap_ad")
+    def test_sync_no_group_in_group_search_base(self, sdk_client_fs, two_users_wo_group):
+        """Test LDAP sync when 0 groups found with group search base, so users should not be synced"""
+        with allure.step("Check no LDAP groups or users exist"):
+            check_existing_groups(sdk_client_fs)
+            check_existing_users(sdk_client_fs)
+
+        _run_sync(sdk_client_fs)
+
+        with allure.step("Check no LDAP groups or users exist"):
+            check_existing_groups(sdk_client_fs)
+            check_existing_users(sdk_client_fs)
+
+        with allure.step("Check no LDAP user can login"):
+            for user in two_users_wo_group:
+                login_should_fail(f"login as {user['name']}", sdk_client_fs, user["name"], user["password"])
 
 
 @contextmanager
