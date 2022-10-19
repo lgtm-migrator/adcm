@@ -1463,7 +1463,7 @@ roles:
         - Create host
         - Upload bundle
         - Remove bundle
-        - Manage host Maintenance mode
+        - Manage host Maintenance mode hidden
         - Manage service Maintenance mode
         - Manage component Maintenance mode
 
@@ -1495,7 +1495,7 @@ roles:
       module_name: rbac.roles
       class_name: ParentRole
       child:
-        - Manage host Maintenance mode
+        - Manage host Maintenance mode hidden
         - Manage service Maintenance mode
         - Manage component Maintenance mode
 
