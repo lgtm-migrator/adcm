@@ -15,21 +15,28 @@ import json
 from adwp_base.errors import AdwpEx
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from django.test import Client
+from django.urls import reverse
 
-from adcm.tests.base import BaseTestCase
+from adcm.tests.base import BaseTestCase, APPLICATION_JSON
+from cm.api import add_host_to_cluster
 from cm.models import (
     Action,
     ActionType,
     Bundle,
     Cluster,
     ClusterObject,
+    Host,
+    HostProvider,
     ProductCategory,
     Prototype,
     ServiceComponent,
 )
 from init_db import init as init_adcm
-from rbac.models import Role, RoleTypes
+from rbac.models import Role, RoleTypes, User
 from rbac.roles import ModelRole
+from rbac.services.role import role_create
+from rbac.services.policy import policy_create
 from rbac.tests.test_base import RBACBaseTestCase
 from rbac.upgrade.role import init_roles, prepare_action_roles
 
@@ -567,3 +574,132 @@ class RoleFunctionalTestRBAC(RBACBaseTestCase):
         ).count()
 
         self.assertEqual(sa_role_count, 6, "Roles missing from base roles")
+
+
+class TestMMRoles(RBACBaseTestCase):
+    def setUp(self) -> None:
+        init_adcm()
+        init_roles()
+
+        self.create_bundles_and_prototypes()
+        self.cluster = Cluster.objects.create(name="testcluster", prototype=self.clp)
+        self.provider = HostProvider.objects.create(
+            name="test_provider",
+            prototype=self.pp,
+        )
+        self.host = Host.objects.create(fqdn="testhost", prototype=self.hp)
+        add_host_to_cluster(self.cluster, self.host)
+        self.service = ClusterObject.objects.create(
+            cluster=self.cluster, prototype=self.sp_1
+        )
+        self.component = ServiceComponent.objects.create(
+            cluster=self.cluster,
+            service=self.service,
+            prototype=self.cop_11
+        )
+
+        self.test_user_username = "test_user"
+        self.test_user_password = "test_user_password"
+        self.test_user = User.objects.create_user(
+            username=self.test_user_username,
+            password=self.test_user_password,
+            is_superuser=True,
+        )
+
+        self.client = Client(HTTP_USER_AGENT='Mozilla/5.0')
+        self.login()
+
+        self.mm_role_host = role_create(
+            name="mm role host",
+            display_name="mm role host",
+            child=[Role.objects.get(name="Manage Maintenance mode")]
+        )
+        self.mm_role_cluster = role_create(
+            name="mm role cluster",
+            display_name="mm role cluster",
+            child=[Role.objects.get(name="Manage cluster Maintenance mode")]
+        )
+
+    def test_mm_host_role(self):
+        policy_create(
+            name="mm host policy",
+            object=[self.host],
+            role=self.mm_role_host,
+            user=[self.test_user]
+        )
+        self.host.refresh_from_db()
+        response = self.client.patch(
+            path=reverse("host-details", kwargs={'host_id': self.host.pk}),
+            data={"maintenance_mode": not self.host.maintenance_mode},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_mm_cluster_role(self):
+        policy_create(
+            name="mm cluster policy",
+            object=[self.cluster],
+            role=self.mm_role_cluster,
+            user=[self.test_user]
+        )
+        self.host.refresh_from_db()
+        response = self.client.patch(
+            path=reverse("host-details", kwargs={'host_id': self.host.pk}),
+            data={"maintenance_mode": not self.host.maintenance_mode},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.component.refresh_from_db()
+        response = self.client.patch(
+            path=reverse("component-details", kwargs={'component_id': self.component.pk}),
+            data={"maintenance_mode": not self.component.maintenance_mode},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.service.refresh_from_db()
+        response = self.client.patch(
+            path=reverse("service-details", kwargs={'service_id': self.service.pk}),
+            data={"maintenance_mode": not self.service.maintenance_mode},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_cl_adm_mm_role(self):
+        policy_create(
+            name="mm cluster policy",
+            object=[self.cluster],
+            role=Role.objects.get(name="Cluster Administrator"),
+            user=[self.test_user]
+        )
+        self.host.refresh_from_db()
+        response = self.client.patch(
+            path=reverse("host-details", kwargs={'host_id': self.host.pk}),
+            data={"maintenance_mode": not self.host.maintenance_mode},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.component.refresh_from_db()
+        response = self.client.patch(
+            path=reverse("component-details", kwargs={'component_id': self.component.pk}),
+            data={"maintenance_mode": not self.component.maintenance_mode},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.service.refresh_from_db()
+        response = self.client.patch(
+            path=reverse("service-details", kwargs={'service_id': self.service.pk}),
+            data={"maintenance_mode": not self.service.maintenance_mode},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
