@@ -603,7 +603,6 @@ class TestMMRoles(RBACBaseTestCase):
         self.test_user = User.objects.create_user(
             username=self.test_user_username,
             password=self.test_user_password,
-            is_superuser=True,
         )
 
         self.client = Client(HTTP_USER_AGENT='Mozilla/5.0')
@@ -619,6 +618,15 @@ class TestMMRoles(RBACBaseTestCase):
             display_name="mm role cluster",
             child=[Role.objects.get(name="Manage cluster Maintenance mode")]
         )
+
+    def test_no_roles(self):
+        for url in (
+                reverse("host-details", kwargs={'host_id': self.host.pk}),
+                reverse("component-details", kwargs={'component_id': self.component.pk}),
+                reverse("service-details", kwargs={'service_id': self.service.pk})
+        ):
+            response = self.client.get(path=url, content_type=APPLICATION_JSON)
+            self.assertEqual(response.status_code, 404)
 
     def test_mm_host_role(self):
         policy_create(
