@@ -232,6 +232,7 @@ class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors
 class PrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     queryset = Prototype.objects.all()
     serializer_class = PrototypeSerializer
+    filterset_fields = ("name", "bundle_id")
     ordering_fields = ("display_name", "version_order")
     lookup_url_kwarg = "prototype_pk"
 
@@ -316,7 +317,7 @@ class ComponentPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
 class ProviderPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     queryset = Prototype.objects.filter(type="provider")
     serializer_class = ProviderPrototypeSerializer
-    filterset_fields = ("name", "bundle_id", "display_name")
+    filterset_fields = ("name", "bundle_id")
     ordering_fields = ("display_name", "version_order")
     permission_classes = (IsAuthenticatedAudit,)
     lookup_url_kwarg = "prototype_pk"
@@ -347,7 +348,7 @@ class HostPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
 class ClusterPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     queryset = Prototype.objects.filter(type="cluster")
     serializer_class = ClusterPrototypeSerializer
-    filterset_fields = ("name", "bundle_id", "display_name")
+    filterset_fields = ("name", "bundle_id")
     ordering_fields = ("display_name", "version_order")
     lookup_url_kwarg = "prototype_pk"
 

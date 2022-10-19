@@ -58,14 +58,6 @@ class TestProviderPrototypeAPI(BaseTestCase):
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"][0]["id"], self.prototype_2.pk)
 
-    def test_list_filter_display_name(self):
-        response: Response = self.client.get(
-            reverse("provider-prototype-list"), {"name": "test_prototype_1"}
-        )
-
-        self.assertEqual(len(response.data["results"]), 1)
-        self.assertEqual(response.data["results"][0]["id"], self.prototype_1.pk)
-
     def test_list_filter_bundle_id(self):
         response: Response = self.client.get(
             reverse("provider-prototype-list"),

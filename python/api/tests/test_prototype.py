@@ -21,16 +21,19 @@ class TestPrototypeAPI(BaseTestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        self.bundle = Bundle.objects.create()
+        self.bundle_1 = Bundle.objects.create(name="test_bundle_1")
+        self.bundle_2 = Bundle.objects.create(name="test_bundle_2")
         self.prototype_1 = Prototype.objects.create(
-            bundle=self.bundle,
+            bundle=self.bundle_1,
             type="adcm",
+            name="test_prototype_1",
             display_name="test_prototype_1",
             version_order=1,
         )
         self.prototype_2 = Prototype.objects.create(
-            bundle=self.bundle,
+            bundle=self.bundle_2,
             type="cluster",
+            name="test_prototype_2",
             display_name="test_prototype_2",
             version_order=2,
         )
@@ -39,6 +42,23 @@ class TestPrototypeAPI(BaseTestCase):
         response: Response = self.client.get(path=reverse("prototype-list"))
 
         self.assertEqual(len(response.data["results"]), 2)
+
+    def test_list_filter_name(self):
+        response: Response = self.client.get(
+            reverse("prototype-list"), {"name": "test_prototype_2"}
+        )
+
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["id"], self.prototype_2.pk)
+
+    def test_list_filter_bundle_id(self):
+        response: Response = self.client.get(
+            reverse("prototype-list"),
+            {"bundle_id": self.bundle_1.pk},
+        )
+
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["id"], self.prototype_1.pk)
 
     def test_list_ordering_display_name(self):
         response: Response = self.client.get(
