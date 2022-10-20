@@ -125,7 +125,7 @@ class SyncLDAP:
                                                  f"{self.settings['USER_FILTER']}" \
                                                  f"{group_filter})"
         ldap_users = self.settings["USER_SEARCH"].execute(self.conn, {"user": "*"}, True)
-        self._sync_ldap_users(ldap_users)
+        self._sync_ldap_users(ldap_users, ldap_groups)
         sys.stdout.write("Users were synchronized\n")
 
     def _sync_ldap_groups(self, ldap_groups: list) -> None:
@@ -161,7 +161,8 @@ class SyncLDAP:
         msg = f"{msg} Couldn't synchronize groups: {error_names}" if error_names else f"{msg}"
         logger.debug(msg)
 
-    def _sync_ldap_users(self, ldap_users: list) -> None:
+    def _sync_ldap_users(self, ldap_users: list, ldap_groups: list) -> None:
+        ldap_group_names = [group[0].split(",")[0][3:] for group in ldap_groups]
         ldap_usernames = set()
         error_names = []
         for cname, ldap_attributes in ldap_users:
@@ -210,12 +211,14 @@ class SyncLDAP:
                 else:
                     for group in ldap_attributes.get("memberof", []):
                         name = group.split(",")[0][3:]
+                        if not name.lower() in ldap_group_names:
+                            continue
                         try:
                             group = Group.objects.get(name=f"{name} [ldap]", built_in=False,
                                                       type=OriginType.LDAP)
                             group.user_set.add(user)
                             sys.stdout.write(f"Add user {user} to group {group}\n")
-                        except (IntegrityError, DataError) as e:
+                        except (IntegrityError, DataError, Group.DoesNotExist) as e:
                             sys.stdout.write(f"Error getting group {name}: {e}\n")
         self._deactivate_extra_users(ldap_usernames)
         msg = "Sync of users ended successfully."
