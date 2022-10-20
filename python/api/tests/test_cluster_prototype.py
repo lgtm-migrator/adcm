@@ -17,7 +17,7 @@ from adcm.tests.base import BaseTestCase
 from cm.models import Action, ActionType, Bundle, Prototype
 
 
-class TestProviderPrototypeAPI(BaseTestCase):
+class TestClusterPrototypeAPI(BaseTestCase):
     def setUp(self) -> None:
         super().setUp()
 
