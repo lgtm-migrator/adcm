@@ -165,7 +165,7 @@ class ClusterListPage(BasePageObject):  # pylint: disable=too-many-public-method
         self.find_child(row, self.table.locators.ClusterRow.rename_btn).click()
         self.wait_element_visible(Dialog.body)
 
-    @allure.step("Set new cluster name in cluster rename dialog")
+    @allure.step("Set new name in rename dialog")
     def set_new_cluster_name_in_cluster_dialog(self, new_name: str) -> None:
         dialog = self.find_element(RenameDialog.body, timeout=0.5)
         name_input = self.find_child(dialog, RenameDialog.object_name)
