@@ -16,7 +16,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.decorators import action
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -27,10 +27,8 @@ from rest_framework.status import (
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
-    HTTP_403_FORBIDDEN,
     HTTP_405_METHOD_NOT_ALLOWED,
 )
-from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from adcm.permissions import IsAuthenticatedAudit
@@ -119,24 +117,15 @@ class CsrfOffSessionAuthentication(SessionAuthentication):
         return
 
 
-class UploadBundleView(APIView):
+class UploadBundleView(CreateModelMixin, GenericUIViewSet):
+    queryset = Bundle.objects.all()
+    serializer_class = UploadBundleSerializer
     authentication_classes = (CsrfOffSessionAuthentication, TokenAuthentication)
     parser_classes = (MultiPartParser,)
 
-    def is_for_ui(self) -> bool:
-        if not self.request:
-            return False
-
-        view = self.request.query_params.get("view")
-
-        return view == "interface"
-
     @audit
-    def post(self, request: Request):
-        if not request.user.has_perm("cm.add_bundle"):
-            return Response(status=HTTP_403_FORBIDDEN)
-
-        serializer = UploadBundleSerializer(data=request.data)
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
@@ -148,27 +137,21 @@ class UploadBundleView(APIView):
         return Response(status=HTTP_201_CREATED)
 
 
-class LoadBundleView(APIView):
-    def is_for_ui(self) -> bool:
-        if not self.request:
-            return False
-
-        view = self.request.query_params.get("view")
-
-        return view == "interface"
+class LoadBundleView(CreateModelMixin, GenericUIViewSet):
+    queryset = Bundle.objects.all()
+    serializer_class = LoadBundleSerializer
 
     @audit
-    def post(self, request, *args, **kwargs):
-        if not request.user.has_perm("cm.add_bundle"):
-            return Response(status=HTTP_403_FORBIDDEN)
-
-        serializer = LoadBundleSerializer(data=request.data)
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
-        bundle = load_bundle(serializer.validated_data["bundle_file"])
-
-        return Response(BundleSerializer(bundle, context={"request": request}).data)
+        return Response(
+            BundleSerializer(
+                load_bundle(serializer.validated_data["bundle_file"]), context={"request": request}
+            ).data,
+        )
 
 
 class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors

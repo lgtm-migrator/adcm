@@ -21,10 +21,10 @@ class StackRoot(APIRootView):
     api_root_dict = {
         "load": "load-bundle",
         "upload": "upload-bundle",
-        "bundle": "bundle",
-        "prototype": "prototype",
-        "service": "service-prototype",
-        "host": "host-prototype",
-        "provider": "provider-prototype",
-        "cluster": "cluster-prototype",
+        "bundle": "bundle-list",
+        "prototype": "prototype-list",
+        "service": "service-prototype-list",
+        "host": "host-prototype-list",
+        "provider": "provider-prototype-list",
+        "cluster": "cluster-prototype-list",
     }

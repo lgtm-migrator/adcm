@@ -43,10 +43,9 @@ router.register("adcm", ADCMPrototypeViewSet, basename="adcm-prototype")
 
 
 urlpatterns = [
-    *router.urls,
     path("", StackRoot.as_view(), name="stack"),
-    path("upload/", UploadBundleView.as_view(), name="upload-bundle"),
-    path("load/", LoadBundleView.as_view(), name="load-bundle"),
+    path("upload/", UploadBundleView.as_view({"post": "create"}), name="upload-bundle"),
+    path("load/", LoadBundleView.as_view({"post": "create"}), name="load-bundle"),
     path("load/servicemap/", load_servicemap_view, name="load-servicemap"),
     path("load/hostmap/", load_hostmap_view, name="load-hostmap"),
     path(
@@ -59,4 +58,5 @@ urlpatterns = [
         BundleViewSet.as_view({"put": "accept_license"}),
         name="accept-license",
     ),
+    *router.urls,  # for correct work of root view router urls must be at bottom of urlpatterns
 ]
