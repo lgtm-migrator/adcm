@@ -19,11 +19,10 @@ from tests.ui_tests.app.helpers.locator import Locator
 
 class Dialog:
     """Generic dialog"""
-
     body = Locator(By.CSS_SELECTOR, "mat-dialog-container", "Dialog with choices")
 
 
-class RenameDialog(Dialog):
+class RenameDialogLocators(Dialog):
     object_name = Locator(By.TAG_NAME, "input", "Object name to set")
     error = Locator(By.TAG_NAME, "mat-error", "Error message")
     save = Locator(By.XPATH, "//button//span[contains(text(), 'Save')]", "Save button in rename dialog")
@@ -31,14 +30,10 @@ class RenameDialog(Dialog):
 
 
 class DeleteDialog(Dialog):
-    """Delete Dialog class"""
-
     yes = Locator(By.XPATH, "//button//span[contains(text(), 'Yes')]", "Yes button in delete dialog")
 
 
 class ActionDialog:
-    """Action Dialog class"""
-
     text = Locator(By.CSS_SELECTOR, "app-dialog mat-dialog-content", "Dialog content")
     next_btn = Locator(By.CSS_SELECTOR, ".mat-stepper-next", "Next button in action dialog")
     run = Locator(By.CSS_SELECTOR, "app-dialog button[color='accent']", "Run button in action dialog")

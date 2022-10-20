@@ -599,9 +599,9 @@ class TestHostRenaming:
     def _test_correct_name_can_be_set(self, host: Host, page: HostListPage) -> None:
         new_name = "best-host.fqdn"
 
-        page.open_rename_dialog(page.get_host_row())
-        page.set_new_name_in_rename_dialog(new_name)
-        page.click_save_on_rename_dialog()
+        dialog = page.open_rename_dialog(page.get_host_row())
+        dialog.set_new_name_in_rename_dialog(new_name)
+        dialog.click_save_on_rename_dialog()
         with allure.step("Check fqdn of host in table"):
             name_in_row = page.get_host_info_from_row(0).fqdn
             assert name_in_row == new_name, f"Incorrect cluster name, expected: {new_name}"
@@ -615,18 +615,18 @@ class TestHostRenaming:
             *[f"{dummy_name[0]}{char}{dummy_name[1:]}" for char in ("и", "!", " ")],
         )
 
-        page.open_rename_dialog(page.get_host_row())
+        dialog = page.open_rename_dialog(page.get_host_row())
 
         for fqdn in incorrect_names:
             with allure.step(f"Check if printing host FQDN '{fqdn}' triggers a warning message"):
-                page.set_new_name_in_rename_dialog(dummy_name)
-                page.set_new_name_in_rename_dialog(fqdn)
-                assert page.is_dialog_error_message_visible(), "Error about incorrect name should be visible"
+                dialog.set_new_name_in_rename_dialog(dummy_name)
+                dialog.set_new_name_in_rename_dialog(fqdn)
+                assert dialog.is_dialog_error_message_visible(), "Error about incorrect name should be visible"
                 assert (
-                    page.get_dialog_error_message() == self.EXPECTED_ERROR
+                    dialog.get_dialog_error_message() == self.EXPECTED_ERROR
                 ), f"Incorrect error message, expected: {self.EXPECTED_ERROR}"
 
-        page.click_cancel_on_rename_dialog()
+        dialog.click_cancel_on_rename_dialog()
 
     def _test_an_error_is_not_shown_on_correct_char_in_name(self, page: HostListPage) -> None:
         dummy_name = "clUster"
@@ -636,14 +636,14 @@ class TestHostRenaming:
             f"{dummy_name}-",
         )
 
-        page.open_rename_dialog(page.get_host_row())
+        dialog = page.open_rename_dialog(page.get_host_row())
 
         for fqdn in correct_names:
             with allure.step(f"Check if printing host FQDN '{fqdn}' shows no error"):
-                page.set_new_name_in_rename_dialog(dummy_name)
-                page.set_new_name_in_rename_dialog(fqdn)
-                assert not page.is_dialog_error_message_visible(), "Error about incorrect name should not be shown"
-                page.click_save_on_rename_dialog()
+                dialog.set_new_name_in_rename_dialog(dummy_name)
+                dialog.set_new_name_in_rename_dialog(fqdn)
+                assert not dialog.is_dialog_error_message_visible(), "Error about correct name should not be shown"
+                dialog.click_save_on_rename_dialog()
                 name_in_row = page.get_host_info_from_row().fqdn
                 assert name_in_row == fqdn, f"Incorrect host FQDN, expected: {fqdn}"
-                page.open_rename_dialog(page.get_host_row())
+                dialog = page.open_rename_dialog(page.get_host_row())
