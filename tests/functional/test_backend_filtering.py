@@ -180,8 +180,8 @@ def one_host_provider_id_attr(one_host: Host):
     [
         pytest.param(Bundle, id="Bundle"),
         pytest.param(Prototype, id="Prototype"),
-        pytest.param(ClusterPrototype, id="ClusterPrototype"),
-        pytest.param(ProviderPrototype, id="ProviderPrototype"),
+        pytest.param(ClusterPrototype, id="ClusterPrototype", marks=[pytest.mark.skip(reason="ADCM-3297")]),
+        pytest.param(ProviderPrototype, id="ProviderPrototype", marks=[pytest.mark.skip(reason="ADCM-3297")]),
         pytest.param(HostPrototype, id="HostPrototype"),
         pytest.param(Cluster, id="Cluster"),
         pytest.param(Provider, id="Provider"),
