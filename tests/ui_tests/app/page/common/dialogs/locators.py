@@ -34,7 +34,7 @@ class DeleteDialog(Dialog):
     yes = Locator(By.XPATH, "//button//span[contains(text(), 'Yes')]", "Yes button in delete dialog")
 
 
-class ActionDialog:
+class ActionDialog(Dialog):
     text = Locator(By.CSS_SELECTOR, "app-dialog mat-dialog-content", "Dialog content")
     next_btn = Locator(By.CSS_SELECTOR, ".mat-stepper-next", "Next button in action dialog")
     run = Locator(By.CSS_SELECTOR, "app-dialog button[color='accent']", "Run button in action dialog")
