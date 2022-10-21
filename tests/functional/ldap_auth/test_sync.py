@@ -36,7 +36,7 @@ from tests.functional.ldap_auth.utils import (
 )
 from tests.functional.rbac.conftest import BusinessRoles, RbacRoles
 from tests.library.assertions import expect_api_error, expect_no_api_error, sets_are_equal
-from tests.library.ldap_interactions import LDAPTestConfig, configure_adcm_for_ldap
+from tests.library.ldap_interactions import LDAPTestConfig, configure_adcm_for_ldap, sync_adcm_with_ldap
 
 # pylint: disable=redefined-outer-name
 
@@ -145,7 +145,7 @@ class TestLDAPSyncAction:
             local_group: Group = sdk_client_fs.group_create(name=ldap_group["name"])
         check_existing_users(sdk_client_fs)
         check_existing_groups(sdk_client_fs, expected_local={local_group.name})
-        _run_sync(sdk_client_fs)
+        sync_adcm_with_ldap(sdk_client_fs)
         check_existing_users(sdk_client_fs, {ldap_user_in_group["name"]})
         check_existing_groups(sdk_client_fs, {ldap_group["name"]}, {local_group.name})
         local_group.reread()
@@ -170,7 +170,7 @@ class TestLDAPSyncAction:
             group.add_user(local_user)
         check_existing_users(sdk_client_fs, expected_local=expected_local_users)
         check_existing_groups(sdk_client_fs, expected_local=[group_name])
-        _run_sync(sdk_client_fs)
+        sync_adcm_with_ldap(sdk_client_fs)
         local_user.reread()
         with allure.step("Check user type is local"):
             assert local_user.type == "local", 'User type should stay "local"'
@@ -184,12 +184,12 @@ class TestLDAPSyncAction:
     # pylint: disable-next=too-many-arguments
     def test_ldap_group_removed(self, sdk_client_fs, ldap_ad, ldap_group, ldap_user_in_group):
         """Test LDAP group removed from ADCM after it's removed from LDAP"""
-        _run_sync(sdk_client_fs)
+        sync_adcm_with_ldap(sdk_client_fs)
         check_existing_users(sdk_client_fs, {ldap_user_in_group["name"]})
         check_existing_groups(sdk_client_fs, {ldap_group["name"]})
         with allure.step("Delete group from LDAP"):
             ldap_ad.delete(ldap_group["dn"])
-        _run_sync(sdk_client_fs)
+        sync_adcm_with_ldap(sdk_client_fs)
         check_existing_users(sdk_client_fs, {ldap_user_in_group["name"]})
         check_existing_groups(sdk_client_fs)
 
@@ -197,14 +197,14 @@ class TestLDAPSyncAction:
     def test_user_removed_from_group(self, sdk_client_fs, ldap_ad, ldap_group, ldap_user_in_group):
         """Test that when user is removed from group in AD, it is also removed in ADCM's LDAP group"""
         another_group: Group = sdk_client_fs.group_create("Another group")
-        _run_sync(sdk_client_fs)
+        sync_adcm_with_ldap(sdk_client_fs)
         with allure.step("Add LDAP users to the local group"):
             user_in_group = get_ldap_user_from_adcm(sdk_client_fs, ldap_user_in_group["name"])
             group = get_ldap_group_from_adcm(sdk_client_fs, ldap_group["name"])
             another_group.add_user(user_in_group)
         with allure.step("Remove user in AD from LDAP group and rerun sync"):
             ldap_ad.remove_user_from_group(ldap_user_in_group["dn"], ldap_group["dn"])
-            _run_sync(sdk_client_fs)
+            sync_adcm_with_ldap(sdk_client_fs)
         with allure.step('Check user was removed only from LDAP group'):
             check_existing_users(sdk_client_fs, {ldap_user_in_group['name']})
             check_existing_groups(sdk_client_fs, {ldap_group['name']}, {another_group.name})
@@ -218,14 +218,14 @@ class TestLDAPSyncAction:
         ldap_user = ldap_user_in_group
         credentials = {"user": ldap_user["name"], "password": ldap_user["password"], "url": sdk_client_fs.url}
         with allure.step("Run sync and check that user is active and can log in"):
-            _run_sync(sdk_client_fs)
+            sync_adcm_with_ldap(sdk_client_fs)
             user = get_ldap_user_from_adcm(sdk_client_fs, ldap_user["name"])
             assert user.is_active, "User should be active"
             expect_no_api_error("login as LDAP active user", ADCMClient, **credentials)
         with allure.step("Deactivate user in LDAP and check it is deactivated after sync"):
             with session_should_expire(**credentials):
                 ldap_ad.deactivate_user(ldap_user["dn"])
-                _run_sync(sdk_client_fs)
+                sync_adcm_with_ldap(sdk_client_fs)
                 user.reread()
                 assert not user.is_active, 'User should be deactivated'
                 expect_api_error('login as deactivated user', ADCMClient, **credentials)
@@ -238,14 +238,14 @@ class TestLDAPSyncAction:
             "url": sdk_client_fs.url,
         }
         with allure.step("Run sync and check that user is active and can log in"):
-            _run_sync(sdk_client_fs)
+            sync_adcm_with_ldap(sdk_client_fs)
 
             check_existing_users(sdk_client_fs, {ldap_user_in_group["name"]})
             expect_no_api_error("login as LDAP user", ADCMClient, **credentials)
         with allure.step("Delete user in LDAP and check access denied"):
             with session_should_expire(**credentials):
                 ldap_ad.delete(ldap_user_in_group["dn"])
-                _run_sync(sdk_client_fs)
+                sync_adcm_with_ldap(sdk_client_fs)
                 check_existing_users(sdk_client_fs, {ldap_user_in_group['name']})
                 user = get_ldap_user_from_adcm(sdk_client_fs, ldap_user_in_group['name'])
                 assert not user.is_active, 'User should be deactivated'
@@ -254,11 +254,11 @@ class TestLDAPSyncAction:
     def test_name_email_sync_from_ldap(self, sdk_client_fs, ldap_ad, ldap_user_in_group):
         """Test that first/last name and email are synced with LDAP"""
         new_user_info = {"first_name": "Babaika", "last_name": "Labadaika", "email": "doesnt@ex.ist"}
-        _run_sync(sdk_client_fs)
+        sync_adcm_with_ldap(sdk_client_fs)
         user = get_ldap_user_from_adcm(sdk_client_fs, ldap_user_in_group["name"])
         self._check_user_info(user, ldap_user_in_group)
         ldap_ad.update_user(ldap_user_in_group["dn"], **new_user_info)
-        _run_sync(sdk_client_fs)
+        sync_adcm_with_ldap(sdk_client_fs)
         self._check_user_info(user, new_user_info)
 
     @allure.issue("https://tracker.yandex.ru/ADCM-3019")
@@ -272,7 +272,7 @@ class TestLDAPSyncAction:
             )
         check_existing_groups(sdk_client_fs)
         check_existing_users(sdk_client_fs)
-        _run_sync(sdk_client_fs)
+        sync_adcm_with_ldap(sdk_client_fs)
         check_existing_groups(sdk_client_fs, {ldap_group_name})
         check_existing_users(sdk_client_fs, {ldap_user_in_group["name"]})
         with allure.step("Check LDAP user is in LDAP group"):
@@ -292,7 +292,7 @@ class TestLDAPSyncAction:
     def _simple_sync(self, sdk_client_fs, ldap_group, ldap_user_in_group, expected_local_users):
         check_existing_users(sdk_client_fs, expected_local=expected_local_users)
         check_existing_groups(sdk_client_fs)
-        _run_sync(sdk_client_fs)
+        sync_adcm_with_ldap(sdk_client_fs)
         check_existing_users(sdk_client_fs, {ldap_user_in_group["name"]}, expected_local=expected_local_users)
         check_existing_groups(sdk_client_fs, {ldap_group["name"]})
 
@@ -371,7 +371,7 @@ class TestKnownSyncBugs:
             check_existing_groups(sdk_client_fs)
             check_existing_users(sdk_client_fs)
 
-        _run_sync(sdk_client_fs)
+        sync_adcm_with_ldap(sdk_client_fs)
 
         with allure.step("Check no LDAP groups or users exist"):
             check_existing_groups(sdk_client_fs)
@@ -391,7 +391,7 @@ class TestKnownSyncBugs:
 
         with allure.step("Configure LDAP only with user base and run sync"):
             set_adcm_ldap_config(users_base=users_ou, group_base="")
-            _run_sync(sdk_client_fs)
+            sync_adcm_with_ldap(sdk_client_fs)
 
         with allure.step("Check LDAP users appeared and are active"):
             sets_are_equal(
@@ -402,7 +402,7 @@ class TestKnownSyncBugs:
 
         with allure.step("Add group search to LDAP settings and "):
             set_adcm_ldap_config(users_base=users_ou, group_base=groups_ou)
-            _run_sync(sdk_client_fs)
+            sync_adcm_with_ldap(sdk_client_fs)
 
         with allure.step("Check LDAP users stayed, but are inactive"):
             sets_are_equal(
@@ -434,12 +434,6 @@ def session_should_expire(user: str, password: str, url: str):
             raise AssertionError(
                 f"Operation should fail as an unauthorized one\nBut check was failed due to {err}\n"
             ) from err
-
-
-@allure.step("Run LDAP sync action")
-def _run_sync(client: ADCMClient):
-    action = client.adcm().action(name=SYNC_ACTION_NAME)
-    wait_for_task_and_assert_result(action.run(), "success")
 
 
 @allure.step("Run successful test connection")
