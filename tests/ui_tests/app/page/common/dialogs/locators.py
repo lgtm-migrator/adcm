@@ -19,6 +19,7 @@ from tests.ui_tests.app.helpers.locator import Locator
 
 class Dialog:
     """Generic dialog"""
+
     body = Locator(By.CSS_SELECTOR, "mat-dialog-container", "Dialog with choices")
 
 
