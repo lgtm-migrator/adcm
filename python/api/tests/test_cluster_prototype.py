@@ -30,6 +30,7 @@ class TestClusterPrototypeAPI(BaseTestCase):
             name="test_prototype_1",
             display_name="test_prototype_1",
             version_order=1,
+            version=1,
         )
         self.prototype_2 = Prototype.objects.create(
             bundle=self.bundle_2,
@@ -37,6 +38,7 @@ class TestClusterPrototypeAPI(BaseTestCase):
             name="test_prototype_2",
             display_name="test_prototype_2",
             version_order=2,
+            version=2,
         )
         self.action = Action.objects.create(
             display_name="test_adcm_action",
@@ -106,6 +108,24 @@ class TestClusterPrototypeAPI(BaseTestCase):
     def test_list_ordering_version_order_reverse(self):
         response: Response = self.client.get(
             reverse("cluster-prototype-list"), {"ordering": "-version_order"}
+        )
+
+        self.assertEqual(len(response.data["results"]), 2)
+        self.assertEqual(response.data["results"][0]["id"], self.prototype_2.pk)
+        self.assertEqual(response.data["results"][1]["id"], self.prototype_1.pk)
+
+    def test_list_ordering_version(self):
+        response: Response = self.client.get(
+            reverse("cluster-prototype-list"), {"ordering": "version"}
+        )
+
+        self.assertEqual(len(response.data["results"]), 2)
+        self.assertEqual(response.data["results"][0]["id"], self.prototype_1.pk)
+        self.assertEqual(response.data["results"][1]["id"], self.prototype_2.pk)
+
+    def test_list_ordering_version_reverse(self):
+        response: Response = self.client.get(
+            reverse("cluster-prototype-list"), {"ordering": "-version"}
         )
 
         self.assertEqual(len(response.data["results"]), 2)

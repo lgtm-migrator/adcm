@@ -334,7 +334,7 @@ class ClusterPrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     queryset = Prototype.objects.filter(type="cluster")
     serializer_class = ClusterPrototypeSerializer
     filterset_fields = ("name", "bundle_id", "display_name")
-    ordering_fields = ("display_name", "version_order")
+    ordering_fields = ("display_name", "version_order", "version")
     lookup_url_kwarg = "prototype_pk"
 
     def get_serializer_class(self):
