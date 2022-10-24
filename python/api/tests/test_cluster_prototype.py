@@ -67,6 +67,15 @@ class TestClusterPrototypeAPI(BaseTestCase):
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"][0]["id"], self.prototype_1.pk)
 
+    def test_list_filter_display_name(self):
+        response: Response = self.client.get(
+            reverse("cluster-prototype-list"),
+            {"display_name": "test_prototype_2"},
+        )
+
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["id"], self.prototype_2.pk)
+
     def test_list_ordering_display_name(self):
         response: Response = self.client.get(
             reverse("cluster-prototype-list"), {"ordering": "display_name"}
