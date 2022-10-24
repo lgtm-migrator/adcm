@@ -31,7 +31,7 @@ from rest_framework.status import (
 )
 from rest_framework.viewsets import ModelViewSet
 
-from adcm.permissions import IsAuthenticatedAudit
+from adcm.permissions import DjangoObjectPermissionsAudit, IsAuthenticatedAudit
 from api.action.serializers import StackActionSerializer
 from api.base_view import GenericUIViewSet, ModelPermOrReadOnlyForAuth
 from api.stack.serializers import (
@@ -120,6 +120,7 @@ class CsrfOffSessionAuthentication(SessionAuthentication):
 class UploadBundleView(CreateModelMixin, GenericUIViewSet):
     queryset = Bundle.objects.all()
     serializer_class = UploadBundleSerializer
+    permission_classes = (DjangoObjectPermissionsAudit,)
     authentication_classes = (CsrfOffSessionAuthentication, TokenAuthentication)
     parser_classes = (MultiPartParser,)
 
@@ -140,6 +141,7 @@ class UploadBundleView(CreateModelMixin, GenericUIViewSet):
 class LoadBundleView(CreateModelMixin, GenericUIViewSet):
     queryset = Bundle.objects.all()
     serializer_class = LoadBundleSerializer
+    permission_classes = (DjangoObjectPermissionsAudit,)
 
     @audit
     def create(self, request: Request, *args, **kwargs) -> Response:

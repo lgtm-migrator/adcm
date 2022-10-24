@@ -198,7 +198,7 @@ class TestBundle(BaseTestCase):
         )
 
     def test_load_denied(self):
-        self.upload_bundle_and_check()
+        self.upload_bundle()
 
         with self.no_rights_user_logged_in:
             response: Response = self.load_bundle()
