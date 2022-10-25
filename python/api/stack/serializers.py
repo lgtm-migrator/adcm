@@ -90,9 +90,10 @@ class PrototypeSerializer(HyperlinkedModelSerializer):
             "required",
             "description",
             "bundle_edition",
+            "url",
         )
         read_only_fields = fields
-        extra_kwargs = {"url": {"lookup_url_kwarg": "bundle_pk"}}
+        extra_kwargs = {"url": {"lookup_url_kwarg": "prototype_pk"}}
 
 
 class PrototypeSerializerMixin:
@@ -151,7 +152,7 @@ class PrototypeUISerializer(PrototypeSerializer, PrototypeSerializerMixin):
             "service_id",
         )
         read_only_fields = fields
-        extra_kwargs = {"url": {"lookup_url_kwarg": "bundle_pk"}}
+        extra_kwargs = {"url": {"lookup_url_kwarg": "prototype_pk"}}
 
 
 class PrototypeDetailSerializer(PrototypeSerializer, PrototypeSerializerMixin):
@@ -174,7 +175,7 @@ class PrototypeDetailSerializer(PrototypeSerializer, PrototypeSerializerMixin):
             "service_id",
         )
         read_only_fields = fields
-        extra_kwargs = {"url": {"lookup_url_kwarg": "bundle_pk"}}
+        extra_kwargs = {"url": {"lookup_url_kwarg": "prototype_pk"}}
 
 
 class PrototypeShort(ModelSerializer):
