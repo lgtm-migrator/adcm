@@ -37,6 +37,7 @@ class ModelPermOrReadOnlyForAuth(DjangoModelPermissions):
             else:
                 queryset = self._queryset(view)
                 perms = self.get_required_permissions(request.method, queryset.model)
+
                 return request.user.has_perms(perms)
 
         return False

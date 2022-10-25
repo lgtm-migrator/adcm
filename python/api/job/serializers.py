@@ -108,7 +108,7 @@ class TaskRetrieveSerializer(HyperlinkedModelSerializer):
             return None
 
         return reverse(
-            "action-details", kwargs={"action_id": obj.action_id}, request=self.context["request"]
+            "action-detail", kwargs={"action_pk": obj.action_id}, request=self.context["request"]
         )
 
     @staticmethod
@@ -218,7 +218,7 @@ class JobRetrieveSerializer(HyperlinkedModelSerializer):
             return None
 
         return reverse(
-            "action-details", kwargs={"action_id": obj.action_id}, request=self.context["request"]
+            "action-detail", kwargs={"action_pk": obj.action_id}, request=self.context["request"]
         )
 
     @staticmethod
