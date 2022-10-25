@@ -15,8 +15,6 @@ import os
 import sys
 from os.path import dirname
 
-ENCODING = 'utf-8'
-
 PYTHON_DIR = sys.exec_prefix
 PYTHON_EXECUTABLE = sys.executable
 PYTHON_VERSION = f'{sys.version_info.major}.{sys.version_info.minor}'

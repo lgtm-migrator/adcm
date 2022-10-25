@@ -17,6 +17,8 @@ from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
 
+ENCODING = "utf-8"
+
 BASE_DIR = os.getenv("ADCM_BASE_DIR")
 if BASE_DIR:
     BASE_DIR = Path(BASE_DIR)

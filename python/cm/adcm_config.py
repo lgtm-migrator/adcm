@@ -21,12 +21,12 @@ from typing import Any, Optional, Tuple
 
 import yspec.checker
 from ansible.parsing.vault import VaultAES256, VaultSecret
+from django.conf import settings
 
 from cm.config import (
     ANSIBLE_SECRET,
     ANSIBLE_VAULT_HEADER,
     BUNDLE_DIR,
-    ENCODING,
     FILE_DIR,
 )
 from cm.errors import raise_adcm_ex
@@ -174,7 +174,7 @@ def read_bundle_file(proto, fname, bundle_hash, pattern, ref=None):
 
     fd = None
     try:
-        fd = open(path, "r", encoding="utf_8")
+        fd = open(path, "r", encoding=settings.ENCODING)
     except FileNotFoundError:
         msg = '{} "{}" is not found ({})'
         raise_adcm_ex("CONFIG_TYPE_ERROR", msg.format(pattern, path, ref))
@@ -385,7 +385,7 @@ def save_file_type(obj, key, subkey, value):
             if value[-1] == "-":
                 value += "\n"
 
-    fd = open(filename, "w", encoding="utf_8")
+    fd = open(filename, "w", encoding=settings.ENCODING)
     fd.write(value)
     fd.close()
     Path(filename).chmod(0o0600)
@@ -406,15 +406,15 @@ def process_file_type(obj: Any, spec: dict, conf: dict):
 
 def ansible_encrypt(msg):
     vault = VaultAES256()
-    secret = VaultSecret(bytes(ANSIBLE_SECRET, ENCODING))
+    secret = VaultSecret(bytes(ANSIBLE_SECRET, settings.ENCODING))
 
-    return vault.encrypt(bytes(msg, ENCODING), secret)
+    return vault.encrypt(bytes(msg, settings.ENCODING), secret)
 
 
 def ansible_encrypt_and_format(msg):
     ciphertext = ansible_encrypt(msg)
 
-    return f"{ANSIBLE_VAULT_HEADER}\n{str(ciphertext, ENCODING)}"
+    return f"{ANSIBLE_VAULT_HEADER}\n{str(ciphertext, settings.ENCODING)}"
 
 
 def ansible_decrypt(msg):
@@ -423,14 +423,14 @@ def ansible_decrypt(msg):
 
     _, ciphertext = msg.split("\n")
     vault = VaultAES256()
-    secret = VaultSecret(bytes(ANSIBLE_SECRET, ENCODING))
+    secret = VaultSecret(bytes(ANSIBLE_SECRET, settings.ENCODING))
 
-    return str(vault.decrypt(ciphertext, secret), ENCODING)
+    return str(vault.decrypt(ciphertext, secret), settings.ENCODING)
 
 
 def is_ansible_encrypted(msg):
     if not isinstance(msg, str):
-        msg = str(msg, ENCODING)
+        msg = str(msg, settings.ENCODING)
     if ANSIBLE_VAULT_HEADER in msg:
         return True
 
