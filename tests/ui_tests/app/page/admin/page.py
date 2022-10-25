@@ -661,7 +661,7 @@ class AdminRolesPage(GeneralAdminPage):
     @allure.step('Check that save button is disabled')
     def check_save_button_disabled(self):
         assert (
-                self.find_element(AdminRolesLocators.save_update_btn).get_attribute("disabled") == 'true'
+            self.find_element(AdminRolesLocators.save_update_btn).get_attribute("disabled") == 'true'
         ), "Save role button should be disabled"
 
     @allure.step("Check {error_message} error is presented")
