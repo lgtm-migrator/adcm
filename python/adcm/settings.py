@@ -29,17 +29,24 @@ CONF_DIR = BASE_DIR / "data" / "conf"
 CONFIG_FILE = BASE_DIR / "config.json"
 SECRET_KEY_FILE = CONF_DIR / "secret_key.txt"
 STACK_DIR = os.getenv("ADCM_STACK_DIR", BASE_DIR)
+BUNDLE_DIR = STACK_DIR / "data" / "bundle"
+CODE_DIR = BASE_DIR / "python"
 DOWNLOAD_DIR = Path(STACK_DIR, 'data', 'download')
 RUN_DIR = BASE_DIR / "data" / "run"
+FILE_DIR = STACK_DIR / "data" / "file"
+LOG_DIR = BASE_DIR / "data" / "log"
+LOG_FILE = LOG_DIR / 'adcm.log'
+SECRETS_FILE = BASE_DIR / "data" / "var" / "secrets.json"
+
 
 if SECRET_KEY_FILE.is_file():
-    with open(SECRET_KEY_FILE, encoding="utf_8") as f:
+    with open(SECRET_KEY_FILE, encoding=ENCODING) as f:
         SECRET_KEY = f.read().strip()
 else:
     SECRET_KEY = get_random_secret_key()
 
 if CONFIG_FILE.is_file():
-    with open(CONFIG_FILE, encoding="utf_8") as f:
+    with open(CONFIG_FILE, encoding=ENCODING) as f:
         ADCM_VERSION = json.load(f)["version"]
 else:
     ADCM_VERSION = "2019.02.07.00"

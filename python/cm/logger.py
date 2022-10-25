@@ -12,8 +12,7 @@
 
 import logging
 
-from cm import config
-
+from django.conf import settings
 logger = logging.getLogger('adcm')
 logger.setLevel(logging.DEBUG)
 
@@ -27,4 +26,4 @@ def get_log_handler(fname):
     return handler
 
 
-logger.addHandler(get_log_handler(config.LOG_FILE))
+logger.addHandler(get_log_handler(settings.LOG_FILE))

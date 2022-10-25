@@ -26,7 +26,7 @@ from rest_framework.serializers import (
 from api.action.serializers import ActionJobSerializer
 from api.concern.serializers import ConcernItemSerializer
 from cm.ansible_plugin import get_check_log
-from cm.config import RUN_DIR, Job
+from cm.config import Job
 from cm.errors import AdcmEx
 from cm.job import start_task
 from cm.models import JobLog, LogStorage, TaskLog
@@ -266,9 +266,9 @@ class LogStorageRetrieveSerializer(HyperlinkedModelSerializer):
 
     @staticmethod
     def _get_ansible_content(obj):
-        path_file = os.path.join(RUN_DIR, f"{obj.job.id}", f"{obj.name}-{obj.type}.{obj.format}")
+        path_file = settings.RUN_DIR / f"{obj.job.id}" / f"{obj.name}-{obj.type}.{obj.format}"
         try:
-            with open(path_file, "r", encoding="utf_8") as f:
+            with open(path_file, "r", encoding=settings.ENCODING) as f:
                 content = f.read()
         except FileNotFoundError as e:
             msg = f'File "{obj.name}-{obj.type}.{obj.format}" not found'
