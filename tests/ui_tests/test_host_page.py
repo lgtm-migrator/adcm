@@ -22,7 +22,9 @@ import pytest
 from _pytest.fixtures import SubRequest
 from adcm_client.objects import ADCMClient, Bundle, Cluster, Host, Provider
 from adcm_pytest_plugin import utils
+from selenium.common import StaleElementReferenceException
 
+from tests.library.retry import RetryFromCheckpoint, Step
 from tests.library.status import ADCMObjectStatusChanger
 from tests.ui_tests.app.app import ADCMTest
 from tests.ui_tests.app.page.admin.page import AdminIntroPage
@@ -138,7 +140,7 @@ def _check_job_name(sdk: ADCMClient, action_display_name: str):
 
 def _check_menu(
     menu_name: str,
-    provider_bundle: Bundle,
+    provider: Provider,
     list_page: HostListPage,
 ):
     list_page.click_on_row_child(0, HostListLocators.HostTable.HostRow.fqdn)
@@ -147,8 +149,7 @@ def _check_menu(
     host_page.check_fqdn_equal_to(HOST_FQDN)
     bundle_label = host_page.get_bundle_label()
     # Test Host is name of host in config.yaml
-    assert 'Test Host' in bundle_label
-    assert provider_bundle.version in bundle_label
+    assert provider.name == bundle_label
 
 
 # !===== TESTS =====!
@@ -182,7 +183,6 @@ class TestHostListPage:
             page.get_host_info_from_row,
         )
 
-    @pytest.mark.skip(reason="https://tracker.yandex.ru/ADCM-3212")
     @pytest.mark.smoke()
     @pytest.mark.include_firefox()
     @pytest.mark.usefixtures("upload_and_create_provider", "upload_and_create_cluster")
@@ -196,13 +196,27 @@ class TestHostListPage:
             'cluster': CLUSTER_NAME,
             'state': 'created',
         }
-        page.open_host_creation_popup()
-        page.host_popup.create_host(host_fqdn, cluster=CLUSTER_NAME)
+        self._create_host_bonded_to_cluster(page, host_fqdn)
         wait_and_assert_ui_info(
             expected_values,
             page.get_host_info_from_row,
             timeout=10,
         )
+
+    @staticmethod
+    def _create_host_bonded_to_cluster(page: HostListPage, fqdn: str) -> None:
+        host_bonding_retry = RetryFromCheckpoint(
+            execution_steps=[
+                Step(page.open_host_creation_popup),
+                Step(page.host_popup.create_host, [fqdn], {"cluster": CLUSTER_NAME}),
+            ],
+            restoration_steps=[
+                Step(page.driver.refresh),
+                Step(page.open_host_creation_popup),
+            ],
+        )
+        with allure.step("Try to bound host to cluster during new host creation"):
+            host_bonding_retry(restore_from=(AssertionError, TimeoutError, StaleElementReferenceException))
 
     @pytest.mark.parametrize("_create_many_hosts", [12], indirect=True)
     @pytest.mark.usefixtures("_create_many_hosts")
@@ -292,7 +306,8 @@ class TestHostListPage:
     def test_open_menu(self, upload_and_create_provider: Tuple[Bundle, Provider], page: HostListPage, menu: str):
         """Open detailed host page and open menu from side navigation"""
 
-        _check_menu(menu, upload_and_create_provider[0], page)
+        _, provider = upload_and_create_provider
+        _check_menu(menu, provider, page)
 
     @pytest.mark.smoke()
     @pytest.mark.include_firefox()
