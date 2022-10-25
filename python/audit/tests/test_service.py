@@ -37,6 +37,7 @@ from cm.models import (
     ClusterBind,
     ClusterObject,
     ConfigLog,
+    MaintenanceMode,
     ObjectConfig,
     Prototype,
     PrototypeExport,
@@ -182,7 +183,7 @@ class TestService(BaseTestCase):
     def test_update(self):
         self.client.patch(
             path=reverse("service-details", kwargs={"service_id": self.service.pk}),
-            data={"maintenance_mode": True},
+            data={"maintenance_mode": MaintenanceMode.ON},
             content_type=APPLICATION_JSON,
         )
 

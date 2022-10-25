@@ -30,6 +30,7 @@ from cm.models import (
     Cluster,
     ClusterObject,
     ConfigLog,
+    MaintenanceMode,
     ObjectConfig,
     Prototype,
     ServiceComponent,
@@ -112,7 +113,7 @@ class TestComponent(BaseTestCase):
     def test_update(self):
         self.client.patch(
             path=reverse("component-details", kwargs={"component_id": self.component.pk}),
-            data={"maintenance_mode": True},
+            data={"maintenance_mode": MaintenanceMode.ON},
             content_type=APPLICATION_JSON,
         )
 

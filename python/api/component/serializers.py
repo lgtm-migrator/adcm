@@ -15,6 +15,7 @@
 from rest_framework.serializers import (
     BooleanField,
     CharField,
+    ChoiceField,
     HyperlinkedIdentityField,
     IntegerField,
     JSONField,
@@ -29,7 +30,7 @@ from api.group_config.serializers import GroupConfigsHyperlinkedIdentityField
 from api.serializers import StringListSerializer
 from api.utils import CommonAPIURL, ObjectURL, filter_actions
 from cm.adcm_config import get_main_info
-from cm.models import Action, ServiceComponent
+from cm.models import Action, MaintenanceMode, ServiceComponent
 from cm.status_api import get_component_status
 
 
@@ -132,7 +133,7 @@ class ComponentDetailUISerializer(ComponentDetailSerializer):
 
 
 class ComponentPatchSerializer(ModelSerializer):
-    maintenance_mode = BooleanField(source="_maintenance_mode")
+    maintenance_mode = ChoiceField(choices=MaintenanceMode.choices, source="_maintenance_mode")
 
     class Meta:
         model = ServiceComponent

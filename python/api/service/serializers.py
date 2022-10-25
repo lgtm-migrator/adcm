@@ -17,6 +17,7 @@ from rest_framework.reverse import reverse
 from rest_framework.serializers import (
     BooleanField,
     CharField,
+    ChoiceField,
     HyperlinkedIdentityField,
     IntegerField,
     JSONField,
@@ -35,7 +36,14 @@ from api.utils import CommonAPIURL, ObjectURL, check_obj, filter_actions
 from cm.adcm_config import get_main_info
 from cm.api import add_service_to_cluster, bind, multi_bind
 from cm.errors import AdcmEx
-from cm.models import Action, Cluster, ClusterObject, Prototype, ServiceComponent
+from cm.models import (
+    Action,
+    Cluster,
+    ClusterObject,
+    MaintenanceMode,
+    Prototype,
+    ServiceComponent,
+)
 from cm.status_api import get_service_status
 
 
@@ -201,7 +209,7 @@ class StatusSerializer(EmptySerializer):
 
 
 class ServicePatchSerializer(ModelSerializer):
-    maintenance_mode = BooleanField(source="_maintenance_mode")
+    maintenance_mode = ChoiceField(choices=MaintenanceMode.choices, source="_maintenance_mode")
 
     class Meta:
         model = ClusterObject

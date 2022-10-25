@@ -46,6 +46,7 @@ from cm.models import (
     Host,
     HostComponent,
     HostProvider,
+    MaintenanceMode,
     Prototype,
     PrototypeExport,
     PrototypeImport,
@@ -628,7 +629,7 @@ def check_maintenance_mode(cluster, host_comp_list):
         try:
             HostComponent.objects.get(cluster=cluster, service=service, host=host, component=comp)
         except HostComponent.DoesNotExist:
-            if host.maintenance_mode:
+            if host.maintenance_mode == MaintenanceMode.ON:
                 raise AdcmEx("INVALID_HC_HOST_IN_MM")  # pylint: disable=raise-missing-from
 
 
