@@ -150,6 +150,8 @@ def _get_obj_changes_data(view: View | ModelViewSet) -> tuple[dict | None, Model
     current_obj = None
     serializer_class = None
     model = None
+    pk = None
+
     if (
         isinstance(view, ModelViewSet)
         and view.action in {"update", "partial_update"}
@@ -177,9 +179,11 @@ def _get_obj_changes_data(view: View | ModelViewSet) -> tuple[dict | None, Model
             serializer_class = host.serializers.HostAuditSerializer
             pk = view.kwargs["host_id"]
             model = Host
+
     if serializer_class:
         current_obj = model.objects.filter(pk=pk).first()
         prev_data = serializer_class(model.objects.filter(pk=pk).first()).data
+
         if current_obj:
             prev_data = serializer_class(current_obj).data
 
