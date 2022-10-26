@@ -94,12 +94,7 @@ class HostDetailSerializer(HostSerializer):
 
 
 class HostUpdateSerializer(HostDetailSerializer):
-    maintenance_mode = ChoiceField(choices=MaintenanceMode.choices)
-
     def update(self, instance, validated_data):
-        instance.maintenance_mode = validated_data.get(
-            "maintenance_mode", instance.maintenance_mode
-        )
         instance.description = validated_data.get("description", instance.description)
         instance.fqdn = validated_data.get("fqdn", instance.fqdn)
         instance.save()
@@ -114,15 +109,21 @@ class HostUpdateSerializer(HostDetailSerializer):
 class HostAuditSerializer(ModelSerializer):
     fqdn = CharField(max_length=253)
     description = CharField(required=False, allow_blank=True)
-    maintenance_mode = ChoiceField(choices=MaintenanceMode.choices)
 
     class Meta:
         model = Host
         fields = (
             "fqdn",
             "description",
-            "maintenance_mode",
         )
+
+
+class HostChangeMaintenanceModeSerializer(ModelSerializer):
+    maintenance_mode = ChoiceField(choices=MaintenanceMode.choices)
+
+    class Meta:
+        model = Host
+        fields = ("maintenance_mode",)
 
 
 class ClusterHostSerializer(HostSerializer):

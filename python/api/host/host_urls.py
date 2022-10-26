@@ -24,6 +24,7 @@ urlpatterns = [
                 path("config/", include("api.config.urls"), {"object_type": "host"}),
                 path("action/", include("api.action.urls"), {"object_type": "host"}),
                 path("status/", StatusList.as_view(), name="host-status"),
+                path("maintenance-mode/", HostDetail.as_view(), name="host-maintenance-mode"),
             ]
         ),
     ),

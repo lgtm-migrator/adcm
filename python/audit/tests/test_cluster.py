@@ -44,7 +44,6 @@ from cm.models import (
     Host,
     HostComponent,
     HostProvider,
-    MaintenanceMode,
     ObjectConfig,
     Prototype,
     PrototypeExport,
@@ -807,7 +806,7 @@ class TestCluster(BaseTestCase):
         )
 
     def test_update_host(self):
-        data = {"description": self.description, "maintenance_mode": MaintenanceMode.ON}
+        data = {"description": self.description}
         self.cluster.prototype.allow_maintenance_mode = True
         self.cluster.prototype.save(update_fields=["allow_maintenance_mode"])
         self.host.cluster = self.cluster
@@ -830,7 +829,7 @@ class TestCluster(BaseTestCase):
             operation_type=AuditLogOperationType.Update,
             object_changes={
                 "current": data,
-                "previous": {"description": "", "maintenance_mode": MaintenanceMode.OFF},
+                "previous": {"description": ""},
             },
         )
         self.client.patch(

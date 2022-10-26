@@ -449,7 +449,7 @@ class TestHost(BaseTestCase):
 
         self.client.patch(
             path=reverse("host-details", kwargs={"host_id": self.host.pk}),
-            data={"maintenance_mode": "on"},
+            data={"fqdn": "/*-/*-"},
             content_type=APPLICATION_JSON,
         )
 

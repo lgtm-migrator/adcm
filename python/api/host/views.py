@@ -14,17 +14,20 @@ from django_filters import rest_framework as drf_filters
 from guardian.mixins import PermissionListMixin
 from guardian.shortcuts import get_objects_for_user
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
+    HTTP_409_CONFLICT,
 )
 
 from api.base_view import DetailView, GenericUIView, PaginatedView
 from api.host.serializers import (
     ClusterHostSerializer,
+    HostChangeMaintenanceModeSerializer,
     HostDetailSerializer,
     HostDetailUISerializer,
     HostSerializer,
@@ -42,13 +45,16 @@ from cm.api import (
     remove_host_from_cluster,
 )
 from cm.errors import AdcmEx
+from cm.job import start_task
 from cm.models import (
+    Action,
     Cluster,
     ClusterObject,
     GroupConfig,
     Host,
     HostComponent,
     HostProvider,
+    MaintenanceMode,
     ServiceComponent,
 )
 from cm.status_api import make_ui_host_status
@@ -297,6 +303,77 @@ class HostDetail(PermissionListMixin, DetailView):
     @audit
     def put(self, request, *args, **kwargs):
         return self._update_host_object(request, partial=False, *args, **kwargs)
+
+    @audit
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        host = self.get_object()
+        serializer = HostChangeMaintenanceModeSerializer(instance=host, data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if serializer.validated_data["maintenance_mode"] == MaintenanceMode.CHANGING:
+            return Response(
+                data={
+                    "error": f'Host maintenance mode can\'t be switched to "{MaintenanceMode.CHANGING}"'
+                },
+                status=HTTP_409_CONFLICT,
+            )
+
+        if host.maintenance_mode == MaintenanceMode.CHANGING:
+            return Response(
+                data={"error": "Host maintenance mode is changing now"},
+                status=HTTP_409_CONFLICT,
+            )
+
+        if host.maintenance_mode == MaintenanceMode.OFF:
+            if serializer.validated_data["maintenance_mode"] == MaintenanceMode.OFF:
+                return Response()
+
+            turn_on_action = Action.objects.filter(
+                prototype=host.prototype, name="host_turn_on_maintenance_mode"
+            ).first()
+            if turn_on_action:
+                start_task(
+                    action=turn_on_action,
+                    obj=host,
+                    conf={},
+                    attr={},
+                    hc=[],
+                    hosts=[],
+                    verbose=False,
+                )
+                serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
+
+            serializer.save()
+
+            return Response()
+
+        if host.maintenance_mode == MaintenanceMode.ON:
+            if serializer.validated_data["maintenance_mode"] == MaintenanceMode.ON:
+                return Response()
+
+            turn_off_action = Action.objects.filter(
+                prototype=host.prototype, name="host_turn_off_maintenance_mode"
+            ).first()
+            if turn_off_action:
+                start_task(
+                    action=turn_off_action,
+                    obj=host,
+                    conf={},
+                    attr={},
+                    hc=[],
+                    hosts=[],
+                    verbose=False,
+                )
+                serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
+
+            serializer.save()
+
+            return Response()
+
+        return Response(
+            data={"error": f'Unknown host maintenance mode "{host.maintenance_mode}"'},
+            status=HTTP_400_BAD_REQUEST,
+        )
 
 
 class StatusList(GenericUIView):
