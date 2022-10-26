@@ -30,7 +30,6 @@ from cm.models import (
     Cluster,
     ClusterObject,
     ConfigLog,
-    MaintenanceMode,
     ObjectConfig,
     Prototype,
     ServiceComponent,
@@ -109,17 +108,6 @@ class TestComponent(BaseTestCase):
         self.assertEqual(log.operation_result, AuditLogOperationResult.Success)
         self.assertIsInstance(log.operation_time, datetime)
         self.assertEqual(log.object_changes, {})
-
-    def test_update(self):
-        self.client.patch(
-            path=reverse("component-details", kwargs={"component_id": self.component.pk}),
-            data={"maintenance_mode": MaintenanceMode.ON},
-            content_type=APPLICATION_JSON,
-        )
-
-        log: AuditLog = AuditLog.objects.order_by("operation_time").last()
-
-        self.check_log(log=log, operation_name="Component updated")
 
     def test_update_config(self):
         self.client.post(

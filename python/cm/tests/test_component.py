@@ -11,8 +11,6 @@
 # limitations under the License.
 
 from django.urls import reverse
-from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from adcm.tests.base import APPLICATION_JSON, BaseTestCase
 from cm.models import (
@@ -53,41 +51,6 @@ class TestComponent(BaseTestCase):
             cluster=self.cluster,
             service=self.service,
         )
-
-    def test_set_maintenance_mode_success(self):
-        response: Response = self.client.patch(
-            path=reverse("component-details", kwargs={"component_id": self.component.pk}),
-            data={"maintenance_mode": MaintenanceMode.ON},
-            content_type=APPLICATION_JSON,
-        )
-
-        self.component.refresh_from_db()
-
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(self.component.maintenance_mode, MaintenanceMode.ON)
-
-        response: Response = self.client.patch(
-            path=reverse("component-details", kwargs={"component_id": self.component.pk}),
-            data={"maintenance_mode": MaintenanceMode.OFF},
-            content_type=APPLICATION_JSON,
-        )
-
-        self.component.refresh_from_db()
-
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(self.component.maintenance_mode, MaintenanceMode.OFF)
-
-    def test_set_maintenance_mode_fail(self):
-        response: Response = self.client.patch(
-            path=reverse("component-details", kwargs={"component_id": self.component.pk}),
-            data={"maintenance_mode": "string"},
-            content_type=APPLICATION_JSON,
-        )
-
-        self.component.refresh_from_db()
-
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(self.component.maintenance_mode, MaintenanceMode.OFF)
 
     def test_maintenance_mode_by_hosts(self):
         host_1 = Host.objects.create(

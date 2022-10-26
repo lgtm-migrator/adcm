@@ -12,18 +12,19 @@
 
 from guardian.mixins import PermissionListMixin
 from rest_framework import permissions
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from api.base_view import DetailView, GenericUIView, PaginatedView
 from api.component.serializers import (
+    ComponentChangeMaintenanceModeSerializer,
     ComponentDetailSerializer,
     ComponentDetailUISerializer,
-    ComponentPatchSerializer,
     ComponentSerializer,
     ComponentUISerializer,
     StatusSerializer,
 )
-from api.utils import get_object_for_user
+from api.utils import get_maintenance_mode_response, get_object_for_user
 from audit.utils import audit
 from cm.models import Cluster, ClusterObject, HostComponent, ServiceComponent
 from cm.status_api import make_ui_component_status
@@ -75,16 +76,12 @@ class ComponentDetailView(PermissionListMixin, DetailView):
         return get_component_queryset(queryset, self.request.user, self.kwargs)
 
     @audit
-    def patch(self, request, *args, **kwargs):
-        serializer = ComponentPatchSerializer(
-            instance=self.get_object(),
-            data=request.data,
-            partial=True,
-        )
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        component = self.get_object()
+        serializer = ComponentChangeMaintenanceModeSerializer(instance=component, data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
 
-        return Response(serializer.data)
+        return get_maintenance_mode_response(obj=component, serializer=serializer)
 
 
 class StatusList(GenericUIView):

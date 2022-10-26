@@ -22,6 +22,11 @@ urlpatterns = [
         include(
             [
                 path('', ComponentDetailView.as_view(), name='component-details'),
+                path(
+                    "maintenance-mode/",
+                    ComponentDetailView.as_view(),
+                    name="component-maintenance-mode",
+                ),
                 path('config/', include('api.config.urls'), {'object_type': 'component'}),
                 path('action/', include('api.action.urls'), {'object_type': 'component'}),
                 path('status/', StatusList.as_view(), name='component-status'),
