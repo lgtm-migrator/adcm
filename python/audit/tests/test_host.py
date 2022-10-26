@@ -38,6 +38,7 @@ from cm.models import (
     ConfigLog,
     Host,
     HostProvider,
+    MaintenanceMode,
     ObjectConfig,
     Prototype,
 )
@@ -605,3 +606,41 @@ class TestHost(BaseTestCase):
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
         self.check_action_log(log=log)
+
+    def test_change_maintenance_mode(self):
+        self.client.post(
+            path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+            data={"maintenance_mode": MaintenanceMode.ON},
+        )
+
+        log: AuditLog = AuditLog.objects.order_by("operation_time").last()
+
+        self.check_host_updated_log(log=log, operation_name="Host updated")
+
+    def test_change_maintenance_mode_failed(self):
+        self.client.post(
+            path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+            data={"maintenance_mode": MaintenanceMode.CHANGING},
+        )
+
+        log: AuditLog = AuditLog.objects.order_by("operation_time").last()
+
+        self.check_host_updated_log(
+            log=log, operation_result=AuditLogOperationResult.Fail, operation_name="Host updated"
+        )
+
+    def test_change_maintenance_mode_denied(self):
+        with self.no_rights_user_logged_in:
+            self.client.post(
+                path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+                data={"maintenance_mode": MaintenanceMode.ON},
+            )
+
+        log: AuditLog = AuditLog.objects.order_by("operation_time").last()
+
+        self.check_host_updated_log(
+            log=log,
+            operation_result=AuditLogOperationResult.Denied,
+            operation_name="Host updated",
+            user=self.no_rights_user,
+        )

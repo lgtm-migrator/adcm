@@ -210,7 +210,10 @@ def audit(func):
             if "bind_id" in kwargs:
                 deleted_obj = ClusterBind.objects.filter(pk=kwargs["bind_id"]).first()
         else:
-            deleted_obj = None
+            if "host_id" in kwargs and "maintenance-mode" in request.path:
+                deleted_obj = Host.objects.filter(pk=kwargs["host_id"]).first()
+            else:
+                deleted_obj = None
 
         prev_data, current_obj = _get_obj_changes_data(view=view)
 
