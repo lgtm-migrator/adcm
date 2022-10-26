@@ -67,12 +67,12 @@ signal.signal(signal.SIGTERM, terminate_task)
 def run_job(task_id, job_id, err_file):
     logger.debug("task run job #%s of task #%s", job_id, task_id)
     cmd = [
-        '/adcm/python/job_venv_wrapper.sh',
+        "/adcm/python/job_venv_wrapper.sh",
         TaskLog.objects.get(id=task_id).action.venv,
-        os.path.join(settings.CODE_DIR, 'job_runner.py'),
+        os.path.join(settings.CODE_DIR, "job_runner.py"),
         str(job_id),
     ]
-    logger.info("task run job cmd: %s", ' '.join(cmd))
+    logger.info("task run job cmd: %s", " ".join(cmd))
     try:
         proc = subprocess.Popen(cmd, stderr=err_file)
         res = proc.wait()
@@ -86,10 +86,10 @@ def run_job(task_id, job_id, err_file):
 
 def set_log_body(job):
     name = job.sub_action.script_type if job.sub_action else job.action.script_type
-    log_storage = LogStorage.objects.filter(job=job, name=name, type__in=['stdout', 'stderr'])
+    log_storage = LogStorage.objects.filter(job=job, name=name, type__in=["stdout", "stderr"])
     for ls in log_storage:
         file_path = settings.RUN_DIR / f"{ls.job.id}" / f"{ls.name}-{ls.type}.{ls.format}"
-        with open(file_path, 'r', encoding=settings.ENCODING) as f:
+        with open(file_path, "r", encoding=settings.ENCODING) as f:
             body = f.read()
 
         LogStorage.objects.filter(job=job, name=ls.name, type=ls.type).update(body=body)
@@ -106,7 +106,7 @@ def run_task(task_id, args=None):
 
     task.pid = os.getpid()
     task.save()
-    jobs = JobLog.objects.filter(task_id=task.id).order_by('id')
+    jobs = JobLog.objects.filter(task_id=task.id).order_by("id")
     if not jobs:
         logger.error("no jobs for task %s", task.id)
         finish_task(task, None, JobStatus.FAILED)
@@ -121,7 +121,7 @@ def run_task(task_id, args=None):
     count = 0
     res = 0
     for job in jobs:
-        if args == 'restart' and job.status == JobStatus.SUCCESS:
+        if args == "restart" and job.status == JobStatus.SUCCESS:
             logger.info('skip job #%s status "%s" of task #%s', job.id, job.status, task_id)
 
             continue
@@ -167,5 +167,5 @@ def do():
         run_task(sys.argv[1])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     do()

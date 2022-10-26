@@ -13,5 +13,5 @@
 
 from django.conf import settings
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(settings.ANSIBLE_SECRET)

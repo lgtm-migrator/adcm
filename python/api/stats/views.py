@@ -21,7 +21,7 @@ from cm.models import JobLog, JobStatus, TaskLog
 class JobStats(PermissionListMixin, GenericUIView):
     queryset = JobLog.objects.all()
     permission_classes = (permissions.IsAuthenticated,)
-    permission_required = ['cm.view_joblog']
+    permission_required = ["cm.view_joblog"]
 
     def get(self, request, pk):
         """
@@ -39,7 +39,7 @@ class JobStats(PermissionListMixin, GenericUIView):
 class TaskStats(PermissionListMixin, GenericUIView):
     queryset = TaskLog.objects.all()
     permission_classes = (permissions.IsAuthenticated,)
-    permission_required = ['cm.view_tasklog']
+    permission_required = ["cm.view_tasklog"]
 
     def get(self, request, pk):
         """

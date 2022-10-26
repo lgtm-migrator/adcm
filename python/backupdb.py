@@ -38,25 +38,25 @@ def check_migrations():
 
 def backup_sqlite(dbfile):
     dt = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    backupfile = os.path.join(settings.BASE_DIR, 'data', 'var', f'{dt}.db')
+    backupfile = os.path.join(settings.BASE_DIR, "data", "var", f"{dt}.db")
     old = sqlite3.connect(dbfile)
     new = sqlite3.connect(backupfile)
     with new:
         old.backup(new)
     new.close()
     old.close()
-    logger.info('Backup sqlite db to %s', backupfile)
+    logger.info("Backup sqlite db to %s", backupfile)
 
 
 def backup_db():
     if not check_migrations():
         return
-    db = DATABASES['default']
-    if db['ENGINE'] != 'django.db.backends.sqlite3':
-        logger.error('Backup for %s not implemented yet', db['ENGINE'])
+    db = DATABASES["default"]
+    if db["ENGINE"] != "django.db.backends.sqlite3":
+        logger.error("Backup for %s not implemented yet", db["ENGINE"])
         return
-    backup_sqlite(db['NAME'])
+    backup_sqlite(db["NAME"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     backup_db()

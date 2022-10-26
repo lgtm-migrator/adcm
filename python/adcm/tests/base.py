@@ -45,7 +45,7 @@ class BaseTestCase(TestCase):
             password="no_rights_user_password",
         )
 
-        self.client = Client(HTTP_USER_AGENT='Mozilla/5.0')
+        self.client = Client(HTTP_USER_AGENT="Mozilla/5.0")
         self.login()
 
         self.cluster_admin_role = Role.objects.create(

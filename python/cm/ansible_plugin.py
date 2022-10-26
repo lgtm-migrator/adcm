@@ -18,8 +18,8 @@ import os
 from collections import defaultdict
 
 from ansible.errors import AnsibleError
-from ansible.plugins.action import ActionBase
 from ansible.utils.vars import merge_hash
+from ansible.plugins.action import ActionBase
 from django.conf import settings
 
 from cm.adcm_config import set_object_config
@@ -79,13 +79,13 @@ MSG_NO_MULTI_STATE_TO_DELETE = (
 
 
 def job_lock(job_id):
-    fname = os.path.join(settings.RUN_DIR, f'{job_id}/config.json')
-    fd = open(fname, 'r', encoding=settings.ENCODING)
+    fname = os.path.join(settings.RUN_DIR, f"{job_id}/config.json")
+    fd = open(fname, "r", encoding=settings.ENCODING)
     try:
         fcntl.flock(fd.fileno(), fcntl.LOCK_EX)  # pylint: disable=I1101
         return fd
     except IOError as e:
-        return err('LOCK_ERROR', e)
+        return err("LOCK_ERROR", e)
 
 
 def job_unlock(fd):
@@ -99,14 +99,14 @@ def check_context_type(task_vars, *context_type, err_msg=None):
     """
     if not task_vars:
         raise AnsibleError(MSG_NO_CONFIG)
-    if 'context' not in task_vars:
+    if "context" not in task_vars:
         raise AnsibleError(MSG_NO_CONTEXT)
-    if not isinstance(task_vars['context'], dict):
+    if not isinstance(task_vars["context"], dict):
         raise AnsibleError(MSG_NO_CONTEXT)
-    context = task_vars['context']
-    if context['type'] not in context_type:
+    context = task_vars["context"]
+    if context["type"] not in context_type:
         if err_msg is None:
-            err_msg = MSG_WRONG_CONTEXT.format(', '.join(context_type), context['type'])
+            err_msg = MSG_WRONG_CONTEXT.format(", ".join(context_type), context["type"])
         raise AnsibleError(err_msg)
 
 
@@ -115,7 +115,7 @@ def get_object_id_from_context(task_vars, id_type, *context_type, err_msg=None):
     Get object id from context.
     """
     check_context_type(task_vars, *context_type, err_msg=err_msg)
-    context = task_vars['context']
+    context = task_vars["context"]
     if id_type not in context:
         raise AnsibleError(MSG_WRONG_CONTEXT_ID.format(id_type))
     return context[id_type]
@@ -131,8 +131,8 @@ class ContextActionModule(ActionBase):
         try:
             func(*args)
         except AdcmEx as e:
-            return {'failed': True, 'msg': e.msg}
-        return {'changed': True}
+            return {"failed": True, "msg": e.msg}
+        return {"changed": True}
 
     def _check_mandatory(self):
         for arg in self._MANDATORY_ARGS:
@@ -172,64 +172,64 @@ class ContextActionModule(ActionBase):
     def run(self, tmp=None, task_vars=None):  # pylint: disable=too-many-branches
         self._check_mandatory()
         obj_type = self._task.args["type"]
-        job_id = task_vars['job']['id']
+        job_id = task_vars["job"]["id"]
         lock = job_lock(job_id)
 
-        if obj_type == 'cluster':
-            check_context_type(task_vars, 'cluster', 'service', 'component')
+        if obj_type == "cluster":
+            check_context_type(task_vars, "cluster", "service", "component")
             res = self._do_cluster(
-                task_vars, {'cluster_id': self._get_job_var(task_vars, 'cluster_id')}
+                task_vars, {"cluster_id": self._get_job_var(task_vars, "cluster_id")}
             )
         elif obj_type == "service" and "service_name" in self._task.args:
-            check_context_type(task_vars, 'cluster', 'service', 'component')
+            check_context_type(task_vars, "cluster", "service", "component")
             res = self._do_service_by_name(
-                task_vars, {'cluster_id': self._get_job_var(task_vars, 'cluster_id')}
+                task_vars, {"cluster_id": self._get_job_var(task_vars, "cluster_id")}
             )
         elif obj_type == "service":
-            check_context_type(task_vars, 'service', 'component')
+            check_context_type(task_vars, "service", "component")
             res = self._do_service(
                 task_vars,
                 {
-                    'cluster_id': self._get_job_var(task_vars, 'cluster_id'),
-                    'service_id': self._get_job_var(task_vars, 'service_id'),
+                    "cluster_id": self._get_job_var(task_vars, "cluster_id"),
+                    "service_id": self._get_job_var(task_vars, "service_id"),
                 },
             )
         elif obj_type == "host" and "host_id" in self._task.args:
-            check_context_type(task_vars, 'provider')
+            check_context_type(task_vars, "provider")
             res = self._do_host_from_provider(task_vars, {})
         elif obj_type == "host":
-            check_context_type(task_vars, 'host')
-            res = self._do_host(task_vars, {'host_id': self._get_job_var(task_vars, 'host_id')})
+            check_context_type(task_vars, "host")
+            res = self._do_host(task_vars, {"host_id": self._get_job_var(task_vars, "host_id")})
         elif obj_type == "provider":
-            check_context_type(task_vars, 'provider', 'host')
+            check_context_type(task_vars, "provider", "host")
             res = self._do_provider(
-                task_vars, {'provider_id': self._get_job_var(task_vars, 'provider_id')}
+                task_vars, {"provider_id": self._get_job_var(task_vars, "provider_id")}
             )
         elif obj_type == "component" and "component_name" in self._task.args:
             if "service_name" in self._task.args:
-                check_context_type(task_vars, 'cluster', 'service', 'component')
+                check_context_type(task_vars, "cluster", "service", "component")
                 res = self._do_component_by_name(
                     task_vars,
                     {
-                        'cluster_id': self._get_job_var(task_vars, 'cluster_id'),
-                        'service_id': None,
+                        "cluster_id": self._get_job_var(task_vars, "cluster_id"),
+                        "service_id": None,
                     },
                 )
             else:
-                check_context_type(task_vars, 'cluster', 'service', 'component')
-                if task_vars['job'].get('service_id', None) is None:
+                check_context_type(task_vars, "cluster", "service", "component")
+                if task_vars["job"].get("service_id", None) is None:
                     raise AnsibleError(MSG_NO_SERVICE_NAME)
                 res = self._do_component_by_name(
                     task_vars,
                     {
-                        'cluster_id': self._get_job_var(task_vars, 'cluster_id'),
-                        'service_id': self._get_job_var(task_vars, 'service_id'),
+                        "cluster_id": self._get_job_var(task_vars, "cluster_id"),
+                        "service_id": self._get_job_var(task_vars, "service_id"),
                     },
                 )
         elif obj_type == "component":
-            check_context_type(task_vars, 'component')
+            check_context_type(task_vars, "component")
             res = self._do_component(
-                task_vars, {'component_id': self._get_job_var(task_vars, 'component_id')}
+                task_vars, {"component_id": self._get_job_var(task_vars, "component_id")}
             )
         else:
             raise AnsibleError(MSG_NO_ROUTE)
@@ -258,7 +258,7 @@ def get_component_by_name(cluster_id, service_id, component_name, service_name):
 
 def get_service_by_name(cluster_id, service_name):
     cluster = Cluster.obj.get(id=cluster_id)
-    proto = Prototype.obj.get(type='service', name=service_name, bundle=cluster.prototype.bundle)
+    proto = Prototype.obj.get(type="service", name=service_name, bundle=cluster.prototype.bundle)
     return ClusterObject.obj.get(cluster=cluster, prototype=proto)
 
 
@@ -299,7 +299,7 @@ def set_service_state_by_name(cluster_id, service_name, state):
 
 
 def set_service_state(cluster_id, service_id, state):
-    obj = ClusterObject.obj.get(id=service_id, cluster__id=cluster_id, prototype__type='service')
+    obj = ClusterObject.obj.get(id=service_id, cluster__id=cluster_id, prototype__type="service")
     return _set_object_state(obj, state)
 
 
@@ -320,7 +320,7 @@ def set_service_multi_state_by_name(cluster_id, service_name, multi_state):
 
 
 def set_service_multi_state(cluster_id, service_id, multi_state):
-    obj = ClusterObject.obj.get(id=service_id, cluster__id=cluster_id, prototype__type='service')
+    obj = ClusterObject.obj.get(id=service_id, cluster__id=cluster_id, prototype__type="service")
     return _set_object_multi_state(obj, multi_state)
 
 
@@ -347,42 +347,42 @@ def set_host_multi_state(host_id, multi_state):
 
 
 def change_hc(job_id, cluster_id, operations):  # pylint: disable=too-many-branches
-    '''
+    """
     For use in ansible plugin adcm_hc
-    '''
+    """
     lock = job_lock(job_id)
     job = JobLog.objects.get(id=job_id)
     action = Action.objects.get(id=job.action_id)
     if action.hostcomponentmap:
-        err('ACTION_ERROR', 'You can not change hc in plugin for action with hc_acl')
+        err("ACTION_ERROR", "You can not change hc in plugin for action with hc_acl")
 
     cluster = Cluster.obj.get(id=cluster_id)
     hc = get_hc(cluster)
     for op in operations:
-        service = ClusterObject.obj.get(cluster=cluster, prototype__name=op['service'])
+        service = ClusterObject.obj.get(cluster=cluster, prototype__name=op["service"])
         component = ServiceComponent.obj.get(
-            cluster=cluster, service=service, prototype__name=op['component']
+            cluster=cluster, service=service, prototype__name=op["component"]
         )
-        host = Host.obj.get(cluster=cluster, fqdn=op['host'])
+        host = Host.obj.get(cluster=cluster, fqdn=op["host"])
         item = {
-            'host_id': host.id,
-            'service_id': service.id,
-            'component_id': component.id,
+            "host_id": host.id,
+            "service_id": service.id,
+            "component_id": component.id,
         }
-        if op['action'] == 'add':
+        if op["action"] == "add":
             if item not in hc:
                 hc.append(item)
             else:
                 msg = 'There is already component "{}" on host "{}"'
-                err('COMPONENT_CONFLICT', msg.format(component.prototype.name, host.fqdn))
-        elif op['action'] == 'remove':
+                err("COMPONENT_CONFLICT", msg.format(component.prototype.name, host.fqdn))
+        elif op["action"] == "remove":
             if item in hc:
                 hc.remove(item)
             else:
                 msg = 'There is no component "{}" on host "{}"'
-                err('COMPONENT_CONFLICT', msg.format(component.prototype.name, host.fqdn))
+                err("COMPONENT_CONFLICT", msg.format(component.prototype.name, host.fqdn))
         else:
-            err('INVALID_INPUT', f'unknown hc action "{op["action"]}"')
+            err("INVALID_INPUT", f'unknown hc action "{op["action"]}"')
 
     add_hc(cluster, hc)
     job_unlock(lock)
@@ -409,7 +409,7 @@ def set_service_config_by_name(cluster_id, service_name, keys, value):
 
 
 def set_service_config(cluster_id, service_id, keys, value):
-    obj = ClusterObject.obj.get(id=service_id, cluster__id=cluster_id, prototype__type='service')
+    obj = ClusterObject.obj.get(id=service_id, cluster__id=cluster_id, prototype__type="service")
     return set_object_config(obj, keys, value)
 
 
@@ -447,7 +447,7 @@ def unset_service_multi_state_by_name(cluster_id, service_name, multi_state, mis
 
 
 def unset_service_multi_state(cluster_id, service_id, multi_state, missing_ok):
-    obj = ClusterObject.obj.get(id=service_id, cluster__id=cluster_id, prototype__type='service')
+    obj = ClusterObject.obj.get(id=service_id, cluster__id=cluster_id, prototype__type="service")
     return _unset_object_multi_state(obj, multi_state, missing_ok)
 
 
@@ -474,8 +474,8 @@ def unset_host_multi_state(host_id, multi_state, missing_ok):
 
 
 def log_group_check(group: GroupCheckLog, fail_msg: str, success_msg: str):
-    logs = CheckLog.objects.filter(group=group).values('result')
-    result = all(log['result'] for log in logs)
+    logs = CheckLog.objects.filter(group=group).values("result")
+    result = all(log["result"] for log in logs)
 
     if result:
         msg = success_msg
@@ -491,33 +491,33 @@ def log_check(job_id: int, group_data: dict, check_data: dict) -> CheckLog:
     lock = job_lock(job_id)
     job = JobLog.obj.get(id=job_id)
     if job.status != JobStatus.RUNNING:
-        err('JOB_NOT_FOUND', f'job #{job.pk} has status "{job.status}", not "running"')
+        err("JOB_NOT_FOUND", f'job #{job.pk} has status "{job.status}", not "running"')
 
-    group_title = group_data.pop('title')
+    group_title = group_data.pop("title")
 
     if group_title:
         group, _ = GroupCheckLog.objects.get_or_create(job=job, title=group_title)
     else:
         group = None
 
-    check_data.update({'job': job, 'group': group})
+    check_data.update({"job": job, "group": group})
     cl = CheckLog.objects.create(**check_data)
 
     if group is not None:
-        group_data.update({'group': group})
+        group_data.update({"group": group})
         log_group_check(**group_data)
 
-    ls, _ = LogStorage.objects.get_or_create(job=job, name='ansible', type='check', format='json')
+    ls, _ = LogStorage.objects.get_or_create(job=job, name="ansible", type="check", format="json")
 
     post_event(
-        'add_job_log',
-        'job',
+        "add_job_log",
+        "job",
         job_id,
         {
-            'id': ls.pk,
-            'type': ls.type,
-            'name': ls.name,
-            'format': ls.format,
+            "id": ls.pk,
+            "type": ls.type,
+            "name": ls.name,
+            "format": ls.format,
         },
     )
     job_unlock(lock)
@@ -532,21 +532,21 @@ def get_check_log(job_id: int):
         group = cl.group
         if group is None:
             data.append(
-                {'title': cl.title, 'type': 'check', 'message': cl.message, 'result': cl.result}
+                {"title": cl.title, "type": "check", "message": cl.message, "result": cl.result}
             )
         else:
             if group not in group_subs:
                 data.append(
                     {
-                        'title': group.title,
-                        'type': 'group',
-                        'message': group.message,
-                        'result': group.result,
-                        'content': group_subs[group],
+                        "title": group.title,
+                        "type": "group",
+                        "message": group.message,
+                        "result": group.result,
+                        "content": group_subs[group],
                     }
                 )
             group_subs[group].append(
-                {'title': cl.title, 'type': 'check', 'message': cl.message, 'result': cl.result}
+                {"title": cl.title, "type": "check", "message": cl.message, "result": cl.result}
             )
     return data
 
@@ -557,7 +557,7 @@ def finish_check(job_id: int):
         return
 
     job = JobLog.objects.get(id=job_id)
-    LogStorage.objects.filter(job=job, name='ansible', type='check', format='json').update(
+    LogStorage.objects.filter(job=job, name="ansible", type="check", format="json").update(
         body=json.dumps(data)
     )
 

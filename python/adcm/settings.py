@@ -21,8 +21,8 @@ from django.core.management.utils import get_random_secret_key
 ENCODING = "utf-8"
 
 PYTHON_SITE_PACKAGES = (
-        Path(sys.exec_prefix) /
-        f"lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
+    Path(sys.exec_prefix)
+    / f"lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
 )
 
 BASE_DIR = os.getenv("ADCM_BASE_DIR")
@@ -41,7 +41,7 @@ DOWNLOAD_DIR = STACK_DIR / "data" / "download"
 RUN_DIR = BASE_DIR / "data" / "run"
 FILE_DIR = STACK_DIR / "data" / "file"
 LOG_DIR = BASE_DIR / "data" / "log"
-LOG_FILE = LOG_DIR / 'adcm.log'
+LOG_FILE = LOG_DIR / "adcm.log"
 SECRETS_FILE = BASE_DIR / "data" / "var" / "secrets.json"
 
 ANSIBLE_VAULT_HEADER = "$ANSIBLE_VAULT;1.1;AES256"
@@ -71,7 +71,7 @@ else:
 DEBUG = False
 ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
-    "rbac",  # keep it above 'django.contrib.auth' in order to keep "createsuperuser" working
+    "rbac",  # keep it above "django.contrib.auth" in order to keep "createsuperuser" working
     "django_generate_secret_key",
     "django_filters",
     "django.contrib.auth",

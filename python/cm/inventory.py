@@ -313,9 +313,9 @@ def get_hosts(host_list, obj, action_host=None):
         ):
             continue
         group[host.fqdn] = get_obj_config(host)
-        group[host.fqdn]['adcm_hostid'] = host.id
-        group[host.fqdn]['state'] = host.state
-        group[host.fqdn]['multi_state'] = host.multi_state
+        group[host.fqdn]["adcm_hostid"] = host.id
+        group[host.fqdn]["state"] = host.state
+        group[host.fqdn]["multi_state"] = host.multi_state
         if not isinstance(obj, Host):
             group[host.fqdn].update(get_host_vars(host, obj))
     return group
