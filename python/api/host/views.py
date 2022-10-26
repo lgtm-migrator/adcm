@@ -21,7 +21,6 @@ from rest_framework.status import (
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
-    HTTP_409_CONFLICT,
 )
 
 from api.base_view import DetailView, GenericUIView, PaginatedView
@@ -36,7 +35,12 @@ from api.host.serializers import (
     ProvideHostSerializer,
     StatusSerializer,
 )
-from api.utils import check_custom_perm, create, get_object_for_user
+from api.utils import (
+    check_custom_perm,
+    create,
+    get_maintenance_mode_response,
+    get_object_for_user,
+)
 from audit.utils import audit
 from cm.api import (
     add_host_to_cluster,
@@ -45,16 +49,13 @@ from cm.api import (
     remove_host_from_cluster,
 )
 from cm.errors import AdcmEx
-from cm.job import start_task
 from cm.models import (
-    Action,
     Cluster,
     ClusterObject,
     GroupConfig,
     Host,
     HostComponent,
     HostProvider,
-    MaintenanceMode,
     ServiceComponent,
 )
 from cm.status_api import make_ui_host_status
@@ -310,70 +311,7 @@ class HostDetail(PermissionListMixin, DetailView):
         serializer = HostChangeMaintenanceModeSerializer(instance=host, data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        if serializer.validated_data["maintenance_mode"] == MaintenanceMode.CHANGING:
-            return Response(
-                data={
-                    "error": f'Host maintenance mode can\'t be switched to "{MaintenanceMode.CHANGING}"'
-                },
-                status=HTTP_409_CONFLICT,
-            )
-
-        if host.maintenance_mode == MaintenanceMode.CHANGING:
-            return Response(
-                data={"error": "Host maintenance mode is changing now"},
-                status=HTTP_409_CONFLICT,
-            )
-
-        if host.maintenance_mode == MaintenanceMode.OFF:
-            if serializer.validated_data["maintenance_mode"] == MaintenanceMode.OFF:
-                return Response()
-
-            turn_on_action = Action.objects.filter(
-                prototype=host.prototype, name="host_turn_on_maintenance_mode"
-            ).first()
-            if turn_on_action:
-                start_task(
-                    action=turn_on_action,
-                    obj=host,
-                    conf={},
-                    attr={},
-                    hc=[],
-                    hosts=[],
-                    verbose=False,
-                )
-                serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
-
-            serializer.save()
-
-            return Response()
-
-        if host.maintenance_mode == MaintenanceMode.ON:
-            if serializer.validated_data["maintenance_mode"] == MaintenanceMode.ON:
-                return Response()
-
-            turn_off_action = Action.objects.filter(
-                prototype=host.prototype, name="host_turn_off_maintenance_mode"
-            ).first()
-            if turn_off_action:
-                start_task(
-                    action=turn_off_action,
-                    obj=host,
-                    conf={},
-                    attr={},
-                    hc=[],
-                    hosts=[],
-                    verbose=False,
-                )
-                serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
-
-            serializer.save()
-
-            return Response()
-
-        return Response(
-            data={"error": f'Unknown host maintenance mode "{host.maintenance_mode}"'},
-            status=HTTP_400_BAD_REQUEST,
-        )
+        return get_maintenance_mode_response(obj=host, serializer=serializer)
 
 
 class StatusList(GenericUIView):

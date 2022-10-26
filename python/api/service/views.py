@@ -12,6 +12,7 @@
 
 from guardian.mixins import PermissionListMixin
 from rest_framework import permissions
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
@@ -22,15 +23,21 @@ from api.service.serializers import (
     ImportPostSerializer,
     ServiceBindPostSerializer,
     ServiceBindSerializer,
+    ServiceChangeMaintenanceModeSerializer,
     ServiceDetailSerializer,
     ServiceDetailUISerializer,
-    ServicePatchSerializer,
     ServiceSerializer,
     ServiceUISerializer,
     StatusSerializer,
 )
 from api.stack.serializers import ImportSerializer
-from api.utils import check_custom_perm, check_obj, create, get_object_for_user
+from api.utils import (
+    check_custom_perm,
+    check_obj,
+    create,
+    get_maintenance_mode_response,
+    get_object_for_user,
+)
 from audit.utils import audit
 from cm.api import delete_service, get_import, unbind
 from cm.errors import raise_adcm_ex
@@ -100,16 +107,12 @@ class ServiceDetailView(PermissionListMixin, DetailView):
         return queryset
 
     @audit
-    def patch(self, request, *args, **kwargs):
-        serializer = ServicePatchSerializer(
-            instance=self.get_object(),
-            data=request.data,
-            partial=True,
-        )
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        service = self.get_object()
+        serializer = ServiceChangeMaintenanceModeSerializer(instance=service, data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
 
-        return Response(serializer.data)
+        return get_maintenance_mode_response(obj=service, serializer=serializer)
 
     @audit
     def delete(self, request, *args, **kwargs):

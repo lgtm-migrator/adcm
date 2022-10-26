@@ -208,8 +208,8 @@ class StatusSerializer(EmptySerializer):
         return get_service_status(obj)
 
 
-class ServicePatchSerializer(ModelSerializer):
-    maintenance_mode = ChoiceField(choices=MaintenanceMode.choices, source="_maintenance_mode")
+class ServiceChangeMaintenanceModeSerializer(ModelSerializer):
+    maintenance_mode = ChoiceField(choices=MaintenanceMode.choices)
 
     class Meta:
         model = ClusterObject

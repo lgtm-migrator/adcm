@@ -37,7 +37,6 @@ from cm.models import (
     ClusterBind,
     ClusterObject,
     ConfigLog,
-    MaintenanceMode,
     ObjectConfig,
     Prototype,
     PrototypeExport,
@@ -179,26 +178,6 @@ class TestService(BaseTestCase):
         PrototypeImport.objects.create(prototype=self.service_prototype, name="Export_service")
 
         return service, cluster
-
-    def test_update(self):
-        self.client.patch(
-            path=reverse("service-details", kwargs={"service_id": self.service.pk}),
-            data={"maintenance_mode": MaintenanceMode.ON},
-            content_type=APPLICATION_JSON,
-        )
-
-        log: AuditLog = AuditLog.objects.order_by("operation_time").last()
-
-        self.check_log(
-            log=log,
-            obj=self.service,
-            obj_name=f"{self.cluster.name}/{self.service.display_name}",
-            object_type=AuditObjectType.Service,
-            operation_name="Service updated",
-            operation_type=AuditLogOperationType.Update,
-            operation_result=AuditLogOperationResult.Success,
-            user=self.test_user,
-        )
 
     def test_update_config(self):
         self.client.post(

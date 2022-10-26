@@ -12,12 +12,7 @@
 
 from django.urls import reverse
 from rest_framework.response import Response
-from rest_framework.status import (
-    HTTP_200_OK,
-    HTTP_204_NO_CONTENT,
-    HTTP_400_BAD_REQUEST,
-    HTTP_409_CONFLICT,
-)
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_409_CONFLICT
 
 from adcm.tests.base import APPLICATION_JSON, BaseTestCase
 from cm.models import (
@@ -64,41 +59,6 @@ class TestService(BaseTestCase):
         response: Response = self.client.delete(path=url, content_type=APPLICATION_JSON)
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
-
-    def test_set_maintenance_mode_success(self):
-        response: Response = self.client.patch(
-            path=reverse("service-details", kwargs={"service_id": self.service.pk}),
-            data={"maintenance_mode": MaintenanceMode.ON},
-            content_type=APPLICATION_JSON,
-        )
-
-        self.service.refresh_from_db()
-
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(self.service.maintenance_mode, MaintenanceMode.ON)
-
-        response: Response = self.client.patch(
-            path=reverse("service-details", kwargs={"service_id": self.service.pk}),
-            data={"maintenance_mode": MaintenanceMode.OFF},
-            content_type=APPLICATION_JSON,
-        )
-
-        self.service.refresh_from_db()
-
-        self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertEqual(self.service.maintenance_mode, MaintenanceMode.OFF)
-
-    def test_set_maintenance_mode_fail(self):
-        response: Response = self.client.patch(
-            path=reverse("service-details", kwargs={"service_id": self.service.pk}),
-            data={"maintenance_mode": "string"},
-            content_type=APPLICATION_JSON,
-        )
-
-        self.service.refresh_from_db()
-
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(self.service.maintenance_mode, MaintenanceMode.OFF)
 
     def test_maintenance_mode_by_hosts(self):
         host_1 = Host.objects.create(

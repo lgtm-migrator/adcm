@@ -28,6 +28,11 @@ urlpatterns = [
         include(
             [
                 path("", ServiceDetailView.as_view(), name="service-details"),
+                path(
+                    "maintenance-mode/",
+                    ServiceDetailView.as_view(),
+                    name="service-maintenance-mode",
+                ),
                 path("component/", include("api.component.urls")),
                 path("import/", ServiceImportView.as_view(), name="service-import"),
                 path(

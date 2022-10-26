@@ -787,6 +787,10 @@ class ClusterObject(ADCMEntity):
 
         return self._maintenance_mode
 
+    @maintenance_mode.setter
+    def maintenance_mode(self, value: MaintenanceMode.choices) -> None:
+        self._maintenance_mode = value
+
     class Meta:
         unique_together = (("cluster", "prototype"),)
 
