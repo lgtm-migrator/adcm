@@ -48,6 +48,7 @@ from cm.models import (
     ClusterObject,
     Host,
     HostProvider,
+    ServiceComponent,
     TaskLog,
 )
 from rbac.endpoints.group.serializers import GroupAuditSerializer
@@ -214,6 +215,8 @@ def audit(func):
                 deleted_obj = Host.objects.filter(pk=kwargs["host_id"]).first()
             elif "service_id" in kwargs and "maintenance-mode" in request.path:
                 deleted_obj = ClusterObject.objects.filter(pk=kwargs["service_id"]).first()
+            elif "component_id" in kwargs and "maintenance-mode" in request.path:
+                deleted_obj = ServiceComponent.objects.filter(pk=kwargs["component_id"]).first()
             else:
                 deleted_obj = None
 

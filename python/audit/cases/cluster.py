@@ -377,7 +377,7 @@ def cluster_case(
                 operation_aux_str=CONFIGURATION_STR,
             )
 
-        case ["component", component_pk]:
+        case ["component", component_pk] | ["component", component_pk, _]:
             audit_operation, audit_object = obj_pk_case(
                 obj_type=AuditObjectType.Component,
                 operation_type=AuditLogOperationType.Update,
