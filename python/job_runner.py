@@ -23,12 +23,11 @@ from django.db import transaction
 
 import adcm.init_django  # pylint: disable=unused-import
 import cm.job
-from cm import config
 from cm.ansible_plugin import finish_check
 from cm.api import get_hc, save_hc
 from cm.errors import AdcmEx
 from cm.logger import logger
-from cm.models import JobLog, LogStorage, Prototype, ServiceComponent
+from cm.models import JobLog, JobStatus, LogStorage, Prototype, ServiceComponent
 from cm.status_api import Event, post_event
 from cm.upgrade import bundle_switch
 
@@ -48,13 +47,13 @@ def read_config(job_id):
 
 def set_job_status(job_id, ret, pid, event):
     if ret == 0:
-        cm.job.set_job_status(job_id, config.Job.SUCCESS, event, pid)
+        cm.job.set_job_status(job_id, JobStatus.SUCCESS, event, pid)
         return 0
     elif ret == -15:
-        cm.job.set_job_status(job_id, config.Job.ABORTED, event, pid)
+        cm.job.set_job_status(job_id, JobStatus.ABORTED, event, pid)
         return 15
     else:
-        cm.job.set_job_status(job_id, config.Job.FAILED, event, pid)
+        cm.job.set_job_status(job_id, JobStatus.FAILED, event, pid)
         return ret
 
 
@@ -117,7 +116,7 @@ def start_subprocess(job_id, cmd, conf, out_file, err_file):
     event = Event()
     logger.info("job run cmd: %s", ' '.join(cmd))
     proc = subprocess.Popen(cmd, env=env_configuration(conf), stdout=out_file, stderr=err_file)
-    cm.job.set_job_status(job_id, config.Job.RUNNING, event, proc.pid)
+    cm.job.set_job_status(job_id, JobStatus.RUNNING, event, proc.pid)
     event.send_state()
     logger.info("run job #%s, pid %s", job_id, proc.pid)
     ret = proc.wait()
@@ -162,7 +161,7 @@ def run_ansible(job_id):
 
 def run_upgrade(job):
     event = Event()
-    cm.job.set_job_status(job.id, config.Job.RUNNING, event)
+    cm.job.set_job_status(job.id, JobStatus.RUNNING, event)
     out_file, err_file = process_err_out_file(job.id, 'internal')
     try:
         with transaction.atomic():
@@ -170,11 +169,11 @@ def run_upgrade(job):
             switch_hc(job.task, job.action)
     except AdcmEx as e:
         err_file.write(e.msg)
-        cm.job.set_job_status(job.id, config.Job.FAILED, event)
+        cm.job.set_job_status(job.id, JobStatus.FAILED, event)
         out_file.close()
         err_file.close()
         sys.exit(1)
-    cm.job.set_job_status(job.id, config.Job.SUCCESS, event)
+    cm.job.set_job_status(job.id, JobStatus.SUCCESS, event)
     event.send_state()
     out_file.close()
     err_file.close()

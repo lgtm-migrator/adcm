@@ -24,22 +24,21 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 
 import adcm.init_django  # pylint: disable=unused-import
-from cm.config import Job
 from cm.job import finish_task, re_prepare_job
 from cm.logger import logger
-from cm.models import JobLog, LogStorage, TaskLog
+from cm.models import JobLog, JobStatus, LogStorage, TaskLog
 
 TASK_ID = 0
 
 
 def terminate_job(task, jobs):
-    running_job = jobs.get(status=Job.RUNNING)
+    running_job = jobs.get(status=JobStatus.RUNNING)
 
     if running_job.pid:
         os.kill(running_job.pid, signal.SIGTERM)
-        finish_task(task, running_job, Job.ABORTED)
+        finish_task(task, running_job, JobStatus.ABORTED)
     else:
-        finish_task(task, None, Job.ABORTED)
+        finish_task(task, None, JobStatus.ABORTED)
 
 
 def terminate_task(signum, frame):
@@ -49,7 +48,7 @@ def terminate_task(signum, frame):
 
     i = 0
     while i < 10:
-        if jobs.filter(status=Job.RUNNING):
+        if jobs.filter(status=JobStatus.RUNNING):
             terminate_job(task, jobs)
             break
         i += 1
@@ -57,7 +56,7 @@ def terminate_task(signum, frame):
 
     if i == 10:
         logger.warning("no jobs running for task #%s", TASK_ID)
-        finish_task(task, None, Job.ABORTED)
+        finish_task(task, None, JobStatus.ABORTED)
 
     os._exit(signum)
 
@@ -110,7 +109,7 @@ def run_task(task_id, args=None):
     jobs = JobLog.objects.filter(task_id=task.id).order_by('id')
     if not jobs:
         logger.error("no jobs for task %s", task.id)
-        finish_task(task, None, Job.FAILED)
+        finish_task(task, None, JobStatus.FAILED)
 
         return
 
@@ -122,7 +121,7 @@ def run_task(task_id, args=None):
     count = 0
     res = 0
     for job in jobs:
-        if args == 'restart' and job.status == Job.SUCCESS:
+        if args == 'restart' and job.status == JobStatus.SUCCESS:
             logger.info('skip job #%s status "%s" of task #%s', job.id, job.status, task_id)
 
             continue
@@ -146,9 +145,9 @@ def run_task(task_id, args=None):
             break
 
     if res == 0:
-        finish_task(task, job, Job.SUCCESS)
+        finish_task(task, job, JobStatus.SUCCESS)
     else:
-        finish_task(task, job, Job.FAILED)
+        finish_task(task, job, JobStatus.FAILED)
 
     err_file.close()
 
