@@ -24,7 +24,6 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from cm.config import ANSIBLE_SECRET
 from cm.models import (
     Bundle,
     Cluster,
@@ -377,7 +376,7 @@ def dump(cluster_id, output):
     ):
         host_component = get_host_component(host_component_obj.id)
         data['host_components'].append(host_component)
-    data['adcm_password'] = ANSIBLE_SECRET
+    data['adcm_password'] = settings.ANSIBLE_SECRET
     result = json.dumps(data, indent=2).encode('utf-8')
     password = getpass.getpass()
     encrypted = encrypt_data(password, result)

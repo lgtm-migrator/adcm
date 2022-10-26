@@ -23,15 +23,6 @@ PYTHON_VERSION = f'{sys.version_info.major}.{sys.version_info.minor}'
 PYTHON_SITE_PACKAGES = os.path.join(PYTHON_DIR, f'lib/python{PYTHON_VERSION}/site-packages')
 # ---
 
-STATUS_SECRET_KEY = ''
-ANSIBLE_SECRET = ''
-
-if settings.SECRETS_FILE.is_file():
-    with open(settings.SECRETS_FILE, encoding=settings.ENCODING) as f:
-        data = json.load(f)
-        STATUS_SECRET_KEY = data['token']
-        ANSIBLE_SECRET = data['adcmuser']['password']
-
 
 class Job:
     CREATED = 'created'
