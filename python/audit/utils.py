@@ -212,6 +212,8 @@ def audit(func):
         else:
             if "host_id" in kwargs and "maintenance-mode" in request.path:
                 deleted_obj = Host.objects.filter(pk=kwargs["host_id"]).first()
+            elif "service_id" in kwargs and "maintenance-mode" in request.path:
+                deleted_obj = ClusterObject.objects.filter(pk=kwargs["service_id"]).first()
             else:
                 deleted_obj = None
 
