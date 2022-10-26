@@ -11,7 +11,6 @@
 # limitations under the License.
 
 import json
-import os
 from itertools import chain
 
 from django.conf import settings
