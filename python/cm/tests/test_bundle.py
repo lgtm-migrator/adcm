@@ -47,7 +47,7 @@ class TestBase(TestCase):
         self.client_unauthorized = Client(HTTP_USER_AGENT="Mozilla/5.0")
 
     def load_bundle(self, bundle_name: str) -> int:
-        with open(os.path.join(self.files_dir, bundle_name), encoding="utf-8") as f:
+        with open(os.path.join(self.files_dir, bundle_name), encoding=settings.ENCODING) as f:
             with transaction.atomic():
                 response = self.client.post(
                     path=reverse("upload-bundle"),
@@ -127,14 +127,14 @@ class TestBundle(TestBase):
     @contextmanager
     def make_bundle_from_str(self, bundle_content: str, filename: str) -> str:
         tmp_filepath = os.path.join(self.files_dir, "config.yaml")
-        with open(tmp_filepath, "wt", encoding="utf-8") as config:
+        with open(tmp_filepath, "wt", encoding=settings.ENCODING) as config:
             config.write(bundle_content)
 
         bundle_filepath = os.path.join(self.files_dir, filename)
         with TarFile.open(
             name=bundle_filepath,
             mode="w",
-            encoding="utf-8",
+            encoding=settings.ENCODING,
         ) as tar:
             tar.add(name=tmp_filepath, arcname=os.path.basename(tmp_filepath))
         os.remove(tmp_filepath)

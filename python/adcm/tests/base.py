@@ -106,7 +106,7 @@ class BaseTestCase(TestCase):
         self.login()
 
     def upload_and_load_bundle(self, path: Path) -> Bundle:
-        with open(path, encoding="utf-8") as f:
+        with open(path, encoding=settings.ENCODING) as f:
             response: Response = self.client.post(
                 path=reverse("upload-bundle"),
                 data={"file": f},

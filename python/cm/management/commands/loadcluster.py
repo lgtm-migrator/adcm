@@ -142,11 +142,11 @@ def switch_encoding(msg):
     if settings.ANSIBLE_VAULT_HEADER in msg:
         _, ciphertext = msg.split("\n")
     vault = VaultAES256()
-    secret_old = VaultSecret(bytes(OLD_ADCM_PASSWORD, 'utf-8'))
-    data = str(vault.decrypt(ciphertext, secret_old), 'utf-8')
-    secret_new = VaultSecret(bytes(settings.ANSIBLE_SECRET, 'utf-8'))
-    ciphertext = vault.encrypt(bytes(data, 'utf-8'), secret_new)
-    return f'{settings.ANSIBLE_VAULT_HEADER}\n{str(ciphertext, "utf-8")}'
+    secret_old = VaultSecret(bytes(OLD_ADCM_PASSWORD, settings.ENCODING))
+    data = str(vault.decrypt(ciphertext, secret_old), settings.ENCODING)
+    secret_new = VaultSecret(bytes(settings.ANSIBLE_SECRET, settings.ENCODING))
+    ciphertext = vault.encrypt(bytes(data, settings.ENCODING), secret_new)
+    return f'{settings.ANSIBLE_VAULT_HEADER}\n{str(ciphertext, settings.ENCODING)}'
 
 
 def process_config(proto, config):
@@ -392,10 +392,10 @@ def load(file_path):
     """
     try:
         password = getpass.getpass()
-        with open(file_path, 'r', encoding='utf_8') as f:
+        with open(file_path, 'r', encoding=settings.ENCODING) as f:
             encrypted = f.read()
             decrypted = decrypt_file(password, encrypted)
-            data = json.loads(decrypted.decode('utf-8'))
+            data = json.loads(decrypted.decode(settings.ENCODING))
     except FileNotFoundError as err:
         raise AdcmEx('DUMP_LOAD_CLUSTER_ERROR', msg='Loaded file not found') from err
     except InvalidToken as err:

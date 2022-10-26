@@ -377,7 +377,7 @@ def dump(cluster_id, output):
         host_component = get_host_component(host_component_obj.id)
         data['host_components'].append(host_component)
     data['adcm_password'] = settings.ANSIBLE_SECRET
-    result = json.dumps(data, indent=2).encode('utf-8')
+    result = json.dumps(data, indent=2).encode(settings.ENCODING)
     password = getpass.getpass()
     encrypted = encrypt_data(password, result)
 
@@ -386,7 +386,7 @@ def dump(cluster_id, output):
             f.write(encrypted)
         sys.stdout.write(f'Dump successfully done to file {output}\n')
     else:
-        sys.stdout.write(encrypted.decode('utf8'))
+        sys.stdout.write(encrypted.decode(settings.ENCODING))
 
 
 class Command(BaseCommand):

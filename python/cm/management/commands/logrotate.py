@@ -68,7 +68,6 @@ class TargetType(Enum):
 class Command(BaseCommand):
     help = "Delete / rotate log files, db records, `run` directories"
 
-    __encoding = "utf-8"
     __nginx_logrotate_conf = "/etc/logrotate.d/nginx"
     __logrotate_cmd = f"logrotate {__nginx_logrotate_conf}"
     __logrotate_cmd_debug = f"{__logrotate_cmd} -v"
@@ -106,11 +105,11 @@ class Command(BaseCommand):
         self.__log(f"executing cmd: `{cmd}`", "info")
         try:
             out = check_output(cmd, shell=True, stderr=STDOUT)
-            out = out.decode(self.__encoding).strip("\n")
+            out = out.decode(settings.ENCODING).strip("\n")
             if out:
                 self.__log(out, "debug")
         except CalledProcessError as e:
-            err_msg = e.stdout.decode(self.__encoding).strip("\n")
+            err_msg = e.stdout.decode(settings.ENCODING).strip("\n")
             msg = f"Error! cmd: `{cmd}` return code: `{e.returncode}` msg: `{err_msg}`"
             self.__log(msg, "exception")
 
@@ -137,7 +136,7 @@ class Command(BaseCommand):
             "no_compress": "" if self.config["logrotate"]["nginx"]["compress"] else "#",
             "num_rotations": self.config["logrotate"]["nginx"]["max_history"],
         }
-        with open(self.__nginx_logrotate_conf, "wt", encoding=self.__encoding) as conf_file:
+        with open(self.__nginx_logrotate_conf, "wt", encoding=settings.ENCODING) as conf_file:
             conf_file.write(LOGROTATE_CONF_FILE_TEMPLATE.format(**conf_file_args))
         self.__log(f"conf file `{self.__nginx_logrotate_conf}` generated", "debug")
 
@@ -147,7 +146,7 @@ class Command(BaseCommand):
             self.__generate_logrotate_conf_file()
             self.__log(
                 f"Using config file `{self.__nginx_logrotate_conf}`:\n"
-                f"{open(self.__nginx_logrotate_conf, 'rt', encoding=self.__encoding).read()}",
+                f"{open(self.__nginx_logrotate_conf, 'rt', encoding=settings.ENCODING).read()}",
                 "debug",
             )
             if self.verbose:

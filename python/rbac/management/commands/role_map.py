@@ -11,6 +11,7 @@
 # limitations under the License.
 import json
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db.models import Subquery
 
@@ -58,6 +59,6 @@ class Command(BaseCommand):
         ):
             data.append(read_role(role))
 
-        with open(output, 'w', encoding='utf_8') as f:
+        with open(output, 'w', encoding=settings.ENCODING) as f:
             json.dump(data, f, indent=indent)
         self.stdout.write(self.style.SUCCESS(f'Result file: {output}'))

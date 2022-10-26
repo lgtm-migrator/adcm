@@ -34,12 +34,12 @@ from cm.upgrade import bundle_switch
 
 def open_file(root, tag, job_id):
     fname = f'{root}/{job_id}/{tag}.txt'
-    f = open(fname, 'w', encoding='utf_8')
+    f = open(fname, 'w', encoding=settings.ENCODING)
     return f
 
 
 def read_config(job_id):
-    fd = open(f'{settings.RUN_DIR}/{job_id}/config.json', encoding='utf_8')
+    fd = open(f'{settings.RUN_DIR}/{job_id}/config.json', encoding=settings.ENCODING)
     conf = json.load(fd)
     fd.close()
     return conf

@@ -16,6 +16,8 @@ import sys
 import time
 from signal import SIGTERM
 
+from django.conf import settings
+
 
 class Daemon:
     """
@@ -61,7 +63,7 @@ class Daemon:
             sys.exit(1)
 
         try:
-            pidfile = open(self.pidfile, 'w+', encoding='utf_8')
+            pidfile = open(self.pidfile, 'w+', encoding=settings.ENCODING)
         except IOError as e:
             sys.stderr.write(f"Can't open pid file {self.pidfile}\n")
             sys.stderr.write(f"{e.strerror}\n")
@@ -70,9 +72,9 @@ class Daemon:
         # redirect standard file descriptors
         sys.stdout.flush()
         sys.stderr.flush()
-        si = open(self.stdin, 'r', encoding='utf_8')
-        so = open(self.stdout, 'a+', encoding='utf_8')
-        se = open(self.stderr, 'w+', encoding='utf_8')
+        si = open(self.stdin, 'r', encoding=settings.ENCODING)
+        so = open(self.stdout, 'a+', encoding=settings.ENCODING)
+        se = open(self.stderr, 'w+', encoding=settings.ENCODING)
         os.dup2(si.fileno(), sys.stdin.fileno())
         os.dup2(so.fileno(), sys.stdout.fileno())
         os.dup2(se.fileno(), sys.stderr.fileno())
@@ -88,7 +90,7 @@ class Daemon:
     def getpid(self):
         '''get pid from pidfile'''
         try:
-            pf = open(self.pidfile, 'r', encoding='utf_8')
+            pf = open(self.pidfile, 'r', encoding=settings.ENCODING)
             try:
                 pid = int(pf.read().strip())
             except ValueError:
