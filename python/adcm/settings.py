@@ -38,6 +38,8 @@ LOG_DIR = BASE_DIR / "data" / "log"
 LOG_FILE = LOG_DIR / 'adcm.log'
 SECRETS_FILE = BASE_DIR / "data" / "var" / "secrets.json"
 
+ANSIBLE_VAULT_HEADER = "$ANSIBLE_VAULT;1.1;AES256"
+DEFAULT_SALT = b'"j\xebi\xc0\xea\x82\xe0\xa8\xba\x9e\x12E>\x11D'
 
 if SECRET_KEY_FILE.is_file():
     with open(SECRET_KEY_FILE, encoding=ENCODING) as f:

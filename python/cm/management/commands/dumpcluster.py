@@ -24,7 +24,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from cm.config import ANSIBLE_SECRET, DEFAULT_SALT
+from cm.config import ANSIBLE_SECRET
 from cm.models import (
     Bundle,
     Cluster,
@@ -302,7 +302,7 @@ def encrypt_data(pass_from_user, result):
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
-        salt=DEFAULT_SALT,
+        salt=settings.DEFAULT_SALT,
         iterations=390000,
         backend=default_backend(),
     )

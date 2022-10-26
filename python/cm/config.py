@@ -24,12 +24,7 @@ PYTHON_SITE_PACKAGES = os.path.join(PYTHON_DIR, f'lib/python{PYTHON_VERSION}/sit
 # ---
 
 STATUS_SECRET_KEY = ''
-
 ANSIBLE_SECRET = ''
-
-ANSIBLE_VAULT_HEADER = '$ANSIBLE_VAULT;1.1;AES256'
-
-DEFAULT_SALT = b'"j\xebi\xc0\xea\x82\xe0\xa8\xba\x9e\x12E>\x11D'
 
 if settings.SECRETS_FILE.is_file():
     with open(settings.SECRETS_FILE, encoding=settings.ENCODING) as f:

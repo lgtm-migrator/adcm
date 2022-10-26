@@ -25,7 +25,6 @@ from django.conf import settings
 
 from cm.config import (
     ANSIBLE_SECRET,
-    ANSIBLE_VAULT_HEADER,
 )
 from cm.errors import raise_adcm_ex
 from cm.logger import logger
@@ -412,11 +411,11 @@ def ansible_encrypt(msg):
 def ansible_encrypt_and_format(msg):
     ciphertext = ansible_encrypt(msg)
 
-    return f"{ANSIBLE_VAULT_HEADER}\n{str(ciphertext, settings.ENCODING)}"
+    return f"{settings.ANSIBLE_VAULT_HEADER}\n{str(ciphertext, settings.ENCODING)}"
 
 
 def ansible_decrypt(msg):
-    if ANSIBLE_VAULT_HEADER not in msg:
+    if settings.ANSIBLE_VAULT_HEADER not in msg:
         return msg
 
     _, ciphertext = msg.split("\n")
@@ -429,7 +428,7 @@ def ansible_decrypt(msg):
 def is_ansible_encrypted(msg):
     if not isinstance(msg, str):
         msg = str(msg, settings.ENCODING)
-    if ANSIBLE_VAULT_HEADER in msg:
+    if settings.ANSIBLE_VAULT_HEADER in msg:
         return True
 
     return False
@@ -465,7 +464,7 @@ def process_config(obj, spec, old_conf):  # pylint: disable=too-many-branches
                 if spec[key]["type"] == "file":
                     conf[key] = cook_file_type_name(obj, key, "")
                 elif spec[key]["type"] in SECURE_PARAM_TYPES:
-                    if ANSIBLE_VAULT_HEADER in conf[key]:
+                    if settings.ANSIBLE_VAULT_HEADER in conf[key]:
                         conf[key] = {"__ansible_vault": conf[key]}
         elif conf[key]:
             for subkey in conf[key]:
@@ -473,7 +472,7 @@ def process_config(obj, spec, old_conf):  # pylint: disable=too-many-branches
                     if spec[key][subkey]["type"] == "file":
                         conf[key][subkey] = cook_file_type_name(obj, key, subkey)
                     elif spec[key][subkey]["type"] in SECURE_PARAM_TYPES:
-                        if ANSIBLE_VAULT_HEADER in conf[key][subkey]:
+                        if settings.ANSIBLE_VAULT_HEADER in conf[key][subkey]:
                             conf[key][subkey] = {"__ansible_vault": conf[key][subkey]}
 
     return conf
