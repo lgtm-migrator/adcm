@@ -18,8 +18,8 @@ import os
 from collections import defaultdict
 
 from ansible.errors import AnsibleError
-from ansible.utils.vars import merge_hash
 from ansible.plugins.action import ActionBase
+from ansible.utils.vars import merge_hash
 from django.conf import settings
 
 from cm.adcm_config import set_object_config
