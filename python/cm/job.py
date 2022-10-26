@@ -22,7 +22,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from audit.utils import audit_finish_task
-from cm import adcm_config, api, config, inventory, issue, variant
+from cm import adcm_config, api, inventory, issue, variant
 from cm.adcm_config import process_file_type
 from cm.api_context import ctx
 from cm.errors import AdcmEx
@@ -856,7 +856,7 @@ def prepare_ansible_config(job_id: int, action: Action, sub_action: SubAction):
     if mitogen:
         config_parser["defaults"]["strategy"] = "mitogen_linear"
         config_parser["defaults"]["strategy_plugins"] = str(
-            Path(config.PYTHON_SITE_PACKAGES, "ansible_mitogen", "plugins", "strategy")
+            settings.PYTHON_SITE_PACKAGES / "ansible_mitogen" / "plugins" / "strategy"
         )
         config_parser["defaults"]["host_key_checking"] = "False"
 
