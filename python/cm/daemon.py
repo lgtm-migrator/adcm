@@ -26,7 +26,7 @@ class Daemon:
     Usage: subclass the Daemon class and override the run() method
     """
 
-    def __init__(self, pidfile, stdin="/dev/null", stdout="/dev/null", stderr="/dev/null"):
+    def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
@@ -63,7 +63,7 @@ class Daemon:
             sys.exit(1)
 
         try:
-            pidfile = open(self.pidfile, "w+", encoding=settings.ENCODING)
+            pidfile = open(self.pidfile, 'w+', encoding=settings.ENCODING)
         except IOError as e:
             sys.stderr.write(f"Can't open pid file {self.pidfile}\n")
             sys.stderr.write(f"{e.strerror}\n")
@@ -72,9 +72,9 @@ class Daemon:
         # redirect standard file descriptors
         sys.stdout.flush()
         sys.stderr.flush()
-        si = open(self.stdin, "r", encoding=settings.ENCODING)
-        so = open(self.stdout, "a+", encoding=settings.ENCODING)
-        se = open(self.stderr, "w+", encoding=settings.ENCODING)
+        si = open(self.stdin, 'r', encoding=settings.ENCODING)
+        so = open(self.stdout, 'a+', encoding=settings.ENCODING)
+        se = open(self.stderr, 'w+', encoding=settings.ENCODING)
         os.dup2(si.fileno(), sys.stdin.fileno())
         os.dup2(so.fileno(), sys.stdout.fileno())
         os.dup2(se.fileno(), sys.stderr.fileno())
@@ -88,9 +88,9 @@ class Daemon:
         os.remove(self.pidfile)
 
     def getpid(self):
-        """get pid from pidfile"""
+        '''get pid from pidfile'''
         try:
-            pf = open(self.pidfile, "r", encoding=settings.ENCODING)
+            pf = open(self.pidfile, 'r', encoding=settings.ENCODING)
             try:
                 pid = int(pf.read().strip())
             except ValueError:

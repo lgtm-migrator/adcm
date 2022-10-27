@@ -31,11 +31,11 @@ def check_config(data_file, schema_file, print_ok=True):
         return 1
     except ruyaml.constructor.DuplicateKeyError as e:
         print(f'Config file "{data_file}" Duplicate Keys Error:')
-        print(f"{e.context}\n{e.context_mark}\n{e.problem}\n{e.problem_mark}")
+        print(f'{e.context}\n{e.context_mark}\n{e.problem}\n{e.problem_mark}')
         return 1
     except (ruyaml.parser.ParserError, ruyaml.scanner.ScannerError, NotImplementedError) as e:
         print(f'Config file "{data_file}" YAML Parser Error:')
-        print(f"{e}")
+        print(f'{e}')
         return 1
 
     try:
@@ -51,19 +51,19 @@ def check_config(data_file, schema_file, print_ok=True):
         return 1
     except cm.checker.FormatError as e:
         print(f'Data File "{data_file}" Errors:')
-        print(f"\tline {e.line}: {e.message}")
+        print(f'\tline {e.line}: {e.message}')
         if e.errors:
             for ee in e.errors:
-                if "Input data for" in ee.message:
+                if 'Input data for' in ee.message:
                     continue
-                print(f"\tline {ee.line}: {ee.message}")
+                print(f'\tline {ee.line}: {ee.message}')
         print(f'Schema File "{schema_file}" line {rules[e.rule].lc.line}, Rule: "{e.rule}"')
         return 1
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Check ADCM config file")
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Check ADCM config file')
     parser.add_argument("config_file", type=str, help="ADCM config file name (config.yaml)")
     args = parser.parse_args()
-    r = check_config(args.config_file, os.path.join(settings.CODE_DIR, "cm", "adcm_schema.yaml"))
+    r = check_config(args.config_file, os.path.join(settings.CODE_DIR, 'cm', 'adcm_schema.yaml'))
     sys.exit(r)

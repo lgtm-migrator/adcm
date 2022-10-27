@@ -21,7 +21,7 @@ from django.conf import settings
 
 from check_adcm_config import check_config
 
-TMP_DIR = "/tmp/adcm_bundle_tmp"
+TMP_DIR = '/tmp/adcm_bundle_tmp'
 
 
 def untar(bundle_file):
@@ -34,7 +34,7 @@ def untar(bundle_file):
 
 def get_config_files(path):
     conf_list = []
-    conf_files = ("config.yaml", "config.yml")
+    conf_files = ('config.yaml', 'config.yml')
     for root, _, files in os.walk(path):
         for conf_file in conf_files:
             if conf_file in files:
@@ -52,11 +52,11 @@ def check_bundle(bundle_file, use_directory=False, verbose=False):
     if verbose:
         print(f'Bundle "{bundle_file}"')
     for conf_file in get_config_files(TMP_DIR):
-        check_config(conf_file, os.path.join(settings.CODE_DIR, "cm", "adcm_schema.yaml"), verbose)
+        check_config(conf_file, os.path.join(settings.CODE_DIR, 'cm', 'adcm_schema.yaml'), verbose)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Check ADCM bundle file")
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Check ADCM bundle file')
     parser.add_argument("bundle_file", type=str, help="ADCM bundle file name (bundle.tgz)")
     parser.add_argument(
         "-d", "--dir", action="store_true", help="use bundle_file as bundle directory name"

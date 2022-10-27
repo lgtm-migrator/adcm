@@ -16,9 +16,8 @@ import random
 import string
 from itertools import chain
 
-from django.conf import settings
-
 import adcm.init_django  # pylint: disable=unused-import
+from django.conf import settings
 from cm.bundle import load_adcm
 from cm.issue import update_hierarchy_issues
 from cm.job import abort_all
@@ -48,9 +47,9 @@ def create_status_user():
     password = random_string(40)
     token = random_string(40)
     User.objects.create_superuser(username, "", password, built_in=True)
-    with open(settings.SECRETS_FILE, "w", encoding=settings.ENCODING) as f:
-        json.dump({"adcmuser": {"user": username, "password": password}, "token": token}, f)
-    logger.info("Update secret file %s OK", settings.SECRETS_FILE)
+    with open(settings.SECRETS_FILE, 'w', encoding=settings.ENCODING) as f:
+        json.dump({'adcmuser': {'user': username, 'password': password}, 'token': token}, f)
+    logger.info('Update secret file %s OK', settings.SECRETS_FILE)
 
 
 def create_dummy_data():
@@ -80,12 +79,12 @@ def recheck_issues():
 
 def init():
     logger.info("Start initializing ADCM DB...")
-    if not User.objects.filter(username="admin").exists():
-        User.objects.create_superuser("admin", "admin@example.com", "admin", built_in=True)
+    if not User.objects.filter(username='admin').exists():
+        User.objects.create_superuser('admin', 'admin@example.com', 'admin', built_in=True)
     create_status_user()
-    if not User.objects.filter(username="system").exists():
-        User.objects.create_superuser("system", "", None, built_in=True)
-        logger.info("Create system user")
+    if not User.objects.filter(username='system').exists():
+        User.objects.create_superuser('system', '', None, built_in=True)
+        logger.info('Create system user')
     event = Event()
     abort_all(event)
     clear_temp_tables()
@@ -97,5 +96,5 @@ def init():
     logger.info("ADCM DB is initialized")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     init()
