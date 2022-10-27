@@ -17,8 +17,7 @@ import shutil
 import sys
 import tarfile
 
-from django.conf import settings
-
+import cm.config
 from check_adcm_config import check_config
 
 TMP_DIR = '/tmp/adcm_bundle_tmp'
@@ -52,7 +51,7 @@ def check_bundle(bundle_file, use_directory=False, verbose=False):
     if verbose:
         print(f'Bundle "{bundle_file}"')
     for conf_file in get_config_files(TMP_DIR):
-        check_config(conf_file, os.path.join(settings.CODE_DIR, 'cm', 'adcm_schema.yaml'), verbose)
+        check_config(conf_file, os.path.join(cm.config.CODE_DIR, 'cm', 'adcm_schema.yaml'), verbose)
 
 
 if __name__ == '__main__':

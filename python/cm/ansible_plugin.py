@@ -19,7 +19,6 @@ from collections import defaultdict
 
 from ansible.errors import AnsibleError
 from ansible.utils.vars import merge_hash
-from django.conf import settings
 
 from ansible.plugins.action import ActionBase
 from cm import config
@@ -79,8 +78,8 @@ MSG_NO_MULTI_STATE_TO_DELETE = (
 
 
 def job_lock(job_id):
-    fname = os.path.join(settings.RUN_DIR, f'{job_id}/config.json')
-    fd = open(fname, 'r', encoding=settings.ENCODING)
+    fname = os.path.join(config.RUN_DIR, f'{job_id}/config.json')
+    fd = open(fname, 'r', encoding='utf_8')
     try:
         fcntl.flock(fd.fileno(), fcntl.LOCK_EX)  # pylint: disable=I1101
         return fd

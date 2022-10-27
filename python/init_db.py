@@ -17,8 +17,8 @@ import string
 from itertools import chain
 
 import adcm.init_django  # pylint: disable=unused-import
-from django.conf import settings
 from cm.bundle import load_adcm
+from cm.config import SECRETS_FILE
 from cm.issue import update_hierarchy_issues
 from cm.job import abort_all
 from cm.logger import logger
@@ -47,9 +47,9 @@ def create_status_user():
     password = random_string(40)
     token = random_string(40)
     User.objects.create_superuser(username, "", password, built_in=True)
-    with open(settings.SECRETS_FILE, 'w', encoding=settings.ENCODING) as f:
+    with open(SECRETS_FILE, 'w', encoding='utf_8') as f:
         json.dump({'adcmuser': {'user': username, 'password': password}, 'token': token}, f)
-    logger.info('Update secret file %s OK', settings.SECRETS_FILE)
+    logger.info('Update secret file %s OK', SECRETS_FILE)
 
 
 def create_dummy_data():

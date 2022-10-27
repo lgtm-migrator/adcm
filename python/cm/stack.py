@@ -22,8 +22,6 @@ from typing import Any
 import ruyaml
 import yaml
 import yspec.checker
-
-from django.conf import settings
 from django.db import IntegrityError
 from rest_framework import status
 from version_utils import rpm
@@ -104,7 +102,7 @@ def get_config_files(path, bundle_hash):
 
 def check_adcm_config(conf_file):
     warnings.simplefilter("error", ruyaml.error.ReusedAnchorWarning)
-    schema_file = settings.CODE_DIR / "cm" / "adcm_schema.yaml"
+    schema_file = os.path.join(config.CODE_DIR, "cm", "adcm_schema.yaml")
     with open(schema_file, encoding="utf_8") as fd:
         rules = ruyaml.round_trip_load(fd)
     try:
