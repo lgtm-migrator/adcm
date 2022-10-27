@@ -15,13 +15,13 @@ import datetime
 import os
 import sqlite3
 
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db import DEFAULT_DB_ALIAS, connections
 from django.db.migrations.executor import MigrationExecutor
 
 import adcm.init_django  # pylint: disable=unused-import
 from adcm.settings import DATABASES
-from cm import config
 from cm.logger import logger
 
 
@@ -38,7 +38,7 @@ def check_migrations():
 
 def backup_sqlite(dbfile):
     dt = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    backupfile = os.path.join(config.BASE_DIR, 'data', 'var', f'{dt}.db')
+    backupfile = os.path.join(settings.BASE_DIR, 'data', 'var', f'{dt}.db')
     old = sqlite3.connect(dbfile)
     new = sqlite3.connect(backupfile)
     with new:
