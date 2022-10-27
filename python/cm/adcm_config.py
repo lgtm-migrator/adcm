@@ -23,6 +23,9 @@ import yspec.checker
 from ansible.parsing.vault import VaultAES256, VaultSecret
 from django.conf import settings
 
+from cm.config import (
+    ANSIBLE_SECRET,
+)
 from cm.errors import raise_adcm_ex
 from cm.logger import logger
 from cm.models import (
@@ -400,7 +403,7 @@ def process_file_type(obj: Any, spec: dict, conf: dict):
 
 def ansible_encrypt(msg):
     vault = VaultAES256()
-    secret = VaultSecret(bytes(settings.ANSIBLE_SECRET, settings.ENCODING))
+    secret = VaultSecret(bytes(ANSIBLE_SECRET, settings.ENCODING))
 
     return vault.encrypt(bytes(msg, settings.ENCODING), secret)
 
@@ -417,7 +420,7 @@ def ansible_decrypt(msg):
 
     _, ciphertext = msg.split("\n")
     vault = VaultAES256()
-    secret = VaultSecret(bytes(settings.ANSIBLE_SECRET, settings.ENCODING))
+    secret = VaultSecret(bytes(ANSIBLE_SECRET, settings.ENCODING))
 
     return str(vault.decrypt(ciphertext, secret), settings.ENCODING)
 

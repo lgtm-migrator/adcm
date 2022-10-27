@@ -15,8 +15,8 @@ from collections import defaultdict
 from typing import Iterable
 
 import requests
-from django.conf import settings
 
+from cm.config import STATUS_SECRET_KEY
 from cm.logger import logger
 from cm.models import (
     ADCMEntity,
@@ -62,14 +62,14 @@ class Event:
 def api_request(method, url, data=None):
     url = API_URL + url
     kwargs = {
-        "headers": {
-            "Content-Type": "application/json",
-            "Authorization": f"Token {settings.STATUS_SECRET_KEY}",
+        'headers': {
+            'Content-Type': 'application/json',
+            'Authorization': 'Token ' + STATUS_SECRET_KEY,
         },
         'timeout': TIMEOUT,
     }
     if data is not None:
-        kwargs["data"] = json.dumps(data)
+        kwargs['data'] = json.dumps(data)
     try:
         request = requests.request(method, url, **kwargs)
         if request.status_code not in (200, 201):

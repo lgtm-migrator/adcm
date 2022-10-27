@@ -30,6 +30,7 @@ from django.db.transaction import atomic
 from django.db.utils import IntegrityError
 
 from cm.adcm_config import save_file_type
+from cm.config import ANSIBLE_SECRET
 from cm.errors import AdcmEx
 from cm.models import (
     Bundle,
@@ -144,7 +145,7 @@ def switch_encoding(msg):
     vault = VaultAES256()
     secret_old = VaultSecret(bytes(OLD_ADCM_PASSWORD, 'utf-8'))
     data = str(vault.decrypt(ciphertext, secret_old), 'utf-8')
-    secret_new = VaultSecret(bytes(settings.ANSIBLE_SECRET, 'utf-8'))
+    secret_new = VaultSecret(bytes(ANSIBLE_SECRET, 'utf-8'))
     ciphertext = vault.encrypt(bytes(data, 'utf-8'), secret_new)
     return f'{settings.ANSIBLE_VAULT_HEADER}\n{str(ciphertext, "utf-8")}'
 

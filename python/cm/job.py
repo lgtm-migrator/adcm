@@ -546,7 +546,7 @@ def prepare_job_config(
             "log_dir": settings.LOG_DIR,
             "tmp_dir": str(Path(settings.RUN_DIR, f"{job_id}", "tmp")),
             "stack_dir": str(Path(get_bundle_root(action), action.prototype.bundle.hash)),
-            "status_api_token": settings.STATUS_SECRET_KEY,
+            "status_api_token": config.STATUS_SECRET_KEY,
         },
         "job": {
             "id": job_id,

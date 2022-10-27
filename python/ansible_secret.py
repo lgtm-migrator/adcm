@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.conf import settings
+from cm import config
 
 if __name__ == '__main__':
-    print(settings.ANSIBLE_SECRET)
+    print(config.ANSIBLE_SECRET)

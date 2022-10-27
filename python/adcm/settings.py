@@ -31,7 +31,7 @@ SECRET_KEY_FILE = CONF_DIR / "secret_key.txt"
 STACK_DIR = os.getenv("ADCM_STACK_DIR", BASE_DIR)
 BUNDLE_DIR = STACK_DIR / "data" / "bundle"
 CODE_DIR = BASE_DIR / "python"
-DOWNLOAD_DIR = STACK_DIR / "data" / "download"
+DOWNLOAD_DIR = Path(STACK_DIR, 'data', 'download')
 RUN_DIR = BASE_DIR / "data" / "run"
 FILE_DIR = STACK_DIR / "data" / "file"
 LOG_DIR = BASE_DIR / "data" / "log"
@@ -40,8 +40,6 @@ SECRETS_FILE = BASE_DIR / "data" / "var" / "secrets.json"
 
 ANSIBLE_VAULT_HEADER = "$ANSIBLE_VAULT;1.1;AES256"
 DEFAULT_SALT = b'"j\xebi\xc0\xea\x82\xe0\xa8\xba\x9e\x12E>\x11D'
-STATUS_SECRET_KEY = ""
-ANSIBLE_SECRET = ""
 
 if SECRET_KEY_FILE.is_file():
     with open(SECRET_KEY_FILE, encoding=ENCODING) as f:
@@ -54,12 +52,6 @@ if CONFIG_FILE.is_file():
         ADCM_VERSION = json.load(f)["version"]
 else:
     ADCM_VERSION = "2019.02.07.00"
-
-if SECRETS_FILE.is_file():
-    with open(SECRETS_FILE, encoding=ENCODING) as f:
-        data = json.load(f)
-        STATUS_SECRET_KEY = data["token"]
-        ANSIBLE_SECRET = data["adcmuser"]["password"]
 
 DEBUG = False
 ALLOWED_HOSTS = ["*"]
