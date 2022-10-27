@@ -18,7 +18,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import Client
 from django.urls import reverse
 
-from adcm.tests.base import BaseTestCase, APPLICATION_JSON
+from adcm.tests.base import APPLICATION_JSON, BaseTestCase
+from api.utils import PermissionDenied, check_custom_perm
 from cm.api import add_host_to_cluster
 from cm.models import (
     Action,
@@ -35,8 +36,8 @@ from cm.models import (
 from init_db import init as init_adcm
 from rbac.models import Role, RoleTypes, User
 from rbac.roles import ModelRole
-from rbac.services.role import role_create
 from rbac.services.policy import policy_create
+from rbac.services.role import role_create
 from rbac.tests.test_base import RBACBaseTestCase
 from rbac.upgrade.role import init_roles, prepare_action_roles
 
@@ -576,7 +577,7 @@ class RoleFunctionalTestRBAC(RBACBaseTestCase):
         self.assertEqual(sa_role_count, 6, "Roles missing from base roles")
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes, protected-access
 class TestMMRoles(RBACBaseTestCase):
     def setUp(self) -> None:
         init_adcm()
@@ -590,13 +591,9 @@ class TestMMRoles(RBACBaseTestCase):
         )
         self.host = Host.objects.create(fqdn="testhost", prototype=self.hp)
         add_host_to_cluster(self.cluster, self.host)
-        self.service = ClusterObject.objects.create(
-            cluster=self.cluster, prototype=self.sp_1
-        )
+        self.service = ClusterObject.objects.create(cluster=self.cluster, prototype=self.sp_1)
         self.component = ServiceComponent.objects.create(
-            cluster=self.cluster,
-            service=self.service,
-            prototype=self.cop_11
+            cluster=self.cluster, service=self.service, prototype=self.cop_11
         )
 
         self.test_user_username = "test_user"
@@ -612,29 +609,35 @@ class TestMMRoles(RBACBaseTestCase):
         self.mm_role_host = role_create(
             name="mm role host",
             display_name="mm role host",
-            child=[Role.objects.get(name="Manage Maintenance mode")]
+            child=[Role.objects.get(name="Manage Maintenance mode")],
         )
         self.mm_role_cluster = role_create(
             name="mm role cluster",
             display_name="mm role cluster",
-            child=[Role.objects.get(name="Manage cluster Maintenance mode")]
+            child=[Role.objects.get(name="Manage cluster Maintenance mode")],
         )
 
     def test_no_roles(self):
-        for url in (
-                reverse("host-details", kwargs={'host_id': self.host.pk}),
-                reverse("component-details", kwargs={'component_id': self.component.pk}),
-                reverse("service-details", kwargs={'service_id': self.service.pk})
+        for view_name, url_kwarg_name, obj in (
+            ("host-details", "host_id", self.host),
+            ("component-details", "component_id", self.component),
+            ("service-details", "service_id", self.service),
         ):
+            url = reverse(view_name, kwargs={url_kwarg_name: obj.pk})
             response = self.client.get(path=url, content_type=APPLICATION_JSON)
             self.assertEqual(response.status_code, 404)
 
+            with self.assertRaises(PermissionDenied):
+                check_custom_perm(
+                    self.test_user, "change_maintenance_mode", obj._meta.model_name, obj
+                )
+
     def test_mm_host_role(self):
         policy_create(
-            name="mm host policy",
-            object=[self.host],
-            role=self.mm_role_host,
-            user=[self.test_user]
+            name="mm host policy", object=[self.host], role=self.mm_role_host, user=[self.test_user]
+        )
+        check_custom_perm(
+            self.test_user, "change_maintenance_mode", self.host._meta.model_name, self.host
         )
         self.host.refresh_from_db()
         response = self.client.patch(
@@ -650,8 +653,21 @@ class TestMMRoles(RBACBaseTestCase):
             name="mm cluster policy",
             object=[self.cluster],
             role=self.mm_role_cluster,
-            user=[self.test_user]
+            user=[self.test_user],
         )
+        check_custom_perm(
+            self.test_user, "change_maintenance_mode", self.host._meta.model_name, self.host
+        )
+        check_custom_perm(
+            self.test_user,
+            "change_maintenance_mode",
+            self.component._meta.model_name,
+            self.component,
+        )
+        check_custom_perm(
+            self.test_user, "change_maintenance_mode", self.service._meta.model_name, self.service
+        )
+
         self.host.refresh_from_db()
         response = self.client.patch(
             path=reverse("host-details", kwargs={'host_id': self.host.pk}),
@@ -684,8 +700,21 @@ class TestMMRoles(RBACBaseTestCase):
             name="mm cluster policy",
             object=[self.cluster],
             role=Role.objects.get(name="Cluster Administrator"),
-            user=[self.test_user]
+            user=[self.test_user],
         )
+        check_custom_perm(
+            self.test_user, "change_maintenance_mode", self.host._meta.model_name, self.host
+        )
+        check_custom_perm(
+            self.test_user,
+            "change_maintenance_mode",
+            self.component._meta.model_name,
+            self.component,
+        )
+        check_custom_perm(
+            self.test_user, "change_maintenance_mode", self.service._meta.model_name, self.service
+        )
+
         self.host.refresh_from_db()
         response = self.client.patch(
             path=reverse("host-details", kwargs={'host_id': self.host.pk}),

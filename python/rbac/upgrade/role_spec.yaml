@@ -1513,7 +1513,7 @@ roles:
             - name: host
               codenames:
                 - view
-                - change
+                - change_maintenance_mode
 
     - name: Manage host Maintenance mode hidden
       description: the ability to enable / disable the "MM" on the host
@@ -1528,7 +1528,7 @@ roles:
             - name: host
               codenames:
                 - view
-                - change
+                - change_maintenance_mode
 
     - name: Manage service Maintenance mode
       description: the ability to enable / disable the "MM" on the service
@@ -1543,7 +1543,7 @@ roles:
             - name: clusterobject
               codenames:
                 - view
-                - change
+                - change_maintenance_mode
 
     - name: Manage component Maintenance mode
       description: the ability to enable / disable the "MM" on the component
@@ -1558,4 +1558,4 @@ roles:
             - name: servicecomponent
               codenames:
                 - view
-                - change
+                - change_maintenance_mode
