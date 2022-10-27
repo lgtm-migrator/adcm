@@ -72,15 +72,18 @@ def set_ansible_config(env, job_id):
 
 
 def env_configuration(job_config):
-    job_id = job_config['job']['id']
-    stack_dir = job_config['env']['stack_dir']
+    job_id = job_config["job"]["id"]
+    stack_dir = job_config["env"]["stack_dir"]
     env = os.environ.copy()
     env = set_pythonpath(env, stack_dir)
+    sys.path.append("/adcm/python")
+
     # This condition is intended to support compatibility.
     # Since older bundle versions may contain their own ansible.cfg
-    if not os.path.exists(os.path.join(stack_dir, 'ansible.cfg')):
+    if not os.path.exists(os.path.join(stack_dir, "ansible.cfg")):
         env = set_ansible_config(env, job_id)
-        logger.info('set ansible config for job:%s', job_id)
+        logger.info("set ansible config for job:%s", job_id)
+
     return env
 
 
