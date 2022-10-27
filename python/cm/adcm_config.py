@@ -23,12 +23,8 @@ import yspec.checker
 from ansible.parsing.vault import VaultAES256, VaultSecret
 from django.conf import settings
 
-from cm.config import (
-    ANSIBLE_SECRET,
-    ANSIBLE_VAULT_HEADER,
-    BUNDLE_DIR,
-    FILE_DIR,
-)
+import adcm.init_django  # pylint: disable=unused-import
+from cm.config import ANSIBLE_SECRET, ANSIBLE_VAULT_HEADER, BUNDLE_DIR, FILE_DIR
 from cm.errors import raise_adcm_ex
 from cm.logger import logger
 from cm.models import (
