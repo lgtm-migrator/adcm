@@ -17,11 +17,14 @@ import json
 import os
 from collections import defaultdict
 
+# isort: off
 from ansible.errors import AnsibleError
 from ansible.utils.vars import merge_hash
+from ansible.plugins.action import ActionBase
 from django.conf import settings
 
-from ansible.plugins.action import ActionBase
+# isort: on
+
 from cm import config
 from cm.adcm_config import set_object_config
 from cm.api import add_hc, get_hc
