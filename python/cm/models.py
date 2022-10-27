@@ -1292,6 +1292,14 @@ class ClusterBind(ADCMModel):
         unique_together = (("cluster", "service", "source_cluster", "source_service"),)
 
 
+JOB_STATUS = (
+    ("created", "created"),
+    ("running", "running"),
+    ("success", "success"),
+    ("failed", "failed"),
+)
+
+
 class JobStatus(models.TextChoices):
     CREATED = "created", "created"
     SUCCESS = "success", "success"
@@ -1313,7 +1321,7 @@ class TaskLog(ADCMModel):
     action = models.ForeignKey(Action, on_delete=models.SET_NULL, null=True, default=None)
     pid = models.PositiveIntegerField(blank=True, default=0)
     selector = models.JSONField(default=dict)
-    status = models.CharField(max_length=16, choices=JobStatus.choices)
+    status = models.CharField(max_length=16, choices=JOB_STATUS)
     config = models.JSONField(null=True, default=None)
     attr = models.JSONField(default=dict)
     hostcomponentmap = models.JSONField(null=True, default=None)
@@ -1404,7 +1412,7 @@ class JobLog(ADCMModel):
     pid = models.PositiveIntegerField(blank=True, default=0)
     selector = models.JSONField(default=dict)
     log_files = models.JSONField(default=list)
-    status = models.CharField(max_length=16, choices=JobStatus.choices)
+    status = models.CharField(max_length=16, choices=JOB_STATUS)
     start_date = models.DateTimeField()
     finish_date = models.DateTimeField(db_index=True)
 
