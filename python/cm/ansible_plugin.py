@@ -18,10 +18,10 @@ import os
 from collections import defaultdict
 
 from ansible.errors import AnsibleError
-from ansible.plugins.action import ActionBase
 from ansible.utils.vars import merge_hash
 from django.conf import settings
 
+from ansible.plugins.action import ActionBase
 from cm.adcm_config import set_object_config
 from cm.api import add_hc, get_hc
 from cm.api_context import ctx
