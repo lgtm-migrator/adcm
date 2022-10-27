@@ -15,7 +15,8 @@ from rest_framework import permissions
 from rest_framework.response import Response
 
 from api.base_view import GenericUIView
-from cm.models import JobLog, JobStatus, TaskLog
+from cm import config
+from cm.models import JobLog, TaskLog
 
 
 class JobStats(PermissionListMixin, GenericUIView):
@@ -29,9 +30,9 @@ class JobStats(PermissionListMixin, GenericUIView):
         """
         jobs = self.get_queryset().filter(id__gt=pk)
         data = {
-            JobStatus.FAILED: jobs.filter(status=JobStatus.FAILED).count(),
-            JobStatus.SUCCESS: jobs.filter(status=JobStatus.SUCCESS).count(),
-            JobStatus.RUNNING: jobs.filter(status=JobStatus.RUNNING).count(),
+            config.Job.FAILED: jobs.filter(status=config.Job.FAILED).count(),
+            config.Job.SUCCESS: jobs.filter(status=config.Job.SUCCESS).count(),
+            config.Job.RUNNING: jobs.filter(status=config.Job.RUNNING).count(),
         }
         return Response(data)
 
@@ -47,8 +48,8 @@ class TaskStats(PermissionListMixin, GenericUIView):
         """
         tasks = self.get_queryset().filter(id__gt=pk)
         data = {
-            JobStatus.FAILED: tasks.filter(status=JobStatus.FAILED).count(),
-            JobStatus.SUCCESS: tasks.filter(status=JobStatus.SUCCESS).count(),
-            JobStatus.RUNNING: tasks.filter(status=JobStatus.RUNNING).count(),
+            config.Job.FAILED: tasks.filter(status=config.Job.FAILED).count(),
+            config.Job.SUCCESS: tasks.filter(status=config.Job.SUCCESS).count(),
+            config.Job.RUNNING: tasks.filter(status=config.Job.RUNNING).count(),
         }
         return Response(data)

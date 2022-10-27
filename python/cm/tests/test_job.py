@@ -20,6 +20,7 @@ from django.utils import timezone
 
 from adcm.tests.base import BaseTestCase
 from cm.api import add_cluster, add_service_to_cluster
+from cm.config import Job
 from cm.job import (
     check_cluster,
     check_service_task,
@@ -46,7 +47,6 @@ from cm.models import (
     Host,
     HostProvider,
     JobLog,
-    JobStatus,
     Prototype,
     ServiceComponent,
     SubAction,
@@ -76,7 +76,7 @@ class TestJob(BaseTestCase):
         job = JobLog.objects.create(
             action=action, start_date=timezone.now(), finish_date=timezone.now()
         )
-        status = JobStatus.RUNNING
+        status = Job.RUNNING
         pid = 10
         event = Mock()
 
@@ -97,10 +97,10 @@ class TestJob(BaseTestCase):
             action=action, object_id=1, start_date=timezone.now(), finish_date=timezone.now()
         )
 
-        set_task_status(task, JobStatus.RUNNING, event)
+        set_task_status(task, Job.RUNNING, event)
 
-        self.assertEqual(task.status, JobStatus.RUNNING)
-        event.set_task_status.assert_called_once_with(task.id, JobStatus.RUNNING)
+        self.assertEqual(task.status, Job.RUNNING)
+        event.set_task_status.assert_called_once_with(task.id, Job.RUNNING)
 
     def test_get_state_single_job(self):
         bundle = gen_bundle()
@@ -119,9 +119,9 @@ class TestJob(BaseTestCase):
 
         # status: expected state, expected multi_state set, expected multi_state unset
         test_data = [
-            [JobStatus.SUCCESS, "success", ["success"], ["success unset"]],
-            [JobStatus.FAILED, "fail", ["fail"], ["fail unset"]],
-            [JobStatus.ABORTED, None, [], []],
+            [Job.SUCCESS, "success", ["success"], ["success unset"]],
+            [Job.FAILED, "fail", ["fail"], ["fail unset"]],
+            [Job.ABORTED, None, [], []],
         ]
         for status, exp_state, exp_m_state_set, exp_m_state_unset in test_data:
             state, m_state_set, m_state_unset = get_state(action, job, status)
@@ -148,9 +148,9 @@ class TestJob(BaseTestCase):
 
         # status: expected state, expected multi_state set, expected multi_state unset
         test_data = [
-            [JobStatus.SUCCESS, "success", ["success"], ["success unset"]],
-            [JobStatus.FAILED, "sub_action fail", ["fail"], ["fail unset"]],
-            [JobStatus.ABORTED, None, [], []],
+            [Job.SUCCESS, "success", ["success"], ["success unset"]],
+            [Job.FAILED, "sub_action fail", ["fail"], ["fail unset"]],
+            [Job.ABORTED, None, [], []],
         ]
         for status, exp_state, exp_m_state_set, exp_m_state_unset in test_data:
             state, m_state_set, m_state_unset = get_state(action, job, status)
@@ -222,7 +222,7 @@ class TestJob(BaseTestCase):
             hostcomponentmap=hostcomponentmap,
         )
 
-        restore_hc(task, action, JobStatus.FAILED)
+        restore_hc(task, action, Job.FAILED)
         mock_save_hc.assert_called_once_with(cluster, [(cluster_object, host, service_component)])
 
     @patch("cm.job.err")

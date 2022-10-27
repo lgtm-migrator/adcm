@@ -34,6 +34,7 @@ from django.db.models.signals import m2m_changed, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
+from cm.config import Job
 from cm.errors import AdcmEx
 from cm.logger import logger
 
@@ -1300,15 +1301,6 @@ JOB_STATUS = (
 )
 
 
-class JobStatus(models.TextChoices):
-    CREATED = "created", "created"
-    SUCCESS = "success", "success"
-    FAILED = "failed", "failed"
-    RUNNING = "running", "running"
-    LOCKED = "locked", "locked"
-    ABORTED = "aborted", "aborted"
-
-
 class UserProfile(ADCMModel):
     login = models.CharField(max_length=32, unique=True)
     profile = models.JSONField(default=str)
@@ -1375,9 +1367,9 @@ class TaskLog(ADCMModel):
                 "Termination is too early, try to execute later",
             )
         errors = {
-            JobStatus.FAILED: ("TASK_IS_FAILED", f"task #{self.pk} is failed"),
-            JobStatus.ABORTED: ("TASK_IS_ABORTED", f"task #{self.pk} is aborted"),
-            JobStatus.SUCCESS: ("TASK_IS_SUCCESS", f"task #{self.pk} is success"),
+            Job.FAILED: ("TASK_IS_FAILED", f"task #{self.pk} is failed"),
+            Job.ABORTED: ("TASK_IS_ABORTED", f"task #{self.pk} is aborted"),
+            Job.SUCCESS: ("TASK_IS_SUCCESS", f"task #{self.pk} is success"),
         }
         action = self.action
         if action and not action.allow_to_terminate and not obj_deletion:
@@ -1385,10 +1377,10 @@ class TaskLog(ADCMModel):
                 "NOT_ALLOWED_TERMINATION",
                 f"not allowed termination task #{self.pk} for action #{action.pk}",
             )
-        if self.status in [JobStatus.FAILED, JobStatus.ABORTED, JobStatus.SUCCESS]:
+        if self.status in [Job.FAILED, Job.ABORTED, Job.SUCCESS]:
             raise AdcmEx(*errors.get(self.status))
         i = 0
-        while not JobLog.objects.filter(task=self, status=JobStatus.RUNNING) and i < 10:
+        while not JobLog.objects.filter(task=self, status=Job.RUNNING) and i < 10:
             time.sleep(0.5)
             i += 1
         if i == 10:

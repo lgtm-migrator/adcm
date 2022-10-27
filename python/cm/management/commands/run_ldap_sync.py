@@ -17,8 +17,9 @@ from django.utils import timezone
 
 from audit.models import AuditLogOperationResult
 from audit.utils import make_audit_log
+from cm.config import Job
 from cm.job import start_task
-from cm.models import ADCM, Action, ConfigLog, JobStatus, TaskLog
+from cm.models import ADCM, Action, ConfigLog, TaskLog
 
 logger = logging.getLogger("background_tasks")
 
@@ -42,11 +43,11 @@ class Command(BaseCommand):
         period = get_settings(adcm_object)
         if period <= 0:
             return
-        if TaskLog.objects.filter(action__name="run_ldap_sync", status=JobStatus.RUNNING).exists():
+        if TaskLog.objects.filter(action__name="run_ldap_sync", status=Job.RUNNING).exists():
             logger.debug("Sync has already launched, we need to wait for the task end")
             return
         last_sync = TaskLog.objects.filter(
-            action__name="run_ldap_sync", status__in=[JobStatus.SUCCESS, JobStatus.FAILED]
+            action__name="run_ldap_sync", status__in=[Job.SUCCESS, Job.FAILED]
         ).last()
         if last_sync is None:
             logger.debug("First ldap sync launched in %s", timezone.now())

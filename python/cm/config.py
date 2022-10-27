@@ -10,8 +10,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
 import sys
+
+from django.conf import settings
 
 # later
 PYTHON_DIR = sys.exec_prefix
@@ -20,3 +23,11 @@ PYTHON_VERSION = f'{sys.version_info.major}.{sys.version_info.minor}'
 PYTHON_SITE_PACKAGES = os.path.join(PYTHON_DIR, f'lib/python{PYTHON_VERSION}/site-packages')
 # ---
 
+
+class Job:
+    CREATED = 'created'
+    SUCCESS = 'success'
+    FAILED = 'failed'
+    RUNNING = 'running'
+    LOCKED = 'locked'
+    ABORTED = 'aborted'
