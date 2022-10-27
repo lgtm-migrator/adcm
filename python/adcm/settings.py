@@ -13,17 +13,11 @@
 import json
 import os
 import string
-import sys
 from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
 
 ENCODING = "utf-8"
-
-PYTHON_SITE_PACKAGES = (
-        Path(sys.exec_prefix) /
-        f"lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
-)
 
 BASE_DIR = os.getenv("ADCM_BASE_DIR")
 if BASE_DIR:

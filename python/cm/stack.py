@@ -29,6 +29,7 @@ from rest_framework import status
 from version_utils import rpm
 
 import cm.checker
+from cm import config
 from cm.adcm_config import (
     check_config_type,
     proto_ref,
