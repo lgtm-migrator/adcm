@@ -24,14 +24,8 @@ from adcm_pytest_plugin.docker_utils import ADCM
 from adcm_pytest_plugin.utils import get_or_add_service
 
 from tests.functional.conftest import only_clean_adcm
-from tests.functional.maintenance_mode.conftest import (
-    DEFAULT_SERVICE_NAME,
-    FIRST_COMPONENT,
-    MM_IS_ON,
-    SECOND_COMPONENT,
-    add_hosts_to_cluster,
-    turn_mm_on,
-)
+from tests.functional.maintenance_mode.conftest import (DEFAULT_SERVICE_NAME, FIRST_COMPONENT, MM_IS_ON,
+                                                        SECOND_COMPONENT, add_hosts_to_cluster, turn_mm_on)
 from tests.functional.maintenance_mode.test_hosts_behavior import ACTION_ALLOWED_IN_MM
 from tests.functional.tools import build_hc_for_hc_acl_action, create_config_group_and_add_host, get_inventory_file
 from tests.library.assertions import sets_are_equal
@@ -88,7 +82,7 @@ def host_not_in_config_group(cluster_with_hc_set, config_groups) -> Host:
     return [host for host in cluster_with_hc_set.host_list() if host.fqdn not in hosts_in_groups][0]
 
 
-def test_hosts_in_mm_removed_from_inventory(adcm_fs, cluster_with_hc_set):
+def test_hosts_in_mm_removed_from_inventory(api_client, adcm_fs, cluster_with_hc_set):
     """Test filtering of hosts in inventory file when hosts are in MM"""
     host, *_ = cluster_with_hc_set.host_list()
     service = cluster_with_hc_set.service()
@@ -97,13 +91,15 @@ def test_hosts_in_mm_removed_from_inventory(adcm_fs, cluster_with_hc_set):
     inventory = run_action_and_get_inventory(action_on_service, adcm_fs)
     check_all_hosts_are_present(inventory, cluster_with_hc_set)
 
-    turn_mm_on(host)
+    turn_mm_on(api_client, host)
 
     inventory = run_action_and_get_inventory(action_on_service, adcm_fs)
     check_hosts_in_mm_are_absent(inventory, cluster_with_hc_set)
 
 
-def test_hosts_in_mm_removed_from_group_config(adcm_fs, cluster_with_hc_set, config_groups, host_not_in_config_group):
+def test_hosts_in_mm_removed_from_group_config(
+    api_client, adcm_fs, cluster_with_hc_set, config_groups, host_not_in_config_group
+):
     """Test filtering of hosts in inventory file when hosts are in MM and in config group"""
     *_, component_group = config_groups
     component: Component = cluster_with_hc_set.service().component(name=FIRST_COMPONENT)
@@ -112,14 +108,14 @@ def test_hosts_in_mm_removed_from_group_config(adcm_fs, cluster_with_hc_set, con
     inventory = run_action_and_get_inventory(action_on_component, adcm_fs)
     check_all_hosts_are_present(inventory, cluster_with_hc_set)
 
-    turn_mm_on(component_group.hosts()[0])
-    turn_mm_on(host_not_in_config_group)
+    turn_mm_on(api_client, component_group.hosts()[0])
+    turn_mm_on(api_client, host_not_in_config_group)
 
     inventory = run_action_and_get_inventory(action_on_component, adcm_fs)
     check_hosts_in_mm_are_absent(inventory, cluster_with_hc_set)
 
 
-def test_hosts_filtered_when_added_to_group_config_after_entering_mm(adcm_fs, cluster_with_hc_set):
+def test_hosts_filtered_when_added_to_group_config_after_entering_mm(api_client, adcm_fs, cluster_with_hc_set):
     """Test filtering of hosts in inventory file when host entered MM and then added to config group"""
     component: Component = cluster_with_hc_set.service().component(name=FIRST_COMPONENT)
     host = cluster_with_hc_set.host(
@@ -127,7 +123,7 @@ def test_hosts_filtered_when_added_to_group_config_after_entering_mm(adcm_fs, cl
     )
     action_on_component = component.action(name=ACTION_ALLOWED_IN_MM)
 
-    turn_mm_on(host)
+    turn_mm_on(api_client, host)
 
     create_config_group_and_add_host("Component Group", component, host)
     inventory = run_action_and_get_inventory(action_on_component, adcm_fs)
@@ -135,7 +131,7 @@ def test_hosts_filtered_when_added_to_group_config_after_entering_mm(adcm_fs, cl
 
 
 @pytest.mark.parametrize("cluster_with_hc_set", [HC_ACL_SERVICE_NAME], indirect=True)
-def test_host_filtering_with_hc_acl(adcm_fs, cluster_with_hc_set: Cluster, hosts):
+def test_host_filtering_with_hc_acl(api_client, adcm_fs, cluster_with_hc_set: Cluster, hosts):
     """Test filtering of hosts in MM in inventory groups when action have `hc_acl` directive"""
     cluster = cluster_with_hc_set
     service = cluster.service(name=HC_ACL_SERVICE_NAME)
@@ -145,7 +141,7 @@ def test_host_filtering_with_hc_acl(adcm_fs, cluster_with_hc_set: Cluster, hosts
 
     add_hosts_to_cluster(cluster, [free_host])
 
-    turn_mm_on(host)
+    turn_mm_on(api_client, host)
 
     inventory = run_action_and_get_inventory(
         service.action(name="change"),
