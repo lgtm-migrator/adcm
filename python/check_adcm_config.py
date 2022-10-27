@@ -16,10 +16,9 @@ import os
 import sys
 
 import ruyaml
-from django.conf import settings
 
-import adcm.init_django  # pylint: disable=unused-import
 import cm.checker
+import cm.config
 
 
 def check_config(data_file, schema_file, print_ok=True):
@@ -66,5 +65,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check ADCM config file')
     parser.add_argument("config_file", type=str, help="ADCM config file name (config.yaml)")
     args = parser.parse_args()
-    r = check_config(args.config_file, os.path.join(settings.CODE_DIR, 'cm', 'adcm_schema.yaml'))
+    r = check_config(args.config_file, os.path.join(cm.config.CODE_DIR, 'cm', 'adcm_schema.yaml'))
     sys.exit(r)

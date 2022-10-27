@@ -24,7 +24,7 @@ from ansible.parsing.vault import VaultAES256, VaultSecret
 from django.conf import settings
 
 import adcm.init_django  # pylint: disable=unused-import
-from cm.config import ANSIBLE_SECRET, ANSIBLE_VAULT_HEADER
+from cm.config import ANSIBLE_SECRET, ANSIBLE_VAULT_HEADER, BUNDLE_DIR, FILE_DIR
 from cm.errors import raise_adcm_ex
 from cm.logger import logger
 from cm.models import (
@@ -164,9 +164,9 @@ def read_bundle_file(proto, fname, bundle_hash, pattern, ref=None):
         ref = proto_ref(proto)
 
     if fname[0:2] == "./":
-        path = Path(settings.BUNDLE_DIR, bundle_hash, proto.path, fname)
+        path = Path(BUNDLE_DIR, bundle_hash, proto.path, fname)
     else:
-        path = Path(settings.BUNDLE_DIR, bundle_hash, fname)
+        path = Path(BUNDLE_DIR, bundle_hash, fname)
 
     fd = None
     try:
@@ -358,7 +358,7 @@ def cook_file_type_name(obj, key, sub_key):
     else:
         filename = ["task", str(obj.id), key, sub_key]
 
-    return str(Path(settings.FILE_DIR, ".".join(filename)))
+    return str(Path(FILE_DIR, ".".join(filename)))
 
 
 def save_file_type(obj, key, subkey, value):

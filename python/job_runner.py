@@ -18,7 +18,6 @@ import os
 import subprocess
 import sys
 
-from django.conf import settings
 from django.db import transaction
 
 import adcm.init_django  # pylint: disable=unused-import
@@ -40,7 +39,7 @@ def open_file(root, tag, job_id):
 
 
 def read_config(job_id):
-    fd = open(f'{settings.RUN_DIR}/{job_id}/config.json', encoding='utf_8')
+    fd = open(f'{config.RUN_DIR}/{job_id}/config.json', encoding='utf_8')
     conf = json.load(fd)
     fd.close()
     return conf
@@ -68,7 +67,7 @@ def set_pythonpath(env, stack_dir):
 
 
 def set_ansible_config(env, job_id):
-    env['ANSIBLE_CONFIG'] = settings.RUN_DIR / f"{job_id}/ansible.cfg"
+    env['ANSIBLE_CONFIG'] = os.path.join(config.RUN_DIR, f'{job_id}/ansible.cfg')
     return env
 
 
@@ -106,8 +105,8 @@ def get_venv(job_id: int) -> str:
 
 
 def process_err_out_file(job_id, job_type):
-    out_file = open_file(settings.RUN_DIR, f'{job_type}-stdout', job_id)
-    err_file = open_file(settings.RUN_DIR, f'{job_type}-stderr', job_id)
+    out_file = open_file(config.RUN_DIR, f'{job_type}-stdout', job_id)
+    err_file = open_file(config.RUN_DIR, f'{job_type}-stderr', job_id)
     post_log(job_id, 'stdout', f'{job_type}')
     post_log(job_id, 'stderr', f'{job_type}')
     return out_file, err_file
@@ -144,11 +143,11 @@ def run_ansible(job_id):
         get_venv(int(job_id)),
         'ansible-playbook',
         '--vault-password-file',
-        f'{settings.CODE_DIR}/ansible_secret.py',
+        f'{config.CODE_DIR}/ansible_secret.py',
         '-e',
-        f'@{settings.RUN_DIR}/{job_id}/config.json',
+        f'@{config.RUN_DIR}/{job_id}/config.json',
         '-i',
-        f'{settings.RUN_DIR}/{job_id}/inventory.json',
+        f'{config.RUN_DIR}/{job_id}/inventory.json',
         playbook,
     ]
     if 'params' in conf['job']:
