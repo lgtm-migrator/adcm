@@ -1003,7 +1003,7 @@ class GroupConfig(ADCMModel):
                     if value != "":
                         if value[-1] == "-":
                             value += "\n"
-                with open(filepath, "w", encoding=settings.ENCODING) as f:
+                with open(filepath, "w", encoding="utf-8") as f:
                     f.write(value)
                 os.chmod(filepath, 0o0600)
             else:

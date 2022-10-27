@@ -10,12 +10,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License.  You may obtain a
+# copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Init or upgrade RBAC roles and permissions"""
 from typing import List
 
 import ruyaml
 from adwp_base.errors import raise_AdwpEx as err
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.utils import timezone
@@ -136,14 +147,14 @@ def get_role_spec(data: str, schema: str) -> dict:
     (see https://github.com/arenadata/yspec for details about schema syntaxis)
     """
     try:
-        with open(data, encoding=settings.ENCODING) as fd:
+        with open(data, encoding='utf_8') as fd:
             data = ruyaml.round_trip_load(fd)
     except FileNotFoundError:
         err('INVALID_ROLE_SPEC', f'Can not open role file "{data}"')
     except (ruyaml.parser.ParserError, ruyaml.scanner.ScannerError, NotImplementedError) as e:
         err('INVALID_ROLE_SPEC', f'YAML decode "{data}" error: {e}')
 
-    with open(schema, encoding=settings.ENCODING) as fd:
+    with open(schema, encoding='utf_8') as fd:
         rules = ruyaml.round_trip_load(fd)
 
     try:

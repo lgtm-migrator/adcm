@@ -23,7 +23,7 @@ from django.db import migrations, models
 def get_body(job, name, type_log, format_log):
     file_path = settings.LOG_DIR / f"{job.id}-{name}-{type_log}.{format_log}"
     if os.path.exists(file_path):
-        with open(file_path, 'r', encoding=settings.ENCODING) as f:
+        with open(file_path, 'r', encoding='utf_8') as f:
             body = f.read()
         return body
     else:

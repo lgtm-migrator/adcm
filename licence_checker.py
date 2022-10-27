@@ -16,9 +16,6 @@ import argparse
 from pathlib import Path
 from typing import TextIO
 
-from django.conf import settings
-
-
 APACHE_LICENCE_PY = [
     '# Licensed under the Apache License, Version 2.0 (the "License");\n',
     '# you may not use this file except in compliance with the License.\n',
@@ -75,7 +72,7 @@ def check_and_fix_files(fixed: int, skipped: int, fix: bool, root: str = "") -> 
             elif path.endswith(".go") or path.endswith("go.mod"):
                 lic = APACHE_LICENCE_GO
             if lic:
-                with open(path, "r+", encoding=settings.ENCODING) as f:
+                with open(path, "r+", encoding="utf-8") as f:
                     lines = f.readlines()
                     if not check_licence(lines, lic):
                         sys.stdout.write(f"{path} has no license\n")
