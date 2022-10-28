@@ -31,11 +31,11 @@ SECRET_KEY_FILE = CONF_DIR / "secret_key.txt"
 STACK_DIR = os.getenv("ADCM_STACK_DIR", BASE_DIR)
 BUNDLE_DIR = STACK_DIR / "data" / "bundle"
 CODE_DIR = BASE_DIR / "python"
-DOWNLOAD_DIR = Path(STACK_DIR, 'data', 'download')
+DOWNLOAD_DIR = Path(STACK_DIR, "data", "download")
 RUN_DIR = BASE_DIR / "data" / "run"
 FILE_DIR = STACK_DIR / "data" / "file"
 LOG_DIR = BASE_DIR / "data" / "log"
-LOG_FILE = LOG_DIR / 'adcm.log'
+LOG_FILE = LOG_DIR / "adcm.log"
 SECRETS_FILE = BASE_DIR / "data" / "var" / "secrets.json"
 
 

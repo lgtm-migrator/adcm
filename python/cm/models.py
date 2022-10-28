@@ -992,7 +992,7 @@ class GroupConfig(ADCMModel):
                     field.subname,
                 ]
             )
-            filepath = str(FILE_DIR, filename)
+            filepath = str(FILE_DIR / filename)
 
             if field.subname:
                 value = config[field.name][field.subname]
