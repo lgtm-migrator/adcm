@@ -32,7 +32,7 @@ class TestHostAPI(BaseTestCase):
 
     def test_change_maintenance_mode_wrong_name_fail(self):
         response: Response = self.client.post(
-            path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-maintenance-mode", kwargs={"host_pk": self.host.pk}),
             data={"maintenance_mode": "wrong"},
         )
 
@@ -41,7 +41,7 @@ class TestHostAPI(BaseTestCase):
 
     def test_change_maintenance_mode_to_changing_fail(self):
         response: Response = self.client.post(
-            path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-maintenance-mode", kwargs={"host_pk": self.host.pk}),
             data={"maintenance_mode": MaintenanceMode.CHANGING},
         )
 
@@ -53,7 +53,7 @@ class TestHostAPI(BaseTestCase):
 
     def test_change_maintenance_mode_on_no_action_success(self):
         response: Response = self.client.post(
-            path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-maintenance-mode", kwargs={"host_pk": self.host.pk}),
             data={"maintenance_mode": MaintenanceMode.ON},
         )
 
@@ -69,7 +69,7 @@ class TestHostAPI(BaseTestCase):
 
         with patch("api.utils.start_task") as start_task_mock:
             response: Response = self.client.post(
-                path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+                path=reverse("host-maintenance-mode", kwargs={"host_pk": self.host.pk}),
                 data={"maintenance_mode": MaintenanceMode.ON},
             )
 
@@ -87,7 +87,7 @@ class TestHostAPI(BaseTestCase):
 
         with patch("api.utils.start_task") as start_task_mock:
             response: Response = self.client.post(
-                path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+                path=reverse("host-maintenance-mode", kwargs={"host_pk": self.host.pk}),
                 data={"maintenance_mode": MaintenanceMode.ON},
             )
 
@@ -102,7 +102,7 @@ class TestHostAPI(BaseTestCase):
         self.host.save(update_fields=["maintenance_mode"])
 
         response: Response = self.client.post(
-            path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-maintenance-mode", kwargs={"host_pk": self.host.pk}),
             data={"maintenance_mode": MaintenanceMode.OFF},
         )
 
@@ -120,7 +120,7 @@ class TestHostAPI(BaseTestCase):
 
         with patch("api.utils.start_task") as start_task_mock:
             response: Response = self.client.post(
-                path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+                path=reverse("host-maintenance-mode", kwargs={"host_pk": self.host.pk}),
                 data={"maintenance_mode": MaintenanceMode.OFF},
             )
 
@@ -138,7 +138,7 @@ class TestHostAPI(BaseTestCase):
 
         with patch("api.utils.start_task") as start_task_mock:
             response: Response = self.client.post(
-                path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+                path=reverse("host-maintenance-mode", kwargs={"host_pk": self.host.pk}),
                 data={"maintenance_mode": MaintenanceMode.OFF},
             )
 
@@ -153,7 +153,7 @@ class TestHostAPI(BaseTestCase):
         self.host.save(update_fields=["maintenance_mode"])
 
         response: Response = self.client.post(
-            path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-maintenance-mode", kwargs={"host_pk": self.host.pk}),
             data={"maintenance_mode": MaintenanceMode.ON},
         )
 
@@ -161,7 +161,7 @@ class TestHostAPI(BaseTestCase):
         self.assertEqual(response.data["error"], "Host maintenance mode is changing now")
 
         response: Response = self.client.post(
-            path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-maintenance-mode", kwargs={"host_pk": self.host.pk}),
             data={"maintenance_mode": MaintenanceMode.OFF},
         )
 

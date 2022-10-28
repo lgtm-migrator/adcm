@@ -12,8 +12,12 @@
 
 
 from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-from api.host.views import HostDetail, StatusList
+from api.host.views import HostDetail, HostViewSet, StatusList
+
+router = DefaultRouter()
+router.register("", HostViewSet)
 
 urlpatterns = [
     path(
@@ -24,8 +28,8 @@ urlpatterns = [
                 path("config/", include("api.config.urls"), {"object_type": "host"}),
                 path("action/", include("api.action.urls"), {"object_type": "host"}),
                 path("status/", StatusList.as_view(), name="host-status"),
-                path("maintenance-mode/", HostDetail.as_view(), name="host-maintenance-mode"),
             ]
         ),
     ),
+    *router.urls,
 ]
