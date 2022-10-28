@@ -32,7 +32,9 @@ from cm.models import Cluster, ClusterBind, ClusterObject, Host
 CONFIGURATION_STR = "configuration "
 
 
-def get_export_cluster_and_service_names(response: Response, view: GenericAPIView) -> tuple[str, str]:
+def get_export_cluster_and_service_names(
+    response: Response, view: GenericAPIView
+) -> tuple[str, str]:
     cluster, service = None, None
     cluster_name, service_name = "", ""
     if response and response.data and isinstance(response.data.get("export_cluster_id"), int):
@@ -384,7 +386,12 @@ def cluster_case(
                 operation_aux_str=CONFIGURATION_STR,
             )
 
-        case ["component", component_pk] | ["component", component_pk, _]:
+        case (
+            ["component", component_pk]
+            | ["component", component_pk, _]
+            | ["cluster", _, "service", _, "component", component_pk, "maintenance-mode"]
+            | ["service", _, "component", component_pk, "maintenance-mode"]
+        ):
             audit_operation, audit_object = obj_pk_case(
                 obj_type=AuditObjectType.Component,
                 operation_type=AuditLogOperationType.Update,
