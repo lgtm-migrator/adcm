@@ -17,11 +17,10 @@ from configparser import ConfigParser
 from pathlib import Path
 from typing import Any, Hashable, List, Optional, Tuple, Union
 
-from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-import adcm.init_django  # pylint: disable=unused-import
+from adcm.settings import BASE_DIR, BUNDLE_DIR, CODE_DIR, ENCODING, LOG_DIR, RUN_DIR
 from audit.utils import audit_finish_task
 from cm import adcm_config, api, config, inventory, issue, variant
 from cm.adcm_config import process_file_type
@@ -399,9 +398,9 @@ def check_adcm(adcm_id: int) -> ADCM:
 def get_bundle_root(action: Action) -> str:
 
     if action.prototype.type == "adcm":
-        return str(Path(settings.BASE_DIR, "conf"))
+        return str(Path(BASE_DIR, "conf"))
 
-    return str(settings.BUNDLE_DIR)
+    return str(BUNDLE_DIR)
 
 
 def cook_script(action: Action, sub_action: SubAction):
@@ -543,9 +542,9 @@ def prepare_job_config(
         "adcm": {"config": get_adcm_config()},
         "context": prepare_context(action, obj),
         "env": {
-            "run_dir": settings.RUN_DIR,
-            "log_dir": settings.LOG_DIR,
-            "tmp_dir": str(Path(settings.RUN_DIR, f"{job_id}", "tmp")),
+            "run_dir": RUN_DIR,
+            "log_dir": LOG_DIR,
+            "tmp_dir": str(Path(RUN_DIR, f"{job_id}", "tmp")),
             "stack_dir": str(Path(get_bundle_root(action), action.prototype.bundle.hash)),
             "status_api_token": config.STATUS_SECRET_KEY,
         },
@@ -618,7 +617,7 @@ def prepare_job_config(
     if conf:
         job_conf["job"]["config"] = conf
 
-    fd = open(Path(settings.RUN_DIR, f"{job_id}", "config.json"), "w", encoding=settings.ENCODING)
+    fd = open(Path(RUN_DIR, f"{job_id}", "config.json"), "w", encoding=ENCODING)
     json.dump(job_conf, fd, indent=3, sort_keys=True)
     fd.close()
 
@@ -671,7 +670,7 @@ def create_task(
         LogStorage.objects.create(job=job, name=log_type, type="stdout", format="txt")
         LogStorage.objects.create(job=job, name=log_type, type="stderr", format="txt")
         set_job_status(job.pk, config.Job.CREATED, ctx.event)
-        Path(settings.RUN_DIR, f"{job.pk}", "tmp").mkdir(parents=True, exist_ok=True)
+        Path(RUN_DIR, f"{job.pk}", "tmp").mkdir(parents=True, exist_ok=True)
 
     tree = Tree(obj)
     affected = (node.value for node in tree.get_all_affected(tree.built_from))
@@ -824,11 +823,11 @@ def check_all_status():
 
 
 def run_task(task: TaskLog, event, args: str = ""):
-    err_file = open(Path(settings.LOG_DIR, "task_runner.err"), "a+", encoding="utf_8")
+    err_file = open(Path(LOG_DIR, "task_runner.err"), "a+", encoding="utf_8")
     cmd = [
         "/adcm/python/job_venv_wrapper.sh",
         task.action.venv,
-        str(Path(settings.CODE_DIR, "task_runner.py")),
+        str(Path(CODE_DIR, "task_runner.py")),
         str(task.pk),
         args,
     ]
@@ -870,9 +869,7 @@ def prepare_ansible_config(job_id: int, action: Action, sub_action: SubAction):
     if "jinja2_native" in params:
         config_parser["defaults"]["jinja2_native"] = str(params["jinja2_native"])
 
-    with open(
-        Path(settings.RUN_DIR, f"{job_id}", "ansible.cfg"), "w", encoding="utf_8"
-    ) as config_file:
+    with open(Path(RUN_DIR, f"{job_id}", "ansible.cfg"), "w", encoding="utf_8") as config_file:
         config_parser.write(config_file)
 
 
