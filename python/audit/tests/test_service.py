@@ -654,6 +654,28 @@ class TestService(BaseTestCase):
             user=self.test_user,
         )
 
+    def test_change_maintenance_mode_via_cluster(self):
+        self.client.post(
+            path=reverse(
+                "service-maintenance-mode",
+                kwargs={"cluster_id": self.cluster.pk, "service_id": self.service.pk},
+            ),
+            data={"maintenance_mode": MaintenanceMode.ON},
+        )
+
+        log: AuditLog = AuditLog.objects.order_by("operation_time").last()
+
+        self.check_log(
+            log=log,
+            obj=self.service,
+            obj_name=f"{self.cluster.name}/{self.service.display_name}",
+            operation_name="Service updated",
+            object_type=AuditObjectType.Service,
+            operation_type=AuditLogOperationType.Update,
+            operation_result=AuditLogOperationResult.Success,
+            user=self.test_user,
+        )
+
     def test_change_maintenance_mode_failed(self):
         self.client.post(
             path=reverse("service-maintenance-mode", kwargs={"service_id": self.service.pk}),

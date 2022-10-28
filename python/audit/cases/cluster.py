@@ -11,7 +11,7 @@
 # limitations under the License.
 
 from django.db.models import Model
-from django.views import View
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
 from audit.cases.common import (
@@ -32,7 +32,7 @@ from cm.models import Cluster, ClusterBind, ClusterObject, Host
 CONFIGURATION_STR = "configuration "
 
 
-def get_export_cluster_and_service_names(response: Response, view: View) -> tuple[str, str]:
+def get_export_cluster_and_service_names(response: Response, view: GenericAPIView) -> tuple[str, str]:
     cluster, service = None, None
     cluster_name, service_name = "", ""
     if response and response.data and isinstance(response.data.get("export_cluster_id"), int):
@@ -73,7 +73,7 @@ def make_export_name(cluster_name: str, service_name: str) -> str:
 # pylint: disable-next=too-many-locals,too-many-branches,too-many-statements
 def cluster_case(
     path: list[str, ...],
-    view: View,
+    view: GenericAPIView,
     response: Response,
     deleted_obj: Model,
 ) -> tuple[AuditOperation, AuditObject | None]:
@@ -287,6 +287,13 @@ def cluster_case(
                 operation_type=AuditLogOperationType.Update,
                 obj_pk=service_pk,
                 operation_aux_str="import ",
+            )
+
+        case ["cluster", _, "service", service_pk, "maintenance-mode"]:
+            audit_operation, audit_object = obj_pk_case(
+                obj_type=AuditObjectType.Service,
+                operation_type=AuditLogOperationType.Update,
+                obj_pk=service_pk,
             )
 
         case (

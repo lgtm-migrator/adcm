@@ -18,9 +18,9 @@ from django.contrib.auth.models import User as DjangoUser
 from django.db.models import Model
 from django.http.response import Http404
 from django.urls import resolve
-# from django.views.generic.base import View
-from rest_framework.generics import GenericAPIView
 from rest_framework.exceptions import PermissionDenied, ValidationError
+
+from rest_framework.generics import GenericAPIView
 from rest_framework.request import Request
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
