@@ -75,10 +75,17 @@ class ComponentDetailView(PermissionListMixin, DetailView):
 
         return get_component_queryset(queryset, self.request.user, self.kwargs)
 
+
+class ComponentMaintenanceModeView(GenericUIView):
+    queryset = ServiceComponent.objects.all()
+    serializer_class = ComponentChangeMaintenanceModeSerializer
+    lookup_field = "id"
+    lookup_url_kwarg = "component_id"
+
     @audit
-    def post(self, request: Request, *args, **kwargs) -> Response:
+    def post(self, request: Request, **kwargs) -> Response:
         component = self.get_object()
-        serializer = ComponentChangeMaintenanceModeSerializer(instance=component, data=request.data)
+        serializer = self.get_serializer(instance=component, data=request.data)
         serializer.is_valid(raise_exception=True)
 
         return get_maintenance_mode_response(obj=component, serializer=serializer)

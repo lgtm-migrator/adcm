@@ -107,14 +107,6 @@ class ServiceDetailView(PermissionListMixin, DetailView):
         return queryset
 
     @audit
-    def post(self, request: Request, *args, **kwargs) -> Response:
-        service = self.get_object()
-        serializer = ServiceChangeMaintenanceModeSerializer(instance=service, data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        return get_maintenance_mode_response(obj=service, serializer=serializer)
-
-    @audit
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
         if instance.state != "created":
@@ -123,6 +115,22 @@ class ServiceDetailView(PermissionListMixin, DetailView):
         delete_service(instance)
 
         return Response(status=HTTP_204_NO_CONTENT)
+
+
+class ServiceMaintenanceModeView(GenericUIView):
+    queryset = ClusterObject.objects.all()
+    permission_classes = (DjangoOnlyObjectPermissions,)
+    serializer_class = ServiceChangeMaintenanceModeSerializer
+    lookup_field = "id"
+    lookup_url_kwarg = "service_id"
+
+    @audit
+    def post(self, request: Request, **kwargs) -> Response:
+        service = self.get_object()
+        serializer = self.get_serializer(instance=service, data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        return get_maintenance_mode_response(obj=service, serializer=serializer)
 
 
 class ServiceImportView(GenericUIView):

@@ -309,7 +309,7 @@ class HostDetail(PermissionListMixin, DetailView):
 class HostMaintenanceModeView(GenericUIView):
     queryset = Host.objects.all()
     permission_classes = (DjangoOnlyObjectPermissions,)
-    serializer_class_post = HostChangeMaintenanceModeSerializer
+    serializer_class = HostChangeMaintenanceModeSerializer
     lookup_field = "id"
     lookup_url_kwarg = "host_id"
 

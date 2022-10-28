@@ -61,18 +61,6 @@ class TestComponentAPI(BaseTestCase):
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertIn("maintenance_mode", response.data)
 
-    def test_change_maintenance_mode_to_changing_fail(self):
-        response: Response = self.client.post(
-            path=reverse("component-maintenance-mode", kwargs={"component_id": self.component.pk}),
-            data={"maintenance_mode": MaintenanceMode.CHANGING},
-        )
-
-        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
-        self.assertEqual(
-            response.data["error"],
-            f'Component maintenance mode can\'t be switched to "{MaintenanceMode.CHANGING}"',
-        )
-
     def test_change_maintenance_mode_on_no_action_success(self):
         response: Response = self.client.post(
             path=reverse("component-maintenance-mode", kwargs={"component_id": self.component.pk}),

@@ -18,6 +18,7 @@ from api.service.views import (
     ServiceDetailView,
     ServiceImportView,
     ServiceListView,
+    ServiceMaintenanceModeView,
     StatusList,
 )
 
@@ -30,7 +31,7 @@ urlpatterns = [
                 path("", ServiceDetailView.as_view(), name="service-details"),
                 path(
                     "maintenance-mode/",
-                    ServiceDetailView.as_view(),
+                    ServiceMaintenanceModeView.as_view(),
                     name="service-maintenance-mode",
                 ),
                 path("component/", include("api.component.urls")),

@@ -133,7 +133,7 @@ class ComponentDetailUISerializer(ComponentDetailSerializer):
 
 
 class ComponentChangeMaintenanceModeSerializer(ModelSerializer):
-    maintenance_mode = ChoiceField(choices=MaintenanceMode.choices)
+    maintenance_mode = ChoiceField(choices=(MaintenanceMode.ON, MaintenanceMode.OFF))
 
     class Meta:
         model = ServiceComponent

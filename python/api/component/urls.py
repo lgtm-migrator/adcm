@@ -13,7 +13,12 @@
 
 from django.urls import include, path
 
-from api.component.views import ComponentDetailView, ComponentListView, StatusList
+from api.component.views import (
+    ComponentDetailView,
+    ComponentListView,
+    ComponentMaintenanceModeView,
+    StatusList,
+)
 
 urlpatterns = [
     path('', ComponentListView.as_view(), name='component'),
@@ -24,7 +29,7 @@ urlpatterns = [
                 path('', ComponentDetailView.as_view(), name='component-details'),
                 path(
                     "maintenance-mode/",
-                    ComponentDetailView.as_view(),
+                    ComponentMaintenanceModeView.as_view(),
                     name="component-maintenance-mode",
                 ),
                 path('config/', include('api.config.urls'), {'object_type': 'component'}),

@@ -18,7 +18,8 @@ from django.contrib.auth.models import User as DjangoUser
 from django.db.models import Model
 from django.http.response import Http404
 from django.urls import resolve
-from django.views.generic.base import View
+# from django.views.generic.base import View
+from rest_framework.generics import GenericAPIView
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.request import Request
 from rest_framework.status import (
@@ -58,18 +59,18 @@ from rbac.endpoints.user.serializers import UserAuditSerializer
 from rbac.models import Group, Policy, Role, User
 
 
-def _get_view_and_request(args) -> tuple[View, Request]:
+def _get_view_and_request(args) -> tuple[GenericAPIView, Request]:
     if len(args) == 2:  # for audit view methods
-        view: View = args[0]
+        view: GenericAPIView = args[0]
         request: Request = args[1]
     else:  # for audit has_permissions method
-        view: View = args[2]
+        view: GenericAPIView = args[2]
         request: Request = args[1]
 
     return view, request
 
 
-def _get_deleted_obj(view: View, request: Request, kwargs) -> Model | None:
+def _get_deleted_obj(view: GenericAPIView, request: Request, kwargs) -> Model | None:
     # pylint: disable=too-many-branches
 
     try:
@@ -145,7 +146,7 @@ def _get_object_changes(prev_data: dict, current_obj: Model) -> dict:
     return object_changes
 
 
-def _get_obj_changes_data(view: View | ModelViewSet) -> tuple[dict | None, Model | None]:
+def _get_obj_changes_data(view: GenericAPIView | ModelViewSet) -> tuple[dict | None, Model | None]:
     prev_data = None
     current_obj = None
     serializer_class = None
@@ -199,7 +200,7 @@ def audit(func):
         audit_operation: AuditOperation
         audit_object: AuditObject
         operation_name: str
-        view: View | ModelViewSet
+        view: GenericAPIView | ModelViewSet
         request: Request
         object_changes: dict
 
@@ -279,7 +280,6 @@ def audit(func):
                     )
                     if action_perm_denied or task_perm_denied:
                         status_code = HTTP_403_FORBIDDEN
-
             else:  # when denied returns 404 from PermissionListMixin
                 if getattr(exc, "msg", None) and (  # pylint: disable=too-many-boolean-expressions
                     "There is host" in exc.msg
@@ -287,6 +287,8 @@ def audit(func):
                     or "of bundle" in exc.msg
                     or ("host doesn't exist" in exc.msg and not isinstance(deleted_obj, Host))
                 ):
+                    status_code = error.status_code
+                elif isinstance(exc, ValidationError):
                     status_code = error.status_code
                 else:
                     status_code = HTTP_403_FORBIDDEN

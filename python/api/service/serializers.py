@@ -210,7 +210,7 @@ class StatusSerializer(EmptySerializer):
 
 
 class ServiceChangeMaintenanceModeSerializer(ModelSerializer):
-    maintenance_mode = ChoiceField(choices=MaintenanceMode.choices)
+    maintenance_mode = ChoiceField(choices=(MaintenanceMode.ON, MaintenanceMode.OFF))
 
     class Meta:
         model = ClusterObject
