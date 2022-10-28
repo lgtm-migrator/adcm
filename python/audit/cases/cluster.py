@@ -133,7 +133,13 @@ def cluster_case(
                 object_type=AuditObjectType.Cluster,
             )
 
-        case ["cluster", cluster_pk, "host", host_pk]:
+        case ["cluster", cluster_pk, "host", host_pk] | [
+            "cluster",
+            cluster_pk,
+            "host",
+            host_pk,
+            "maintenance-mode",
+        ]:
             if view.request.method == "DELETE":
                 name = "host removed"
                 if not isinstance(deleted_obj, Host):
