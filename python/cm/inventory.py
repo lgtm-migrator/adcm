@@ -16,6 +16,7 @@ from itertools import chain
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 
+import adcm.init_django  # pylint: disable=unused-import
 from cm.adcm_config import get_prototype_config, process_config
 from cm.logger import logger
 from cm.models import (

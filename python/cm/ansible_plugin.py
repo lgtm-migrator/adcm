@@ -25,6 +25,7 @@ from django.conf import settings
 
 # isort: on
 
+import adcm.init_django  # pylint: disable=unused-import
 from cm import config
 from cm.adcm_config import set_object_config
 from cm.api import add_hc, get_hc

@@ -27,6 +27,7 @@ from django.db import IntegrityError
 from rest_framework import status
 from version_utils import rpm
 
+import adcm.init_django  # pylint: disable=unused-import
 import cm.checker
 from cm.adcm_config import (
     check_config_type,
@@ -49,21 +50,21 @@ from cm.models import (
 NAME_REGEX = r"[0-9a-zA-Z_\.-]+"
 
 
-def save_definition(path, fname, conf, obj_list, bundle_hash, adcm=False):
+def save_definition(path, fname, conf, obj_list, bundle_hash, adcm_=False):
     if isinstance(conf, dict):
-        save_object_definition(path, fname, conf, obj_list, bundle_hash, adcm)
+        save_object_definition(path, fname, conf, obj_list, bundle_hash, adcm_)
     else:
         for obj_def in conf:
-            save_object_definition(path, fname, obj_def, obj_list, bundle_hash, adcm)
+            save_object_definition(path, fname, obj_def, obj_list, bundle_hash, adcm_)
 
 
 def cook_obj_id(conf):
     return f"{conf['type']}.{conf['name']}.{conf['version']}"
 
 
-def save_object_definition(path, fname, conf, obj_list, bundle_hash, adcm=False):
+def save_object_definition(path, fname, conf, obj_list, bundle_hash, adcm_=False):
     def_type = conf["type"]
-    if def_type == "adcm" and not adcm:
+    if def_type == "adcm" and not adcm_:
         msg = "Invalid type \"{}\" in object definition: {}"
         return err("INVALID_OBJECT_DEFINITION", msg.format(def_type, fname))
     check_object_definition(fname, conf, def_type, obj_list)

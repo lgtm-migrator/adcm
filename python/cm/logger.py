@@ -14,6 +14,8 @@ import logging
 
 from django.conf import settings
 
+import adcm.init_django  # pylint: disable=unused-import
+
 logger = logging.getLogger('adcm')
 logger.setLevel(logging.DEBUG)
 

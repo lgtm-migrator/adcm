@@ -21,6 +21,7 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from version_utils import rpm
 
+import adcm.init_django  # pylint: disable=unused-import
 import cm.stack
 import cm.status_api
 from adcm.settings import ADCM_VERSION
@@ -200,15 +201,15 @@ def load_adcm():
 
 def process_adcm():
     sp = StagePrototype.objects.get(type='adcm')
-    adcm = ADCM.objects.filter()
-    if adcm:
-        old_proto = adcm[0].prototype
+    adcm_ = ADCM.objects.filter()
+    if adcm_:
+        old_proto = adcm_[0].prototype
         new_proto = sp
         if old_proto.version == new_proto.version:
             logger.debug('adcm vesrion %s, skip upgrade', old_proto.version)
         elif rpm.compare_versions(old_proto.version, new_proto.version) < 0:
             bundle = copy_stage('adcm', sp)
-            upgrade_adcm(adcm[0], bundle)
+            upgrade_adcm(adcm_[0], bundle)
         else:
             msg = 'Current adcm version {} is more than or equal to upgrade version {}'
             err('UPGRADE_ERROR', msg.format(old_proto.version, new_proto.version))
@@ -220,26 +221,26 @@ def process_adcm():
 def init_adcm(bundle):
     proto = Prototype.objects.get(type='adcm', bundle=bundle)
     with transaction.atomic():
-        adcm = ADCM.objects.create(prototype=proto, name='ADCM')
-        obj_conf = init_object_config(proto, adcm)
-        adcm.config = obj_conf
-        adcm.save()
+        adcm_ = ADCM.objects.create(prototype=proto, name='ADCM')
+        obj_conf = init_object_config(proto, adcm_)
+        adcm_.config = obj_conf
+        adcm_.save()
     logger.info('init adcm object version %s OK', proto.version)
-    return adcm
+    return adcm_
 
 
-def upgrade_adcm(adcm, bundle):
-    old_proto = adcm.prototype
+def upgrade_adcm(adcm_, bundle):
+    old_proto = adcm_.prototype
     new_proto = Prototype.objects.get(type='adcm', bundle=bundle)
     if rpm.compare_versions(old_proto.version, new_proto.version) >= 0:
         msg = 'Current adcm version {} is more than or equal to upgrade version {}'
         err('UPGRADE_ERROR', msg.format(old_proto.version, new_proto.version))
     with transaction.atomic():
-        adcm.prototype = new_proto
-        adcm.save()
-        switch_config(adcm, new_proto, old_proto)
-    logger.info('upgrade adcm OK from version %s to %s', old_proto.version, adcm.prototype.version)
-    return adcm
+        adcm_.prototype = new_proto
+        adcm_.save()
+        switch_config(adcm_, new_proto, old_proto)
+    logger.info('upgrade adcm OK from version %s to %s', old_proto.version, adcm_.prototype.version)
+    return adcm_
 
 
 def process_bundle(path, bundle_hash):
@@ -867,8 +868,8 @@ def delete_bundle(bundle):
         cl = clusters[0]
         msg = 'There is cluster #{} "{}" of bundle #{} "{}" {}'
         err('BUNDLE_CONFLICT', msg.format(cl.id, cl.name, bundle.id, bundle.name, bundle.version))
-    adcm = ADCM.objects.filter(prototype__bundle=bundle)
-    if adcm:
+    adcm_ = ADCM.objects.filter(prototype__bundle=bundle)
+    if adcm_:
         msg = 'There is adcm object of bundle #{} "{}" {}'
         err('BUNDLE_CONFLICT', msg.format(bundle.id, bundle.name, bundle.version))
     if bundle.hash != 'adcm':

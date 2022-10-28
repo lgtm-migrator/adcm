@@ -21,6 +21,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
+import adcm.init_django  # pylint: disable=unused-import
 from audit.utils import audit_finish_task
 from cm import adcm_config, api, config, inventory, issue, variant
 from cm.adcm_config import process_file_type
@@ -417,8 +418,8 @@ def cook_script(action: Action, sub_action: SubAction):
 
 
 def get_adcm_config():
-    adcm = ADCM.obj.get()
-    return get_obj_config(adcm)
+    adcm_ = ADCM.obj.get()
+    return get_obj_config(adcm_)
 
 
 def get_actual_hc(cluster: Cluster):
