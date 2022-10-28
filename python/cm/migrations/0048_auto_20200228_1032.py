@@ -16,12 +16,13 @@ import json
 import os
 
 import django.db.models.deletion
-from django.conf import settings
 from django.db import migrations, models
+
+from adcm.settings import LOG_DIR
 
 
 def get_body(job, name, type_log, format_log):
-    file_path = settings.LOG_DIR / f"{job.id}-{name}-{type_log}.{format_log}"
+    file_path = LOG_DIR / f"{job.id}-{name}-{type_log}.{format_log}"
     if os.path.exists(file_path):
         with open(file_path, 'r', encoding='utf_8') as f:
             body = f.read()

@@ -16,11 +16,11 @@ from datetime import datetime, timedelta
 from enum import Enum
 from subprocess import STDOUT, CalledProcessError, check_output
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
+from adcm.settings import RUN_DIR
 from audit.models import AuditLogOperationResult
 from audit.utils import make_audit_log
 from cm.models import (
@@ -248,9 +248,9 @@ class Command(BaseCommand):
 
                 self.__log("db JobLog rotated", "info")
             if days_delta_fs > 0:  # pylint: disable=too-many-nested-blocks
-                for name in os.listdir(settings.RUN_DIR):
+                for name in os.listdir(RUN_DIR):
                     if not name.startswith("."):  # a line of code is used for development
-                        path = settings.RUN_DIR / name
+                        path = RUN_DIR / name
                         try:
                             m_time = datetime.fromtimestamp(os.path.getmtime(path), tz=timezone.utc)
                             if timezone.now() - m_time > timedelta(days=days_delta_fs):

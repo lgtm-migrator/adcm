@@ -13,7 +13,6 @@
 import json
 from pathlib import Path
 
-from django.conf import settings
 from rest_framework.reverse import reverse
 from rest_framework.serializers import (
     HyperlinkedIdentityField,
@@ -22,6 +21,7 @@ from rest_framework.serializers import (
     SerializerMethodField,
 )
 
+from adcm.settings import ENCODING, RUN_DIR
 from api.action.serializers import ActionJobSerializer
 from api.concern.serializers import ConcernItemSerializer
 from cm.ansible_plugin import get_check_log
@@ -222,7 +222,7 @@ class JobRetrieveSerializer(HyperlinkedModelSerializer):
 
     @staticmethod
     def get_log_dir(obj: JobLog) -> str:
-        return str(Path(settings.RUN_DIR, str(obj.pk)))
+        return str(Path(RUN_DIR, str(obj.pk)))
 
     def get_log_files(self, obj: JobLog) -> list[dict[str, str]]:
         logs = []
@@ -265,9 +265,9 @@ class LogStorageRetrieveSerializer(HyperlinkedModelSerializer):
 
     @staticmethod
     def _get_ansible_content(obj):
-        path_file = settings.RUN_DIR / f"{obj.job.id}" / f"{obj.name}-{obj.type}.{obj.format}"
+        path_file = RUN_DIR / f"{obj.job.id}" / f"{obj.name}-{obj.type}.{obj.format}"
         try:
-            with open(path_file, "r", encoding=settings.ENCODING) as f:
+            with open(path_file, "r", encoding=ENCODING) as f:
                 content = f.read()
         except FileNotFoundError as e:
             msg = f'File "{obj.name}-{obj.type}.{obj.format}" not found'

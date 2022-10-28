@@ -19,11 +19,11 @@ import subprocess
 import sys
 import time
 
-from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 
 import adcm.init_django  # pylint: disable=unused-import
+from adcm.settings import CODE_DIR, ENCODING, LOG_DIR, RUN_DIR
 from cm.config import Job
 from cm.job import finish_task, re_prepare_job
 from cm.logger import logger
@@ -70,7 +70,7 @@ def run_job(task_id, job_id, err_file):
     cmd = [
         '/adcm/python/job_venv_wrapper.sh',
         TaskLog.objects.get(id=task_id).action.venv,
-        os.path.join(settings.CODE_DIR, 'job_runner.py'),
+        os.path.join(CODE_DIR, 'job_runner.py'),
         str(job_id),
     ]
     logger.info("task run job cmd: %s", ' '.join(cmd))
@@ -89,8 +89,8 @@ def set_log_body(job):
     name = job.sub_action.script_type if job.sub_action else job.action.script_type
     log_storage = LogStorage.objects.filter(job=job, name=name, type__in=['stdout', 'stderr'])
     for ls in log_storage:
-        file_path = settings.RUN_DIR / f"{ls.job.id}" / f"{ls.name}-{ls.type}.{ls.format}"
-        with open(file_path, 'r', encoding=settings.ENCODING) as f:
+        file_path = RUN_DIR / f"{ls.job.id}" / f"{ls.name}-{ls.type}.{ls.format}"
+        with open(file_path, 'r', encoding=ENCODING) as f:
             body = f.read()
 
         LogStorage.objects.filter(job=job, name=ls.name, type=ls.type).update(body=body)
@@ -114,7 +114,7 @@ def run_task(task_id, args=None):
 
         return
 
-    err_file = open(settings.LOG_DIR / "job_runner.err", "a+", encoding=settings.ENCODING)
+    err_file = open(LOG_DIR / "job_runner.err", "a+", encoding=ENCODING)
 
     logger.info("run task #%s", task_id)
 
