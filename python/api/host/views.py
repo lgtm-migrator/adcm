@@ -13,7 +13,6 @@
 from django_filters import rest_framework as drf_filters
 from guardian.mixins import PermissionListMixin
 from guardian.shortcuts import get_objects_for_user
-from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -23,7 +22,6 @@ from rest_framework.status import (
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
 )
-from rest_framework.viewsets import GenericViewSet
 
 from api.base_view import DetailView, GenericUIView, PaginatedView
 from api.host.serializers import (
@@ -308,15 +306,15 @@ class HostDetail(PermissionListMixin, DetailView):
         return self._update_host_object(request, partial=False, *args, **kwargs)
 
 
-class HostViewSet(GenericViewSet):
+class HostMaintenanceModeView(GenericUIView):
     queryset = Host.objects.all()
     permission_classes = (DjangoOnlyObjectPermissions,)
-    serializer_class = HostChangeMaintenanceModeSerializer
-    lookup_url_kwarg = "host_pk"
+    serializer_class_post = HostChangeMaintenanceModeSerializer
+    lookup_field = "id"
+    lookup_url_kwarg = "host_id"
 
     @audit
-    @action(methods=["post"], detail=True)
-    def maintenance_mode(self, request: Request, **kwargs) -> Response:
+    def post(self, request: Request, **kwargs) -> Response:
         host = self.get_object()
         serializer = self.get_serializer(instance=host, data=request.data)
         serializer.is_valid(raise_exception=True)

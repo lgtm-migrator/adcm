@@ -183,14 +183,6 @@ def get_maintenance_mode_response(
     else:
         obj_name = "obj"
 
-    if serializer.validated_data["maintenance_mode"] == MaintenanceMode.CHANGING:
-        return Response(
-            data={
-                "error": f'{obj_name.capitalize()} maintenance mode can\'t be switched to "{MaintenanceMode.CHANGING}"'
-            },
-            status=HTTP_409_CONFLICT,
-        )
-
     if obj.maintenance_mode == MaintenanceMode.CHANGING:
         return Response(
             data={"error": f"{obj_name.capitalize()} maintenance mode is changing now"},
