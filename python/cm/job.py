@@ -542,8 +542,8 @@ def prepare_job_config(
         "adcm": {"config": get_adcm_config()},
         "context": prepare_context(action, obj),
         "env": {
-            "run_dir": RUN_DIR,
-            "log_dir": LOG_DIR,
+            "run_dir": str(RUN_DIR),
+            "log_dir": str(LOG_DIR),
             "tmp_dir": str(Path(RUN_DIR, f"{job_id}", "tmp")),
             "stack_dir": str(Path(get_bundle_root(action), action.prototype.bundle.hash)),
             "status_api_token": config.STATUS_SECRET_KEY,
