@@ -147,6 +147,16 @@ class JobViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Generi
     permission_required = ["cm.view_joblog"]
     lookup_url_kwarg = "job_pk"
 
+    def get_queryset(self, *args, **kwargs):
+        queryset = super().get_queryset(*args, **kwargs)
+        if not self.request.user.is_superuser:
+            # NOT superuser shouldn't have access to ADCM tasks
+            queryset = queryset.exclude(
+                object_type=ContentType.objects.get(app_label="cm", model="adcm")
+            )
+
+        return queryset
+
     def get_permissions(self):
         if self.action == "list":
             permission_classes = (DjangoModelPermissions,)
@@ -164,7 +174,7 @@ class JobViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Generi
 
 #  pylint:disable-next=too-many-ancestors
 class TaskViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, GenericUIViewSet):
-    queryset = TaskLog.objects.select_related("action").all()
+    queryset = TaskLog.objects.select_related("action").order_by("-id").all()
     serializer_class = TaskSerializer
     filterset_fields = ("action_id", "pid", "status", "start_date", "finish_date")
     ordering_fields = ("status", "start_date", "finish_date")
