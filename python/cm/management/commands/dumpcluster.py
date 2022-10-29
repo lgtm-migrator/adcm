@@ -24,7 +24,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from cm.config import ANSIBLE_SECRET, DEFAULT_SALT
+from adcm.settings import ANSIBLE_SECRET, DEFAULT_SALT
 from cm.models import (
     Bundle,
     Cluster,

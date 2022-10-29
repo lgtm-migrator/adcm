@@ -20,7 +20,15 @@ from typing import Any, Hashable, List, Optional, Tuple, Union
 from django.db import transaction
 from django.utils import timezone
 
-from adcm.settings import BASE_DIR, BUNDLE_DIR, CODE_DIR, ENCODING, LOG_DIR, RUN_DIR
+from adcm.settings import (
+    BASE_DIR,
+    BUNDLE_DIR,
+    CODE_DIR,
+    ENCODING,
+    LOG_DIR,
+    RUN_DIR,
+    STATUS_SECRET_KEY,
+)
 from audit.utils import audit_finish_task
 from cm import adcm_config, api, config, inventory, issue, variant
 from cm.adcm_config import process_file_type
@@ -546,7 +554,7 @@ def prepare_job_config(
             "log_dir": str(LOG_DIR),
             "tmp_dir": str(Path(RUN_DIR, f"{job_id}", "tmp")),
             "stack_dir": str(Path(get_bundle_root(action), action.prototype.bundle.hash)),
-            "status_api_token": config.STATUS_SECRET_KEY,
+            "status_api_token": str(STATUS_SECRET_KEY),
         },
         "job": {
             "id": job_id,

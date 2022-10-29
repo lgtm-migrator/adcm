@@ -29,8 +29,8 @@ from django.core.management.base import BaseCommand
 from django.db.transaction import atomic
 from django.db.utils import IntegrityError
 
+from adcm.settings import ANSIBLE_SECRET, ANSIBLE_VAULT_HEADER, DEFAULT_SALT
 from cm.adcm_config import save_file_type
-from cm.config import ANSIBLE_SECRET, ANSIBLE_VAULT_HEADER, DEFAULT_SALT
 from cm.errors import AdcmEx
 from cm.models import (
     Bundle,

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cm import config
+from adcm.settings import ANSIBLE_SECRET
 
 if __name__ == '__main__':
-    print(config.ANSIBLE_SECRET)
+    print(ANSIBLE_SECRET)
