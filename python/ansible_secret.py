@@ -13,5 +13,5 @@
 
 from adcm.settings import ANSIBLE_SECRET
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(ANSIBLE_SECRET)

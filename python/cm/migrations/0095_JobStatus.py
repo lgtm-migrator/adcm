@@ -18,36 +18,36 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('cm', '0094_increase_max_length'),
+        ("cm", "0094_increase_max_length"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='joblog',
-            name='status',
+            model_name="joblog",
+            name="status",
             field=models.CharField(
                 choices=[
-                    ('created', 'created'),
-                    ('success', 'success'),
-                    ('failed', 'failed'),
-                    ('running', 'running'),
-                    ('locked', 'locked'),
-                    ('aborted', 'aborted'),
+                    ("created", "created"),
+                    ("success", "success"),
+                    ("failed", "failed"),
+                    ("running", "running"),
+                    ("locked", "locked"),
+                    ("aborted", "aborted"),
                 ],
                 max_length=16,
             ),
         ),
         migrations.AlterField(
-            model_name='tasklog',
-            name='status',
+            model_name="tasklog",
+            name="status",
             field=models.CharField(
                 choices=[
-                    ('created', 'created'),
-                    ('success', 'success'),
-                    ('failed', 'failed'),
-                    ('running', 'running'),
-                    ('locked', 'locked'),
-                    ('aborted', 'aborted'),
+                    ("created", "created"),
+                    ("success", "success"),
+                    ("failed", "failed"),
+                    ("running", "running"),
+                    ("locked", "locked"),
+                    ("aborted", "aborted"),
                 ],
                 max_length=16,
             ),

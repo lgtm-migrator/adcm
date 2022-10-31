@@ -1293,12 +1293,12 @@ class ClusterBind(ADCMModel):
 
 
 class JobStatus(models.TextChoices):
-    CREATED = 'created', 'created'
-    SUCCESS = 'success', 'success'
-    FAILED = 'failed', 'failed'
-    RUNNING = 'running', 'running'
-    LOCKED = 'locked', 'locked'
-    ABORTED = 'aborted', 'aborted'
+    CREATED = "created", "created"
+    SUCCESS = "success", "success"
+    FAILED = "failed", "failed"
+    RUNNING = "running", "running"
+    LOCKED = "locked", "locked"
+    ABORTED = "aborted", "aborted"
 
 
 class UserProfile(ADCMModel):

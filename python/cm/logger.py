@@ -14,12 +14,12 @@ import logging
 
 from adcm.settings import LOG_FILE
 
-logger = logging.getLogger('adcm')
+logger = logging.getLogger("adcm")
 logger.setLevel(logging.DEBUG)
 
 
 def get_log_handler(fname):
-    handler = logging.FileHandler(fname, 'a', 'utf-8')
+    handler = logging.FileHandler(fname, "a", "utf-8")
     fmt = logging.Formatter(
         "%(asctime)s.%(msecs)03d %(levelname)s %(module)s %(message)s", "%m-%d %H:%M:%S"
     )
