@@ -17,19 +17,10 @@ from configparser import ConfigParser
 from pathlib import Path
 from typing import Any, Hashable, List, Optional, Tuple, Union
 
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from adcm.settings import (
-    BASE_DIR,
-    BUNDLE_DIR,
-    CODE_DIR,
-    ENCODING_UTF_8,
-    LOG_DIR,
-    PYTHON_SITE_PACKAGES,
-    RUN_DIR,
-    STATUS_SECRET_KEY,
-)
 from audit.utils import audit_finish_task
 from cm import adcm_config, api, inventory, issue, variant
 from cm.adcm_config import process_file_type
@@ -408,9 +399,9 @@ def check_adcm(adcm_id: int) -> ADCM:
 def get_bundle_root(action: Action) -> str:
 
     if action.prototype.type == "adcm":
-        return str(Path(BASE_DIR, "conf"))
+        return str(Path(settings.BASE_DIR, "conf"))
 
-    return str(BUNDLE_DIR)
+    return str(settings.BUNDLE_DIR)
 
 
 def cook_script(action: Action, sub_action: SubAction):
@@ -552,11 +543,11 @@ def prepare_job_config(
         "adcm": {"config": get_adcm_config()},
         "context": prepare_context(action, obj),
         "env": {
-            "run_dir": str(RUN_DIR),
-            "log_dir": str(LOG_DIR),
-            "tmp_dir": str(Path(RUN_DIR, f"{job_id}", "tmp")),
+            "run_dir": str(settings.RUN_DIR),
+            "log_dir": str(settings.LOG_DIR),
+            "tmp_dir": str(Path(settings.RUN_DIR, f"{job_id}", "tmp")),
             "stack_dir": str(Path(get_bundle_root(action), action.prototype.bundle.hash)),
-            "status_api_token": str(STATUS_SECRET_KEY),
+            "status_api_token": str(settings.STATUS_SECRET_KEY),
         },
         "job": {
             "id": job_id,
@@ -627,7 +618,9 @@ def prepare_job_config(
     if conf:
         job_conf["job"]["config"] = conf
 
-    fd = open(Path(RUN_DIR, f"{job_id}", "config.json"), "w", encoding=ENCODING_UTF_8)
+    fd = open(
+        Path(settings.RUN_DIR, f"{job_id}", "config.json"), "w", encoding=settings.ENCODING_UTF_8
+    )
     json.dump(job_conf, fd, indent=3, sort_keys=True)
     fd.close()
 
@@ -680,7 +673,7 @@ def create_task(
         LogStorage.objects.create(job=job, name=log_type, type="stdout", format="txt")
         LogStorage.objects.create(job=job, name=log_type, type="stderr", format="txt")
         set_job_status(job.pk, JobStatus.CREATED, ctx.event)
-        Path(RUN_DIR, f"{job.pk}", "tmp").mkdir(parents=True, exist_ok=True)
+        Path(settings.RUN_DIR, f"{job.pk}", "tmp").mkdir(parents=True, exist_ok=True)
 
     tree = Tree(obj)
     affected = (node.value for node in tree.get_all_affected(tree.built_from))
@@ -833,11 +826,13 @@ def check_all_status():
 
 
 def run_task(task: TaskLog, event, args: str = ""):
-    err_file = open(Path(LOG_DIR, "task_runner.err"), "a+", encoding=ENCODING_UTF_8)
+    err_file = open(
+        Path(settings.LOG_DIR, "task_runner.err"), "a+", encoding=settings.ENCODING_UTF_8
+    )
     cmd = [
         "/adcm/python/job_venv_wrapper.sh",
         task.action.venv,
-        str(Path(CODE_DIR, "task_runner.py")),
+        str(Path(settings.CODE_DIR, "task_runner.py")),
         str(task.pk),
         args,
     ]
@@ -865,7 +860,7 @@ def prepare_ansible_config(job_id: int, action: Action, sub_action: SubAction):
     if mitogen:
         config_parser["defaults"]["strategy"] = "mitogen_linear"
         config_parser["defaults"]["strategy_plugins"] = str(
-            Path(PYTHON_SITE_PACKAGES, "ansible_mitogen", "plugins", "strategy")
+            Path(settings.PYTHON_SITE_PACKAGES, "ansible_mitogen", "plugins", "strategy")
         )
         config_parser["defaults"]["host_key_checking"] = "False"
 
@@ -880,7 +875,7 @@ def prepare_ansible_config(job_id: int, action: Action, sub_action: SubAction):
         config_parser["defaults"]["jinja2_native"] = str(params["jinja2_native"])
 
     with open(
-        Path(RUN_DIR, f"{job_id}", "ansible.cfg"), "w", encoding=ENCODING_UTF_8
+        Path(settings.RUN_DIR, f"{job_id}", "ansible.cfg"), "w", encoding=settings.ENCODING_UTF_8
     ) as config_file:
         config_parser.write(config_file)
 

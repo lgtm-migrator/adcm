@@ -16,16 +16,19 @@ import sys
 from pathlib import Path
 
 import ruyaml
+from django.conf import settings
 
+import adcm.init_django  # pylint: disable=unused-import
 import cm.checker
-from adcm.settings import CODE_DIR, ENCODING_UTF_8
 
 
 def check_config(data_file, schema_file, print_ok=True):
-    rules = ruyaml.round_trip_load(open(schema_file, encoding=ENCODING_UTF_8))
+    rules = ruyaml.round_trip_load(open(schema_file, encoding=settings.ENCODING_UTF_8))
     try:
         # ruyaml.version_info=(0, 15, 0)   # switch off duplicate key error
-        data = ruyaml.round_trip_load(open(data_file, encoding=ENCODING_UTF_8), version="1.1")
+        data = ruyaml.round_trip_load(
+            open(data_file, encoding=settings.ENCODING_UTF_8), version="1.1"
+        )
     except FileNotFoundError as e:
         print(e)
         return 1
@@ -65,5 +68,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Check ADCM config file")
     parser.add_argument("config_file", type=str, help="ADCM config file name (config.yaml)")
     args = parser.parse_args()
-    r = check_config(args.config_file, Path(CODE_DIR, "cm", "adcm_schema.yaml"))
+    r = check_config(args.config_file, Path(settings.CODE_DIR, "cm", "adcm_schema.yaml"))
     sys.exit(r)

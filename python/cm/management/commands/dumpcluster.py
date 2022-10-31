@@ -24,7 +24,6 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from adcm.settings import ANSIBLE_SECRET, DEFAULT_SALT, ENCODING_UTF_8
 from cm.models import (
     Bundle,
     Cluster,
@@ -302,7 +301,7 @@ def encrypt_data(pass_from_user, result):
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
-        salt=DEFAULT_SALT,
+        salt=settings.DEFAULT_SALT,
         iterations=390000,
         backend=default_backend(),
     )
@@ -377,8 +376,8 @@ def dump(cluster_id, output):
     ):
         host_component = get_host_component(host_component_obj.id)
         data["host_components"].append(host_component)
-    data["adcm_password"] = ANSIBLE_SECRET
-    result = json.dumps(data, indent=2).encode(ENCODING_UTF_8)
+    data["adcm_password"] = settings.ANSIBLE_SECRET
+    result = json.dumps(data, indent=2).encode(settings.ENCODING_UTF_8)
     password = getpass.getpass()
     encrypted = encrypt_data(password, result)
 
@@ -387,7 +386,7 @@ def dump(cluster_id, output):
             f.write(encrypted)
         sys.stdout.write(f"Dump successfully done to file {output}\n")
     else:
-        sys.stdout.write(encrypted.decode(ENCODING_UTF_8))
+        sys.stdout.write(encrypted.decode(settings.ENCODING_UTF_8))
 
 
 class Command(BaseCommand):

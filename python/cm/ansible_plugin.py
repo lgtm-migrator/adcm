@@ -22,8 +22,8 @@ from ansible.utils.vars import merge_hash
 from ansible.plugins.action import ActionBase
 
 # isort: on
+from django.conf import settings
 
-from adcm.settings import ENCODING_UTF_8, RUN_DIR
 from cm.adcm_config import set_object_config
 from cm.api import add_hc, get_hc
 from cm.api_context import ctx
@@ -81,7 +81,7 @@ MSG_NO_MULTI_STATE_TO_DELETE = (
 
 
 def job_lock(job_id):
-    fd = open(RUN_DIR / f"{job_id}/config.json", "r", encoding=ENCODING_UTF_8)
+    fd = open(settings.RUN_DIR / f"{job_id}/config.json", "r", encoding=settings.ENCODING_UTF_8)
     try:
         fcntl.flock(fd.fileno(), fcntl.LOCK_EX)  # pylint: disable=I1101
         return fd

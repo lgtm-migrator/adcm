@@ -22,12 +22,12 @@ from typing import Any
 import ruyaml
 import yaml
 import yspec.checker
+from django.conf import settings
 from django.db import IntegrityError
 from rest_framework import status
 from version_utils import rpm
 
 import cm.checker
-from adcm.settings import CODE_DIR, ENCODING_UTF_8
 from cm.adcm_config import (
     check_config_type,
     proto_ref,
@@ -102,11 +102,11 @@ def get_config_files(path, bundle_hash):
 
 def check_adcm_config(conf_file):
     warnings.simplefilter("error", ruyaml.error.ReusedAnchorWarning)
-    schema_file = CODE_DIR / "cm" / "adcm_schema.yaml"
-    with open(schema_file, encoding=ENCODING_UTF_8) as fd:
+    schema_file = settings.CODE_DIR / "cm" / "adcm_schema.yaml"
+    with open(schema_file, encoding=settings.ENCODING_UTF_8) as fd:
         rules = ruyaml.round_trip_load(fd)
     try:
-        with open(conf_file, encoding=ENCODING_UTF_8) as fd:
+        with open(conf_file, encoding=settings.ENCODING_UTF_8) as fd:
             data = cm.checker.round_trip_load(fd, version="1.1", allow_duplicate_keys=True)
     except (ruyaml.parser.ParserError, ruyaml.scanner.ScannerError, NotImplementedError) as e:
         err("STACK_LOAD_ERROR", f"YAML decode \"{conf_file}\" error: {e}")
@@ -145,7 +145,7 @@ def get_license_hash(proto, conf, bundle_hash):
         return None
     body = read_bundle_file(proto, conf["license"], bundle_hash, "license file")
     sha1 = hashlib.sha256()
-    sha1.update(body.encode(ENCODING_UTF_8))
+    sha1.update(body.encode(settings.ENCODING_UTF_8))
     return sha1.hexdigest()
 
 

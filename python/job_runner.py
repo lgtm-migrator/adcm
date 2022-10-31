@@ -19,11 +19,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+from django.conf import settings
 from django.db import transaction
 
 import adcm.init_django  # pylint: disable=unused-import
 import cm.job
-from adcm.settings import CODE_DIR, ENCODING_UTF_8, RUN_DIR
 from cm.ansible_plugin import finish_check
 from cm.api import get_hc, save_hc
 from cm.errors import AdcmEx
@@ -35,12 +35,12 @@ from cm.upgrade import bundle_switch
 
 def open_file(root, tag, job_id):
     fname = f"{root}/{job_id}/{tag}.txt"
-    f = open(fname, "w", encoding=ENCODING_UTF_8)
+    f = open(fname, "w", encoding=settings.ENCODING_UTF_8)
     return f
 
 
 def read_config(job_id):
-    fd = open(f"{RUN_DIR}/{job_id}/config.json", encoding=ENCODING_UTF_8)
+    fd = open(f"{settings.RUN_DIR}/{job_id}/config.json", encoding=settings.ENCODING_UTF_8)
     conf = json.load(fd)
     fd.close()
     return conf
@@ -68,7 +68,7 @@ def set_pythonpath(env, stack_dir):
 
 
 def set_ansible_config(env, job_id):
-    env["ANSIBLE_CONFIG"] = str(RUN_DIR / f"{job_id}/ansible.cfg")
+    env["ANSIBLE_CONFIG"] = str(settings.RUN_DIR / f"{job_id}/ansible.cfg")
     return env
 
 
@@ -106,8 +106,8 @@ def get_venv(job_id: int) -> str:
 
 
 def process_err_out_file(job_id, job_type):
-    out_file = open_file(RUN_DIR, f"{job_type}-stdout", job_id)
-    err_file = open_file(RUN_DIR, f"{job_type}-stderr", job_id)
+    out_file = open_file(settings.RUN_DIR, f"{job_type}-stdout", job_id)
+    err_file = open_file(settings.RUN_DIR, f"{job_type}-stderr", job_id)
     post_log(job_id, "stdout", f"{job_type}")
     post_log(job_id, "stderr", f"{job_type}")
     return out_file, err_file
@@ -144,11 +144,11 @@ def run_ansible(job_id):
         get_venv(int(job_id)),
         "ansible-playbook",
         "--vault-password-file",
-        f"{CODE_DIR}/ansible_secret.py",
+        f"{settings.CODE_DIR}/ansible_secret.py",
         "-e",
-        f"@{RUN_DIR}/{job_id}/config.json",
+        f"@{settings.RUN_DIR}/{job_id}/config.json",
         "-i",
-        f"{RUN_DIR}/{job_id}/inventory.json",
+        f"{settings.RUN_DIR}/{job_id}/inventory.json",
         playbook,
     ]
     if "params" in conf["job"]:

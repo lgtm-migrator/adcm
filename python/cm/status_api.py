@@ -15,8 +15,8 @@ from collections import defaultdict
 from typing import Iterable
 
 import requests
+from django.conf import settings
 
-from adcm.settings import STATUS_SECRET_KEY
 from cm.logger import logger
 from cm.models import (
     ADCMEntity,
@@ -64,7 +64,7 @@ def api_request(method, url, data=None):
     kwargs = {
         "headers": {
             "Content-Type": "application/json",
-            "Authorization": f"Token {STATUS_SECRET_KEY}",
+            "Authorization": f"Token {settings.STATUS_SECRET_KEY}",
         },
         "timeout": TIMEOUT,
     }

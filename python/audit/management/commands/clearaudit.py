@@ -18,11 +18,11 @@ from pathlib import Path
 from shutil import rmtree
 from tarfile import TarFile
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db.models import Count, Q
 from django.utils import timezone
 
-from adcm.settings import ENCODING_UTF_8
 from audit.models import AuditLog, AuditLogOperationResult, AuditObject, AuditSession
 from audit.utils import make_audit_log
 from cm.adcm_config import get_adcm_config
@@ -40,12 +40,12 @@ class Command(BaseCommand):
         read=dict(
             name=os.path.join(archive_base_dir, archive_name),
             mode="r:gz",
-            encoding=ENCODING_UTF_8,
+            encoding=settings.ENCODING_UTF_8,
         ),
         write=dict(
             name=os.path.join(archive_base_dir, archive_name),
             mode="w:gz",
-            encoding=ENCODING_UTF_8,
+            encoding=settings.ENCODING_UTF_8,
             compresslevel=9,
         ),
     )
@@ -165,7 +165,7 @@ class Command(BaseCommand):
                 qs_fields = header
 
             mode = "at" if header else "wt"
-            with open(tmp_cvf_name, mode, newline="", encoding=ENCODING_UTF_8) as csv_file:
+            with open(tmp_cvf_name, mode, newline="", encoding=settings.ENCODING_UTF_8) as csv_file:
                 writer = csv.writer(csv_file)
 
                 if header is None:
@@ -182,7 +182,7 @@ class Command(BaseCommand):
     def __get_csv_header(self, path):
         header = None
         if Path(path).is_file():
-            with open(path, "rt", encoding=ENCODING_UTF_8) as csv_file:
+            with open(path, "rt", encoding=settings.ENCODING_UTF_8) as csv_file:
                 header = csv_file.readline().strip().split(",")
         return header
 

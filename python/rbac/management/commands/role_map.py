@@ -11,10 +11,10 @@
 # limitations under the License.
 import json
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db.models import Subquery
 
-from adcm.settings import ENCODING_UTF_8
 from rbac.models import Role
 
 
@@ -59,6 +59,6 @@ class Command(BaseCommand):
         ):
             data.append(read_role(role))
 
-        with open(output, "w", encoding=ENCODING_UTF_8) as f:
+        with open(output, "w", encoding=settings.ENCODING_UTF_8) as f:
             json.dump(data, f, indent=indent)
         self.stdout.write(self.style.SUCCESS(f"Result file: {output}"))

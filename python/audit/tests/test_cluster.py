@@ -26,7 +26,6 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from adcm.settings import ENCODING_UTF_8
 from adcm.tests.base import APPLICATION_JSON, BaseTestCase
 from audit.models import (
     AuditLog,
@@ -318,7 +317,7 @@ class TestCluster(BaseTestCase):
 
         with open(
             Path(settings.BASE_DIR, "python/audit/tests/files", cluster_bundle_filename),
-            encoding=ENCODING_UTF_8,
+            encoding=settings.ENCODING_UTF_8,
         ) as f:
             self.client.post(
                 path=reverse("upload-bundle"),
@@ -332,7 +331,7 @@ class TestCluster(BaseTestCase):
 
         with open(
             Path(settings.BASE_DIR, "python/audit/tests/files", provider_bundle_filename),
-            encoding=ENCODING_UTF_8,
+            encoding=settings.ENCODING_UTF_8,
         ) as f:
             self.client.post(
                 path=reverse("upload-bundle"),

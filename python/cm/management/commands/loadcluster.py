@@ -29,12 +29,6 @@ from django.core.management.base import BaseCommand
 from django.db.transaction import atomic
 from django.db.utils import IntegrityError
 
-from adcm.settings import (
-    ANSIBLE_SECRET,
-    ANSIBLE_VAULT_HEADER,
-    DEFAULT_SALT,
-    ENCODING_UTF_8,
-)
 from cm.adcm_config import save_file_type
 from cm.errors import AdcmEx
 from cm.models import (
@@ -145,14 +139,14 @@ def create_group(group, ex_hosts_list, obj):
 
 def switch_encoding(msg):
     ciphertext = msg
-    if ANSIBLE_VAULT_HEADER in msg:
+    if settings.ANSIBLE_VAULT_HEADER in msg:
         _, ciphertext = msg.split("\n")
     vault = VaultAES256()
-    secret_old = VaultSecret(bytes(OLD_ADCM_PASSWORD, ENCODING_UTF_8))
-    data = str(vault.decrypt(ciphertext, secret_old), ENCODING_UTF_8)
-    secret_new = VaultSecret(bytes(ANSIBLE_SECRET, ENCODING_UTF_8))
-    ciphertext = vault.encrypt(bytes(data, ENCODING_UTF_8), secret_new)
-    return f"{ANSIBLE_VAULT_HEADER}\n{str(ciphertext, ENCODING_UTF_8)}"
+    secret_old = VaultSecret(bytes(OLD_ADCM_PASSWORD, settings.ENCODING_UTF_8))
+    data = str(vault.decrypt(ciphertext, secret_old), settings.ENCODING_UTF_8)
+    secret_new = VaultSecret(bytes(settings.ANSIBLE_SECRET, settings.ENCODING_UTF_8))
+    ciphertext = vault.encrypt(bytes(data, settings.ENCODING_UTF_8), secret_new)
+    return f"{settings.ANSIBLE_VAULT_HEADER}\n{str(ciphertext, settings.ENCODING_UTF_8)}"
 
 
 def process_config(proto, config):
@@ -373,7 +367,7 @@ def decrypt_file(pass_from_user, file):
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
-        salt=DEFAULT_SALT,
+        salt=settings.DEFAULT_SALT,
         iterations=390000,
         backend=default_backend(),
     )
@@ -398,10 +392,10 @@ def load(file_path):
     """
     try:
         password = getpass.getpass()
-        with open(file_path, "r", encoding=ENCODING_UTF_8) as f:
+        with open(file_path, "r", encoding=settings.ENCODING_UTF_8) as f:
             encrypted = f.read()
             decrypted = decrypt_file(password, encrypted)
-            data = json.loads(decrypted.decode(ENCODING_UTF_8))
+            data = json.loads(decrypted.decode(settings.ENCODING_UTF_8))
     except FileNotFoundError as err:
         raise AdcmEx("DUMP_LOAD_CLUSTER_ERROR", msg="Loaded file not found") from err
     except InvalidToken as err:

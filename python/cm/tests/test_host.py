@@ -25,7 +25,6 @@ from rest_framework.status import (
     HTTP_409_CONFLICT,
 )
 
-from adcm.settings import ENCODING_UTF_8
 from adcm.tests.base import APPLICATION_JSON, BaseTestCase
 from cm.models import Bundle, Cluster, Host, HostProvider, Prototype
 
@@ -65,7 +64,7 @@ class TestHostAPI(BaseTestCase):
         )
 
     def load_bundle(self, bundle_name):
-        with open(self.files_dir / bundle_name, encoding=ENCODING_UTF_8) as f:
+        with open(self.files_dir / bundle_name, encoding=settings.ENCODING_UTF_8) as f:
             response: Response = self.client.post(
                 path=reverse("upload-bundle"),
                 data={"file": f},

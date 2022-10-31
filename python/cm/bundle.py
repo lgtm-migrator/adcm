@@ -15,12 +15,12 @@ import hashlib
 import shutil
 import tarfile
 
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from version_utils import rpm
 
 import cm.stack
 import cm.status_api
-from adcm.settings import ADCM_VERSION, BASE_DIR, BUNDLE_DIR, DOWNLOAD_DIR
 from cm.adcm_config import init_object_config, proto_ref, switch_config
 from cm.errors import raise_adcm_ex as err
 from cm.logger import logger
@@ -89,7 +89,7 @@ def load_bundle(bundle_file):
 def update_bundle(bundle):
     try:
         check_stage()
-        process_bundle(BUNDLE_DIR / bundle.hash, bundle.hash)
+        process_bundle(settings.BUNDLE_DIR / bundle.hash, bundle.hash)
         get_stage_bundle(bundle.name)
         second_pass()
         update_bundle_from_stage(bundle)
@@ -127,7 +127,7 @@ def order_versions():
 
 
 def process_file(bundle_file):
-    path = str(DOWNLOAD_DIR / bundle_file)
+    path = str(settings.DOWNLOAD_DIR / bundle_file)
     bundle_hash = get_hash_safe(path)
     dir_path = untar_safe(bundle_hash, path)
     return (bundle_hash, dir_path)
@@ -142,7 +142,7 @@ def untar_safe(bundle_hash, path):
 
 
 def untar(bundle_hash, bundle):
-    path = BUNDLE_DIR / bundle_hash
+    path = settings.BUNDLE_DIR / bundle_hash
     if path.is_dir():
         try:
             existed = Bundle.objects.get(hash=bundle_hash)
@@ -181,7 +181,7 @@ def get_hash(bundle_file):
 
 def load_adcm():
     check_stage()
-    adcm_file = BASE_DIR / "conf" / "adcm" / "config.yaml"
+    adcm_file = settings.BASE_DIR / "conf" / "adcm" / "config.yaml"
     conf = cm.stack.read_definition(adcm_file, "yaml")
     if not conf:
         logger.warning("Empty adcm config (%s)", adcm_file)
@@ -632,7 +632,7 @@ def copy_stage(bundle_hash, bundle_proto):
     try:
         bundle.save()
     except IntegrityError:
-        shutil.rmtree(BUNDLE_DIR / bundle.hash)
+        shutil.rmtree(settings.BUNDLE_DIR / bundle.hash)
         msg = 'Bundle "{}" {} already installed'
         err("BUNDLE_ERROR", msg.format(bundle_proto.name, bundle_proto.version))
 
@@ -869,7 +869,7 @@ def delete_bundle(bundle):
         msg = 'There is adcm object of bundle #{} "{}" {}'
         err("BUNDLE_CONFLICT", msg.format(bundle.id, bundle.name, bundle.version))
     if bundle.hash != "adcm":
-        shutil.rmtree(BUNDLE_DIR / bundle.hash)
+        shutil.rmtree(settings.BUNDLE_DIR / bundle.hash)
     bundle_id = bundle.id
     bundle.delete()
     for role in Role.objects.filter(class_name="ParentRole"):
@@ -891,7 +891,7 @@ def check_services():
 def check_adcm_version(bundle):
     if not bundle.adcm_min_version:
         return
-    if rpm.compare_versions(bundle.adcm_min_version, ADCM_VERSION) > 0:
+    if rpm.compare_versions(bundle.adcm_min_version, settings.ADCM_VERSION) > 0:
         msg = "This bundle required ADCM version equal to {} or newer."
         err("BUNDLE_VERSION_ERROR", msg.format(bundle.adcm_min_version))
 

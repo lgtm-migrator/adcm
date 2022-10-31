@@ -11,7 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from adcm.settings import ANSIBLE_SECRET
+from django.conf import settings
+
+import adcm.init_django  # pylint: disable=unused-import
 
 if __name__ == "__main__":
-    print(ANSIBLE_SECRET)
+    print(settings.ANSIBLE_SECRET)

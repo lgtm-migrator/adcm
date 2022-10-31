@@ -15,6 +15,7 @@
 
 import os
 from contextlib import contextmanager
+from pathlib import Path
 from tarfile import TarFile
 
 from django.conf import settings
@@ -23,7 +24,6 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from rest_framework import status
 
-from adcm.settings import ENCODING_UTF_8
 from cm.models import Bundle
 from init_db import init as init_adcm
 from rbac.upgrade.role import init_roles
@@ -48,7 +48,7 @@ class TestBase(TestCase):
         self.client_unauthorized = Client(HTTP_USER_AGENT="Mozilla/5.0")
 
     def load_bundle(self, bundle_name: str) -> int:
-        with open(self.files_dir / bundle_name, encoding=ENCODING_UTF_8) as f:
+        with open(Path(self.files_dir, bundle_name), encoding=settings.ENCODING_UTF_8) as f:
             with transaction.atomic():
                 response = self.client.post(
                     path=reverse("upload-bundle"),
@@ -128,14 +128,14 @@ class TestBundle(TestBase):
     @contextmanager
     def make_bundle_from_str(self, bundle_content: str, filename: str) -> str:
         tmp_filepath = os.path.join(self.files_dir, "config.yaml")
-        with open(tmp_filepath, "wt", encoding=ENCODING_UTF_8) as config:
+        with open(tmp_filepath, "wt", encoding=settings.ENCODING_UTF_8) as config:
             config.write(bundle_content)
 
         bundle_filepath = os.path.join(self.files_dir, filename)
         with TarFile.open(
             name=bundle_filepath,
             mode="w",
-            encoding=ENCODING_UTF_8,
+            encoding=settings.ENCODING_UTF_8,
         ) as tar:
             tar.add(name=tmp_filepath, arcname=os.path.basename(tmp_filepath))
         os.remove(tmp_filepath)

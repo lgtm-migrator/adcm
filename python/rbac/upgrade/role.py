@@ -15,12 +15,12 @@ from typing import List
 
 import ruyaml
 from adwp_base.errors import raise_AdwpEx as err
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.utils import timezone
 
 import cm.checker
-from adcm.settings import ENCODING_UTF_8
 from cm.models import (
     Action,
     Bundle,
@@ -136,14 +136,14 @@ def get_role_spec(data: str, schema: str) -> dict:
     (see https://github.com/arenadata/yspec for details about schema syntaxis)
     """
     try:
-        with open(data, encoding=ENCODING_UTF_8) as fd:
+        with open(data, encoding=settings.ENCODING_UTF_8) as fd:
             data = ruyaml.round_trip_load(fd)
     except FileNotFoundError:
         err("INVALID_ROLE_SPEC", f'Can not open role file "{data}"')
     except (ruyaml.parser.ParserError, ruyaml.scanner.ScannerError, NotImplementedError) as e:
         err("INVALID_ROLE_SPEC", f'YAML decode "{data}" error: {e}')
 
-    with open(schema, encoding=ENCODING_UTF_8) as fd:
+    with open(schema, encoding=settings.ENCODING_UTF_8) as fd:
         rules = ruyaml.round_trip_load(fd)
 
     try:
