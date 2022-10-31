@@ -40,6 +40,7 @@ from cm.models import (
     PrototypeConfig,
     ServiceComponent,
 )
+from cm.issue import update_hierarchy_issues
 
 
 def get_object_for_user(user, perms, klass, **kwargs):
@@ -209,6 +210,7 @@ def get_maintenance_mode_response(
             serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
 
         serializer.save()
+        update_hierarchy_issues(obj.cluster)
 
         return Response()
 
@@ -232,6 +234,7 @@ def get_maintenance_mode_response(
             serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
 
         serializer.save()
+        update_hierarchy_issues(obj.cluster)
 
         return Response()
 
