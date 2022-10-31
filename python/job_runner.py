@@ -17,12 +17,13 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 from django.db import transaction
 
 import adcm.init_django  # pylint: disable=unused-import
 import cm.job
-from adcm.settings import CODE_DIR, ENCODING, RUN_DIR
+from adcm.settings import CODE_DIR, ENCODING_UTF_8, RUN_DIR
 from cm.ansible_plugin import finish_check
 from cm.api import get_hc, save_hc
 from cm.errors import AdcmEx
@@ -34,12 +35,12 @@ from cm.upgrade import bundle_switch
 
 def open_file(root, tag, job_id):
     fname = f"{root}/{job_id}/{tag}.txt"
-    f = open(fname, "w", encoding=ENCODING)
+    f = open(fname, "w", encoding=ENCODING_UTF_8)
     return f
 
 
 def read_config(job_id):
-    fd = open(f"{RUN_DIR}/{job_id}/config.json", encoding=ENCODING)
+    fd = open(f"{RUN_DIR}/{job_id}/config.json", encoding=ENCODING_UTF_8)
     conf = json.load(fd)
     fd.close()
     return conf
@@ -67,7 +68,7 @@ def set_pythonpath(env, stack_dir):
 
 
 def set_ansible_config(env, job_id):
-    env["ANSIBLE_CONFIG"] = RUN_DIR / f"{job_id}/ansible.cfg"
+    env["ANSIBLE_CONFIG"] = str(RUN_DIR / f"{job_id}/ansible.cfg")
     return env
 
 
@@ -78,7 +79,7 @@ def env_configuration(job_config):
     env = set_pythonpath(env, stack_dir)
     # This condition is intended to support compatibility.
     # Since older bundle versions may contain their own ansible.cfg
-    if not os.path.exists(os.path.join(stack_dir, "ansible.cfg")):
+    if not Path(stack_dir, "ansible.cfg").is_file():
         env = set_ansible_config(env, job_id)
         logger.info("set ansible config for job:%s", job_id)
     return env

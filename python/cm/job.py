@@ -24,7 +24,7 @@ from adcm.settings import (
     BASE_DIR,
     BUNDLE_DIR,
     CODE_DIR,
-    ENCODING,
+    ENCODING_UTF_8,
     LOG_DIR,
     PYTHON_SITE_PACKAGES,
     RUN_DIR,
@@ -627,7 +627,7 @@ def prepare_job_config(
     if conf:
         job_conf["job"]["config"] = conf
 
-    fd = open(Path(RUN_DIR, f"{job_id}", "config.json"), "w", encoding=ENCODING)
+    fd = open(Path(RUN_DIR, f"{job_id}", "config.json"), "w", encoding=ENCODING_UTF_8)
     json.dump(job_conf, fd, indent=3, sort_keys=True)
     fd.close()
 
@@ -833,7 +833,7 @@ def check_all_status():
 
 
 def run_task(task: TaskLog, event, args: str = ""):
-    err_file = open(Path(LOG_DIR, "task_runner.err"), "a+", encoding=ENCODING)
+    err_file = open(Path(LOG_DIR, "task_runner.err"), "a+", encoding=ENCODING_UTF_8)
     cmd = [
         "/adcm/python/job_venv_wrapper.sh",
         task.action.venv,
@@ -879,7 +879,9 @@ def prepare_ansible_config(job_id: int, action: Action, sub_action: SubAction):
     if "jinja2_native" in params:
         config_parser["defaults"]["jinja2_native"] = str(params["jinja2_native"])
 
-    with open(Path(RUN_DIR, f"{job_id}", "ansible.cfg"), "w", encoding=ENCODING) as config_file:
+    with open(
+        Path(RUN_DIR, f"{job_id}", "ansible.cfg"), "w", encoding=ENCODING_UTF_8
+    ) as config_file:
         config_parser.write(config_file)
 
 

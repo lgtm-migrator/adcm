@@ -18,7 +18,7 @@ from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
 
-ENCODING = "utf-8"
+ENCODING_UTF_8 = "utf-8"
 
 BASE_DIR = os.getenv("ADCM_BASE_DIR")
 if BASE_DIR:
@@ -46,7 +46,7 @@ ANSIBLE_VAULT_HEADER = "$ANSIBLE_VAULT;1.1;AES256"
 DEFAULT_SALT = b'"j\xebi\xc0\xea\x82\xe0\xa8\xba\x9e\x12E>\x11D'
 
 if SECRETS_FILE.is_file():
-    with open(SECRETS_FILE, encoding=ENCODING) as f:
+    with open(SECRETS_FILE, encoding=ENCODING_UTF_8) as f:
         data = json.load(f)
         STATUS_SECRET_KEY = data["token"]
         ANSIBLE_SECRET = data["adcmuser"]["password"]
@@ -55,13 +55,13 @@ else:
     ANSIBLE_SECRET = ""
 
 if SECRET_KEY_FILE.is_file():
-    with open(SECRET_KEY_FILE, encoding=ENCODING) as f:
+    with open(SECRET_KEY_FILE, encoding=ENCODING_UTF_8) as f:
         SECRET_KEY = f.read().strip()
 else:
     SECRET_KEY = get_random_secret_key()
 
 if CONFIG_FILE.is_file():
-    with open(CONFIG_FILE, encoding=ENCODING) as f:
+    with open(CONFIG_FILE, encoding=ENCODING_UTF_8) as f:
         ADCM_VERSION = json.load(f)["version"]
 else:
     ADCM_VERSION = "2019.02.07.00"

@@ -19,7 +19,7 @@ from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 
-from adcm.settings import ENCODING
+from adcm.settings import ENCODING_UTF_8
 from cm.models import Bundle
 from rbac.models import Role, User
 
@@ -107,7 +107,7 @@ class BaseTestCase(TestCase):
         self.login()
 
     def upload_and_load_bundle(self, path: Path) -> Bundle:
-        with open(path, encoding=ENCODING) as f:
+        with open(path, encoding=ENCODING_UTF_8) as f:
             response: Response = self.client.post(
                 path=reverse("upload-bundle"),
                 data={"file": f},

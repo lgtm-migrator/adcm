@@ -17,7 +17,7 @@ import string
 from itertools import chain
 
 import adcm.init_django  # pylint: disable=unused-import
-from adcm.settings import ENCODING, SECRETS_FILE
+from adcm.settings import ENCODING_UTF_8, SECRETS_FILE
 from cm.bundle import load_adcm
 from cm.issue import update_hierarchy_issues
 from cm.job import abort_all
@@ -47,7 +47,7 @@ def create_status_user():
     password = random_string(40)
     token = random_string(40)
     User.objects.create_superuser(username, "", password, built_in=True)
-    with open(SECRETS_FILE, "w", encoding=ENCODING) as f:
+    with open(SECRETS_FILE, "w", encoding=ENCODING_UTF_8) as f:
         json.dump({"adcmuser": {"user": username, "password": password}, "token": token}, f)
     logger.info("Update secret file %s OK", SECRETS_FILE)
 

@@ -18,7 +18,7 @@ from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 
-from adcm.settings import ENCODING
+from adcm.settings import ENCODING_UTF_8
 from adcm.tests.base import BaseTestCase
 from cm.bundle import get_hash
 from cm.models import Bundle, Prototype
@@ -43,7 +43,7 @@ class TestBundle(BaseTestCase):
         Path(settings.DOWNLOAD_DIR, self.test_bundle_filename).unlink(missing_ok=True)
 
     def upload_bundle(self):
-        with open(self.test_bundle_path, encoding=ENCODING) as f:
+        with open(self.test_bundle_path, encoding=ENCODING_UTF_8) as f:
             return self.client.post(
                 path=reverse("upload-bundle"),
                 data={"file": f},

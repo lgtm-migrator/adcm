@@ -26,7 +26,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 
-from adcm.settings import ENCODING
 from adcm.utils import str_remove_non_alnum
 from api.base_view import GenericUIViewSet
 from api.job.serializers import (
@@ -132,7 +131,7 @@ def get_task_download_archive_file_handler(task: TaskLog) -> io.BytesIO:
                         f'{f"{job.pk}-{dir_name_suffix}".strip("-")}'
                         f'/{log_storage.name}-{log_storage.type}.txt'
                     )
-                    body = io.BytesIO(bytes(log_storage.body, ENCODING))
+                    body = io.BytesIO(bytes(log_storage.body, settings.ENCODING_UTF_8))
                     tarinfo.size = body.getbuffer().nbytes
                     tar_file.addfile(tarinfo=tarinfo, fileobj=body)
 
@@ -269,7 +268,7 @@ class LogStorageViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin,
                 f"{log_storage.name}-{log_storage.type}.{log_storage.format}",
             )
             if Path.is_file(file_path):
-                with open(file_path, "r", encoding=ENCODING) as f:
+                with open(file_path, "r", encoding=settings.ENCODING_UTF_8) as f:
                     body = f.read()
                     length = len(body)
             else:
@@ -282,7 +281,7 @@ class LogStorageViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin,
         response = HttpResponse(body)
         response["Content-Type"] = mime_type
         response["Content-Length"] = length
-        response["Content-Encoding"] = ENCODING.upper()
+        response["Content-Encoding"] = settings.ENCODING_UTF_8
         response["Content-Disposition"] = f"attachment; filename={filename}"
 
         return response

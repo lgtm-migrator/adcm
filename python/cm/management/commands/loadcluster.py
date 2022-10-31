@@ -29,7 +29,12 @@ from django.core.management.base import BaseCommand
 from django.db.transaction import atomic
 from django.db.utils import IntegrityError
 
-from adcm.settings import ANSIBLE_SECRET, ANSIBLE_VAULT_HEADER, DEFAULT_SALT, ENCODING
+from adcm.settings import (
+    ANSIBLE_SECRET,
+    ANSIBLE_VAULT_HEADER,
+    DEFAULT_SALT,
+    ENCODING_UTF_8,
+)
 from cm.adcm_config import save_file_type
 from cm.errors import AdcmEx
 from cm.models import (
@@ -143,11 +148,11 @@ def switch_encoding(msg):
     if ANSIBLE_VAULT_HEADER in msg:
         _, ciphertext = msg.split("\n")
     vault = VaultAES256()
-    secret_old = VaultSecret(bytes(OLD_ADCM_PASSWORD, ENCODING))
-    data = str(vault.decrypt(ciphertext, secret_old), ENCODING)
-    secret_new = VaultSecret(bytes(ANSIBLE_SECRET, ENCODING))
-    ciphertext = vault.encrypt(bytes(data, ENCODING), secret_new)
-    return f"{ANSIBLE_VAULT_HEADER}\n{str(ciphertext, ENCODING)}"
+    secret_old = VaultSecret(bytes(OLD_ADCM_PASSWORD, ENCODING_UTF_8))
+    data = str(vault.decrypt(ciphertext, secret_old), ENCODING_UTF_8)
+    secret_new = VaultSecret(bytes(ANSIBLE_SECRET, ENCODING_UTF_8))
+    ciphertext = vault.encrypt(bytes(data, ENCODING_UTF_8), secret_new)
+    return f"{ANSIBLE_VAULT_HEADER}\n{str(ciphertext, ENCODING_UTF_8)}"
 
 
 def process_config(proto, config):
@@ -393,10 +398,10 @@ def load(file_path):
     """
     try:
         password = getpass.getpass()
-        with open(file_path, "r", encoding=ENCODING) as f:
+        with open(file_path, "r", encoding=ENCODING_UTF_8) as f:
             encrypted = f.read()
             decrypted = decrypt_file(password, encrypted)
-            data = json.loads(decrypted.decode(ENCODING))
+            data = json.loads(decrypted.decode(ENCODING_UTF_8))
     except FileNotFoundError as err:
         raise AdcmEx("DUMP_LOAD_CLUSTER_ERROR", msg="Loaded file not found") from err
     except InvalidToken as err:

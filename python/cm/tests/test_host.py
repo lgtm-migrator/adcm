@@ -11,7 +11,6 @@
 # limitations under the License.
 # pylint: disable=too-many-lines
 
-import os
 import string
 
 from django.conf import settings
@@ -26,7 +25,7 @@ from rest_framework.status import (
     HTTP_409_CONFLICT,
 )
 
-from adcm.settings import ENCODING
+from adcm.settings import ENCODING_UTF_8
 from adcm.tests.base import APPLICATION_JSON, BaseTestCase
 from cm.models import Bundle, Cluster, Host, HostProvider, Prototype
 
@@ -66,7 +65,7 @@ class TestHostAPI(BaseTestCase):
         )
 
     def load_bundle(self, bundle_name):
-        with open(os.path.join(self.files_dir, bundle_name), encoding=ENCODING) as f:
+        with open(self.files_dir / bundle_name, encoding=ENCODING_UTF_8) as f:
             response: Response = self.client.post(
                 path=reverse("upload-bundle"),
                 data={"file": f},

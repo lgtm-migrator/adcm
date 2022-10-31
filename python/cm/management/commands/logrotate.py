@@ -20,7 +20,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
-from adcm.settings import ENCODING, RUN_DIR
+from adcm.settings import ENCODING_UTF_8, RUN_DIR
 from audit.models import AuditLogOperationResult
 from audit.utils import make_audit_log
 from cm.models import (
@@ -105,11 +105,11 @@ class Command(BaseCommand):
         self.__log(f"executing cmd: `{cmd}`", "info")
         try:
             out = check_output(cmd, shell=True, stderr=STDOUT)
-            out = out.decode(ENCODING).strip("\n")
+            out = out.decode(ENCODING_UTF_8).strip("\n")
             if out:
                 self.__log(out, "debug")
         except CalledProcessError as e:
-            err_msg = e.stdout.decode(ENCODING).strip("\n")
+            err_msg = e.stdout.decode(ENCODING_UTF_8).strip("\n")
             msg = f"Error! cmd: `{cmd}` return code: `{e.returncode}` msg: `{err_msg}`"
             self.__log(msg, "exception")
 
@@ -136,7 +136,7 @@ class Command(BaseCommand):
             "no_compress": "" if self.config["logrotate"]["nginx"]["compress"] else "#",
             "num_rotations": self.config["logrotate"]["nginx"]["max_history"],
         }
-        with open(self.__nginx_logrotate_conf, "wt", encoding=ENCODING) as conf_file:
+        with open(self.__nginx_logrotate_conf, "wt", encoding=ENCODING_UTF_8) as conf_file:
             conf_file.write(LOGROTATE_CONF_FILE_TEMPLATE.format(**conf_file_args))
         self.__log(f"conf file `{self.__nginx_logrotate_conf}` generated", "debug")
 
@@ -146,7 +146,7 @@ class Command(BaseCommand):
             self.__generate_logrotate_conf_file()
             self.__log(
                 f"Using config file `{self.__nginx_logrotate_conf}`:\n"
-                f"{open(self.__nginx_logrotate_conf, 'rt', encoding=ENCODING).read()}",
+                f"{open(self.__nginx_logrotate_conf, 'rt', encoding=ENCODING_UTF_8).read()}",
                 "debug",
             )
             if self.verbose:

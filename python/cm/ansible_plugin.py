@@ -14,7 +14,6 @@
 
 import fcntl
 import json
-import os
 from collections import defaultdict
 
 # isort: off
@@ -24,7 +23,7 @@ from ansible.plugins.action import ActionBase
 
 # isort: on
 
-from adcm.settings import ENCODING, RUN_DIR
+from adcm.settings import ENCODING_UTF_8, RUN_DIR
 from cm.adcm_config import set_object_config
 from cm.api import add_hc, get_hc
 from cm.api_context import ctx
@@ -82,8 +81,7 @@ MSG_NO_MULTI_STATE_TO_DELETE = (
 
 
 def job_lock(job_id):
-    fname = os.path.join(RUN_DIR, f"{job_id}/config.json")
-    fd = open(fname, "r", encoding=ENCODING)
+    fd = open(RUN_DIR / f"{job_id}/config.json", "r", encoding=ENCODING_UTF_8)
     try:
         fcntl.flock(fd.fileno(), fcntl.LOCK_EX)  # pylint: disable=I1101
         return fd

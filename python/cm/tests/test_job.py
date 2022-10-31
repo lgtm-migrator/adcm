@@ -17,7 +17,7 @@ from unittest.mock import Mock, patch
 
 from django.utils import timezone
 
-from adcm.settings import BASE_DIR, BUNDLE_DIR, ENCODING, RUN_DIR
+from adcm.settings import BASE_DIR, BUNDLE_DIR, ENCODING_UTF_8, RUN_DIR
 from adcm.tests.base import BaseTestCase
 from cm.api import add_cluster, add_service_to_cluster
 from cm.job import (
@@ -463,7 +463,7 @@ class TestJob(BaseTestCase):
                     job_config["job"]["hostgroup"] = "127.0.0.1"
 
                 mock_open.assert_called_with(
-                    RUN_DIR / f"{job.id}" / "config.json", "w", encoding=ENCODING
+                    RUN_DIR / f"{job.id}" / "config.json", "w", encoding=ENCODING_UTF_8
                 )
                 mock_dump.assert_called_with(job_config, fd, indent=3, sort_keys=True)
                 mock_get_adcm_config.assert_called()

@@ -15,7 +15,7 @@ from itertools import chain
 
 from django.contrib.contenttypes.models import ContentType
 
-from adcm.settings import ENCODING, RUN_DIR
+from adcm.settings import ENCODING_UTF_8, RUN_DIR
 from cm.adcm_config import get_prototype_config, process_config
 from cm.logger import logger
 from cm.models import (
@@ -356,7 +356,7 @@ def get_target_host(host_id):
 
 def prepare_job_inventory(obj, job_id, action, delta, action_host=None):
     logger.info("prepare inventory for job #%s, object: %s", job_id, obj)
-    fd = open(RUN_DIR / f"{job_id}/inventory.json", "w", encoding=ENCODING)
+    fd = open(RUN_DIR / f"{job_id}/inventory.json", "w", encoding=ENCODING_UTF_8)
     inv = {"all": {"children": {}}}
     cluster = get_object_cluster(obj)
     if cluster:

@@ -18,13 +18,13 @@ import os
 import django.db.models.deletion
 from django.db import migrations, models
 
-from adcm.settings import ENCODING, LOG_DIR
+from adcm.settings import ENCODING_UTF_8, LOG_DIR
 
 
 def get_body(job, name, type_log, format_log):
     file_path = LOG_DIR / f"{job.id}-{name}-{type_log}.{format_log}"
     if os.path.exists(file_path):
-        with open(file_path, "r", encoding=ENCODING) as f:
+        with open(file_path, "r", encoding=ENCODING_UTF_8) as f:
             body = f.read()
         return body
     else:

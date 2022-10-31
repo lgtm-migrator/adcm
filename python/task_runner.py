@@ -23,7 +23,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 
 import adcm.init_django  # pylint: disable=unused-import
-from adcm.settings import CODE_DIR, ENCODING, LOG_DIR, RUN_DIR
+from adcm.settings import CODE_DIR, ENCODING_UTF_8, LOG_DIR, RUN_DIR
 from cm.job import finish_task, re_prepare_job
 from cm.logger import logger
 from cm.models import JobLog, JobStatus, LogStorage, TaskLog
@@ -89,7 +89,7 @@ def set_log_body(job):
     log_storage = LogStorage.objects.filter(job=job, name=name, type__in=["stdout", "stderr"])
     for ls in log_storage:
         file_path = RUN_DIR / f"{ls.job.id}" / f"{ls.name}-{ls.type}.{ls.format}"
-        with open(file_path, "r", encoding=ENCODING) as f:
+        with open(file_path, "r", encoding=ENCODING_UTF_8) as f:
             body = f.read()
 
         LogStorage.objects.filter(job=job, name=ls.name, type=ls.type).update(body=body)
@@ -113,7 +113,7 @@ def run_task(task_id, args=None):
 
         return
 
-    err_file = open(LOG_DIR / "job_runner.err", "a+", encoding=ENCODING)
+    err_file = open(LOG_DIR / "job_runner.err", "a+", encoding=ENCODING_UTF_8)
 
     logger.info("run task #%s", task_id)
 

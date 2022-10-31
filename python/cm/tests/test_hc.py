@@ -17,7 +17,7 @@ from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 
-from adcm.settings import ENCODING
+from adcm.settings import ENCODING_UTF_8
 from adcm.tests.base import APPLICATION_JSON, BaseTestCase
 from cm.api import add_host_to_cluster, save_hc
 from cm.errors import AdcmEx
@@ -143,7 +143,7 @@ class TestHC(BaseTestCase):
             "python/cm/tests/files",
             test_bundle_filename,
         )
-        with open(test_bundle_path, encoding=ENCODING) as f:
+        with open(test_bundle_path, encoding=ENCODING_UTF_8) as f:
             response: Response = self.client.post(
                 path=reverse("upload-bundle"),
                 data={"file": f},
