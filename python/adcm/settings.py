@@ -39,7 +39,7 @@ LOG_DIR = BASE_DIR / "data" / "log"
 LOG_FILE = LOG_DIR / "adcm.log"
 SECRETS_FILE = BASE_DIR / "data" / "var" / "secrets.json"
 PYTHON_SITE_PACKAGES = Path(
-    sys.exec_prefix, f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
+    sys.exec_prefix, f"lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
 )
 
 ANSIBLE_VAULT_HEADER = "$ANSIBLE_VAULT;1.1;AES256"
