@@ -41,6 +41,7 @@ from cm.models import (
     ServiceComponent,
 )
 from cm.issue import update_hierarchy_issues
+from cm.api import load_host_map
 
 
 def get_object_for_user(user, perms, klass, **kwargs):
@@ -211,6 +212,7 @@ def get_maintenance_mode_response(
 
         serializer.save()
         update_hierarchy_issues(obj.cluster)
+        load_host_map()
 
         return Response()
 
@@ -235,6 +237,7 @@ def get_maintenance_mode_response(
 
         serializer.save()
         update_hierarchy_issues(obj.cluster)
+        load_host_map()
 
         return Response()
 
