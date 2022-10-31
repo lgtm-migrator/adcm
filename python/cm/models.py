@@ -791,6 +791,10 @@ class ClusterObject(ADCMEntity):
     def maintenance_mode(self, value: MaintenanceMode.choices) -> None:
         self._maintenance_mode = value
 
+    @property
+    def is_maintenance_mode_available(self) -> bool:
+        return self.cluster.prototype.allow_maintenance_mode
+
     class Meta:
         unique_together = (("cluster", "prototype"),)
 
@@ -878,6 +882,10 @@ class ServiceComponent(ADCMEntity):
     @maintenance_mode.setter
     def maintenance_mode(self, value: MaintenanceMode.choices) -> None:
         self._maintenance_mode = value
+
+    @property
+    def is_maintenance_mode_available(self) -> bool:
+        return self.cluster.prototype.allow_maintenance_mode
 
     class Meta:
         unique_together = (("cluster", "service", "prototype"),)

@@ -56,6 +56,8 @@ class ServiceSerializer(EmptySerializer):
     state = CharField(read_only=True)
     prototype_id = IntegerField(required=True, help_text="id of service prototype")
     url = ObjectURL(read_only=True, view_name="service-details")
+    maintenance_mode = CharField(read_only=True)
+    is_maintenance_mode_available = BooleanField(read_only=True)
 
     @staticmethod
     def validate_prototype_id(prototype_id):
