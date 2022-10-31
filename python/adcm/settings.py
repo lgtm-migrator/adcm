@@ -13,6 +13,7 @@
 import json
 import os
 import string
+import sys
 from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
@@ -37,6 +38,9 @@ FILE_DIR = STACK_DIR / "data" / "file"
 LOG_DIR = BASE_DIR / "data" / "log"
 LOG_FILE = LOG_DIR / "adcm.log"
 SECRETS_FILE = BASE_DIR / "data" / "var" / "secrets.json"
+PYTHON_SITE_PACKAGES = Path(
+    sys.exec_prefix, f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
+)
 
 ANSIBLE_VAULT_HEADER = "$ANSIBLE_VAULT;1.1;AES256"
 DEFAULT_SALT = b'"j\xebi\xc0\xea\x82\xe0\xa8\xba\x9e\x12E>\x11D'

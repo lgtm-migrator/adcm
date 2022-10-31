@@ -26,6 +26,7 @@ from adcm.settings import (
     CODE_DIR,
     ENCODING,
     LOG_DIR,
+    PYTHON_SITE_PACKAGES,
     RUN_DIR,
     STATUS_SECRET_KEY,
 )
@@ -863,7 +864,7 @@ def prepare_ansible_config(job_id: int, action: Action, sub_action: SubAction):
     if mitogen:
         config_parser["defaults"]["strategy"] = "mitogen_linear"
         config_parser["defaults"]["strategy_plugins"] = str(
-            Path(config.PYTHON_SITE_PACKAGES, "ansible_mitogen", "plugins", "strategy")
+            Path(PYTHON_SITE_PACKAGES, "ansible_mitogen", "plugins", "strategy")
         )
         config_parser["defaults"]["host_key_checking"] = "False"
 

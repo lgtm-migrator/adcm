@@ -10,16 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
-
-# later
-PYTHON_DIR = sys.exec_prefix
-PYTHON_EXECUTABLE = sys.executable
-PYTHON_VERSION = f'{sys.version_info.major}.{sys.version_info.minor}'
-PYTHON_SITE_PACKAGES = os.path.join(PYTHON_DIR, f'lib/python{PYTHON_VERSION}/site-packages')
-# ---
-
 
 class Job:
     CREATED = 'created'
