@@ -22,7 +22,7 @@ from django.db import transaction
 
 import adcm.init_django  # pylint: disable=unused-import
 import cm.job
-from adcm.settings import CODE_DIR, RUN_DIR
+from adcm.settings import CODE_DIR, ENCODING, RUN_DIR
 from cm.ansible_plugin import finish_check
 from cm.api import get_hc, save_hc
 from cm.errors import AdcmEx
@@ -34,12 +34,12 @@ from cm.upgrade import bundle_switch
 
 def open_file(root, tag, job_id):
     fname = f"{root}/{job_id}/{tag}.txt"
-    f = open(fname, "w", encoding="utf_8")
+    f = open(fname, "w", encoding=ENCODING)
     return f
 
 
 def read_config(job_id):
-    fd = open(f"{RUN_DIR}/{job_id}/config.json", encoding="utf_8")
+    fd = open(f"{RUN_DIR}/{job_id}/config.json", encoding=ENCODING)
     conf = json.load(fd)
     fd.close()
     return conf

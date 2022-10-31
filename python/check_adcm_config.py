@@ -18,14 +18,14 @@ import sys
 import ruyaml
 
 import cm.checker
-from adcm.settings import CODE_DIR
+from adcm.settings import CODE_DIR, ENCODING
 
 
 def check_config(data_file, schema_file, print_ok=True):
-    rules = ruyaml.round_trip_load(open(schema_file, encoding="utf_8"))
+    rules = ruyaml.round_trip_load(open(schema_file, encoding=ENCODING))
     try:
         # ruyaml.version_info=(0, 15, 0)   # switch off duplicate key error
-        data = ruyaml.round_trip_load(open(data_file, encoding="utf_8"), version="1.1")
+        data = ruyaml.round_trip_load(open(data_file, encoding=ENCODING), version="1.1")
     except FileNotFoundError as e:
         print(e)
         return 1

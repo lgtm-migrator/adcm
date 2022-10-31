@@ -30,6 +30,7 @@ from rest_framework.status import (
     HTTP_409_CONFLICT,
 )
 
+from adcm.settings import ENCODING
 from adcm.tests.base import APPLICATION_JSON, BaseTestCase
 from cm.api import save_hc
 from cm.hierarchy import Tree
@@ -75,7 +76,7 @@ class TestAPI(BaseTestCase):
         self.component = "ZOOKEEPER_SERVER"
 
     def load_bundle(self, bundle_name):
-        with open(os.path.join(self.files_dir, bundle_name), encoding="utf-8") as f:
+        with open(os.path.join(self.files_dir, bundle_name), encoding=ENCODING) as f:
             response: Response = self.client.post(
                 path=reverse("upload-bundle"),
                 data={"file": f},

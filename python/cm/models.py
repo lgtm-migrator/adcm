@@ -33,7 +33,7 @@ from django.db.models.signals import m2m_changed, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
-from adcm.settings import FILE_DIR
+from adcm.settings import ENCODING, FILE_DIR
 from cm.errors import AdcmEx
 from cm.logger import logger
 
@@ -1003,7 +1003,7 @@ class GroupConfig(ADCMModel):
                     if value != "":
                         if value[-1] == "-":
                             value += "\n"
-                with open(filepath, "w", encoding="utf-8") as f:
+                with open(filepath, "w", encoding=ENCODING) as f:
                     f.write(value)
                 os.chmod(filepath, 0o0600)
             else:

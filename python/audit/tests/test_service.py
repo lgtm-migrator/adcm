@@ -23,6 +23,7 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from adcm.settings import ENCODING
 from adcm.tests.base import APPLICATION_JSON, BaseTestCase
 from audit.models import (
     AuditLog,
@@ -337,7 +338,7 @@ class TestService(BaseTestCase):
         bundle_filename = "import.tar"
         with open(
             Path(settings.BASE_DIR, "python/audit/tests/files", bundle_filename),
-            encoding="utf-8",
+            encoding=ENCODING,
         ) as f:
             self.client.post(
                 path=reverse("upload-bundle"),

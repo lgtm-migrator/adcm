@@ -833,7 +833,7 @@ def check_all_status():
 
 
 def run_task(task: TaskLog, event, args: str = ""):
-    err_file = open(Path(LOG_DIR, "task_runner.err"), "a+", encoding="utf_8")
+    err_file = open(Path(LOG_DIR, "task_runner.err"), "a+", encoding=ENCODING)
     cmd = [
         "/adcm/python/job_venv_wrapper.sh",
         task.action.venv,
@@ -879,7 +879,7 @@ def prepare_ansible_config(job_id: int, action: Action, sub_action: SubAction):
     if "jinja2_native" in params:
         config_parser["defaults"]["jinja2_native"] = str(params["jinja2_native"])
 
-    with open(Path(RUN_DIR, f"{job_id}", "ansible.cfg"), "w", encoding="utf_8") as config_file:
+    with open(Path(RUN_DIR, f"{job_id}", "ansible.cfg"), "w", encoding=ENCODING) as config_file:
         config_parser.write(config_file)
 
 

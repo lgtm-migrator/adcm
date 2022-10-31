@@ -19,6 +19,7 @@ from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 
+from adcm.settings import ENCODING
 from cm.models import Bundle
 from rbac.models import Role, User
 
@@ -45,7 +46,7 @@ class BaseTestCase(TestCase):
             password="no_rights_user_password",
         )
 
-        self.client = Client(HTTP_USER_AGENT='Mozilla/5.0')
+        self.client = Client(HTTP_USER_AGENT="Mozilla/5.0")
         self.login()
 
         self.cluster_admin_role = Role.objects.create(
@@ -106,7 +107,7 @@ class BaseTestCase(TestCase):
         self.login()
 
     def upload_and_load_bundle(self, path: Path) -> Bundle:
-        with open(path, encoding="utf-8") as f:
+        with open(path, encoding=ENCODING) as f:
             response: Response = self.client.post(
                 path=reverse("upload-bundle"),
                 data={"file": f},
