@@ -16,6 +16,7 @@ import os
 import os.path
 import shutil
 import tarfile
+from pathlib import Path
 
 from django.db import IntegrityError, transaction
 from version_utils import rpm
@@ -873,7 +874,7 @@ def delete_bundle(bundle):
         err('BUNDLE_CONFLICT', msg.format(bundle.id, bundle.name, bundle.version))
     if bundle.hash != 'adcm':
         try:
-            shutil.rmtree(os.path.join(config.BUNDLE_DIR, bundle.hash))
+            shutil.rmtree(Path(config.BUNDLE_DIR, bundle.hash))
         except FileNotFoundError:
             logger.info(
                 "Bundle %s %s was removed in file system. Delete bundle in database",
