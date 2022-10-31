@@ -872,7 +872,11 @@ def delete_bundle(bundle):
         msg = 'There is adcm object of bundle #{} "{}" {}'
         err('BUNDLE_CONFLICT', msg.format(bundle.id, bundle.name, bundle.version))
     if bundle.hash != 'adcm':
-        shutil.rmtree(os.path.join(config.BUNDLE_DIR, bundle.hash))
+        try:
+            shutil.rmtree(os.path.join(config.BUNDLE_DIR, bundle.hash))
+        except FileNotFoundError:
+            logger.info(f"Bundle {bundle.name} {bundle.version} was removed in file system."
+                        f" Delete bundle in database")
     bundle_id = bundle.id
     bundle.delete()
     for role in Role.objects.filter(class_name='ParentRole'):
