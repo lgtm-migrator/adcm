@@ -31,7 +31,7 @@ from adcm.settings import (
     STATUS_SECRET_KEY,
 )
 from audit.utils import audit_finish_task
-from cm import adcm_config, api, config, inventory, issue, variant
+from cm import adcm_config, api, inventory, issue, variant
 from cm.adcm_config import process_file_type
 from cm.api_context import ctx
 from cm.errors import AdcmEx
@@ -53,6 +53,7 @@ from cm.models import (
     HostComponent,
     HostProvider,
     JobLog,
+    JobStatus,
     LogStorage,
     ObjectType,
     Prototype,
@@ -148,12 +149,12 @@ def prepare_task(
 
 
 def restart_task(task: TaskLog):
-    if task.status in (config.Job.CREATED, config.Job.RUNNING):
+    if task.status in (JobStatus.CREATED, JobStatus.RUNNING):
         err("TASK_ERROR", f"task #{task.pk} is running")
-    elif task.status == config.Job.SUCCESS:
+    elif task.status == JobStatus.SUCCESS:
         run_task(task, ctx.event)
         ctx.event.send_state()
-    elif task.status in (config.Job.FAILED, config.Job.ABORTED):
+    elif task.status in (JobStatus.FAILED, JobStatus.ABORTED):
         run_task(task, ctx.event, "restart")
         ctx.event.send_state()
     else:
@@ -654,10 +655,10 @@ def create_task(
         verbose=verbose,
         start_date=timezone.now(),
         finish_date=timezone.now(),
-        status=config.Job.CREATED,
+        status=JobStatus.CREATED,
         selector=get_selector(obj, action),
     )
-    set_task_status(task, config.Job.CREATED, ctx.event)
+    set_task_status(task, JobStatus.CREATED, ctx.event)
 
     if action.type == ActionType.Job.value:
         sub_actions = [None]
@@ -672,13 +673,13 @@ def create_task(
             log_files=action.log_files,
             start_date=timezone.now(),
             finish_date=timezone.now(),
-            status=config.Job.CREATED,
+            status=JobStatus.CREATED,
             selector=get_selector(obj, action),
         )
         log_type = sub_action.script_type if sub_action else action.script_type
         LogStorage.objects.create(job=job, name=log_type, type="stdout", format="txt")
         LogStorage.objects.create(job=job, name=log_type, type="stderr", format="txt")
-        set_job_status(job.pk, config.Job.CREATED, ctx.event)
+        set_job_status(job.pk, JobStatus.CREATED, ctx.event)
         Path(RUN_DIR, f"{job.pk}", "tmp").mkdir(parents=True, exist_ok=True)
 
     tree = Tree(obj)
@@ -695,13 +696,13 @@ def get_state(
     if job and job.sub_action:
         sub_action = job.sub_action
 
-    if status == config.Job.SUCCESS:
+    if status == JobStatus.SUCCESS:
         multi_state_set = action.multi_state_on_success_set
         multi_state_unset = action.multi_state_on_success_unset
         state = action.state_on_success
         if not state:
             logger.warning('action "%s" success state is not set', action.name)
-    elif status == config.Job.FAILED:
+    elif status == JobStatus.FAILED:
         state = getattr_first("state_on_fail", sub_action, action)
         multi_state_set = getattr_first("multi_state_on_fail_set", sub_action, action)
         multi_state_unset = getattr_first("multi_state_on_fail_unset", sub_action, action)
@@ -748,7 +749,7 @@ def set_action_state(
 
 
 def restore_hc(task: TaskLog, action: Action, status: str):
-    if status not in [config.Job.FAILED, config.Job.ABORTED]:
+    if status not in [JobStatus.FAILED, JobStatus.ABORTED]:
         return
     if not action.hostcomponentmap:
         return
@@ -847,7 +848,7 @@ def run_task(task: TaskLog, event, args: str = ""):
     )
     logger.info("task run #%s, python process %s", task.pk, proc.pid)
 
-    set_task_status(task, config.Job.RUNNING, event)
+    set_task_status(task, JobStatus.RUNNING, event)
 
 
 def prepare_ansible_config(job_id: int, action: Action, sub_action: SubAction):
@@ -895,11 +896,11 @@ def set_job_status(job_id: int, status: str, event, pid: int = 0):
 
 
 def abort_all(event):
-    for task in TaskLog.objects.filter(status=config.Job.RUNNING):
-        set_task_status(task, config.Job.ABORTED, event)
+    for task in TaskLog.objects.filter(status=JobStatus.RUNNING):
+        set_task_status(task, JobStatus.ABORTED, event)
         task.unlock_affected()
-    for job in JobLog.objects.filter(status=config.Job.RUNNING):
-        set_job_status(job.pk, config.Job.ABORTED, event)
+    for job in JobLog.objects.filter(status=JobStatus.RUNNING):
+        set_job_status(job.pk, JobStatus.ABORTED, event)
     ctx.event.send_state()
 
 

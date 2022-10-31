@@ -25,7 +25,6 @@ from ansible.plugins.action import ActionBase
 # isort: on
 
 from adcm.settings import ENCODING, RUN_DIR
-from cm import config
 from cm.adcm_config import set_object_config
 from cm.api import add_hc, get_hc
 from cm.api_context import ctx
@@ -41,6 +40,7 @@ from cm.models import (
     Host,
     HostProvider,
     JobLog,
+    JobStatus,
     LogStorage,
     Prototype,
     ServiceComponent,
@@ -493,7 +493,7 @@ def log_group_check(group: GroupCheckLog, fail_msg: str, success_msg: str):
 def log_check(job_id: int, group_data: dict, check_data: dict) -> CheckLog:
     lock = job_lock(job_id)
     job = JobLog.obj.get(id=job_id)
-    if job.status != config.Job.RUNNING:
+    if job.status != JobStatus.RUNNING:
         err('JOB_NOT_FOUND', f'job #{job.pk} has status "{job.status}", not "running"')
 
     group_title = group_data.pop('title')

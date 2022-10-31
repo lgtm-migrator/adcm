@@ -34,7 +34,6 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 from adcm.settings import FILE_DIR
-from cm.config import Job
 from cm.errors import AdcmEx
 from cm.logger import logger
 
@@ -1293,12 +1292,13 @@ class ClusterBind(ADCMModel):
         unique_together = (("cluster", "service", "source_cluster", "source_service"),)
 
 
-JOB_STATUS = (
-    ("created", "created"),
-    ("running", "running"),
-    ("success", "success"),
-    ("failed", "failed"),
-)
+class JobStatus(models.TextChoices):
+    CREATED = 'created', 'created'
+    SUCCESS = 'success', 'success'
+    FAILED = 'failed', 'failed'
+    RUNNING = 'running', 'running'
+    LOCKED = 'locked', 'locked'
+    ABORTED = 'aborted', 'aborted'
 
 
 class UserProfile(ADCMModel):
@@ -1313,7 +1313,7 @@ class TaskLog(ADCMModel):
     action = models.ForeignKey(Action, on_delete=models.SET_NULL, null=True, default=None)
     pid = models.PositiveIntegerField(blank=True, default=0)
     selector = models.JSONField(default=dict)
-    status = models.CharField(max_length=16, choices=JOB_STATUS)
+    status = models.CharField(max_length=16, choices=JobStatus.choices)
     config = models.JSONField(null=True, default=None)
     attr = models.JSONField(default=dict)
     hostcomponentmap = models.JSONField(null=True, default=None)
@@ -1367,9 +1367,9 @@ class TaskLog(ADCMModel):
                 "Termination is too early, try to execute later",
             )
         errors = {
-            Job.FAILED: ("TASK_IS_FAILED", f"task #{self.pk} is failed"),
-            Job.ABORTED: ("TASK_IS_ABORTED", f"task #{self.pk} is aborted"),
-            Job.SUCCESS: ("TASK_IS_SUCCESS", f"task #{self.pk} is success"),
+            JobStatus.FAILED: ("TASK_IS_FAILED", f"task #{self.pk} is failed"),
+            JobStatus.ABORTED: ("TASK_IS_ABORTED", f"task #{self.pk} is aborted"),
+            JobStatus.SUCCESS: ("TASK_IS_SUCCESS", f"task #{self.pk} is success"),
         }
         action = self.action
         if action and not action.allow_to_terminate and not obj_deletion:
@@ -1377,10 +1377,10 @@ class TaskLog(ADCMModel):
                 "NOT_ALLOWED_TERMINATION",
                 f"not allowed termination task #{self.pk} for action #{action.pk}",
             )
-        if self.status in [Job.FAILED, Job.ABORTED, Job.SUCCESS]:
+        if self.status in [JobStatus.FAILED, JobStatus.ABORTED, JobStatus.SUCCESS]:
             raise AdcmEx(*errors.get(self.status))
         i = 0
-        while not JobLog.objects.filter(task=self, status=Job.RUNNING) and i < 10:
+        while not JobLog.objects.filter(task=self, status=JobStatus.RUNNING) and i < 10:
             time.sleep(0.5)
             i += 1
         if i == 10:
@@ -1404,7 +1404,7 @@ class JobLog(ADCMModel):
     pid = models.PositiveIntegerField(blank=True, default=0)
     selector = models.JSONField(default=dict)
     log_files = models.JSONField(default=list)
-    status = models.CharField(max_length=16, choices=JOB_STATUS)
+    status = models.CharField(max_length=16, choices=JobStatus.choices)
     start_date = models.DateTimeField()
     finish_date = models.DateTimeField(db_index=True)
 

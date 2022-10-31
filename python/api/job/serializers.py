@@ -25,10 +25,9 @@ from adcm.settings import ENCODING, RUN_DIR
 from api.action.serializers import ActionJobSerializer
 from api.concern.serializers import ConcernItemSerializer
 from cm.ansible_plugin import get_check_log
-from cm.config import Job
 from cm.errors import AdcmEx
 from cm.job import start_task
-from cm.models import JobLog, LogStorage, TaskLog
+from cm.models import JobLog, JobStatus, LogStorage, TaskLog
 
 
 class JobShortSerializer(HyperlinkedModelSerializer):
@@ -123,7 +122,7 @@ class TaskRetrieveSerializer(HyperlinkedModelSerializer):
         else:
             allow_to_terminate = False
 
-        if allow_to_terminate and obj.status in {Job.CREATED, Job.RUNNING}:
+        if allow_to_terminate and obj.status in {JobStatus.CREATED, JobStatus.RUNNING}:
             return True
 
         return False
