@@ -875,8 +875,11 @@ def delete_bundle(bundle):
         try:
             shutil.rmtree(os.path.join(config.BUNDLE_DIR, bundle.hash))
         except FileNotFoundError:
-            logger.info(f"Bundle {bundle.name} {bundle.version} was removed in file system."
-                        f" Delete bundle in database")
+            logger.info(
+                "Bundle %s %s was removed in file system. Delete bundle in database",
+                bundle.name,
+                bundle.version
+            )
     bundle_id = bundle.id
     bundle.delete()
     for role in Role.objects.filter(class_name='ParentRole'):
