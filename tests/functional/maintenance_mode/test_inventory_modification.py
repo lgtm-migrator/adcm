@@ -24,8 +24,14 @@ from adcm_pytest_plugin.docker_utils import ADCM
 from adcm_pytest_plugin.utils import get_or_add_service
 
 from tests.functional.conftest import only_clean_adcm
-from tests.functional.maintenance_mode.conftest import (DEFAULT_SERVICE_NAME, FIRST_COMPONENT, MM_IS_ON,
-                                                        SECOND_COMPONENT, add_hosts_to_cluster, turn_mm_on)
+from tests.functional.maintenance_mode.conftest import (
+    DEFAULT_SERVICE_NAME,
+    FIRST_COMPONENT,
+    MM_IS_ON,
+    SECOND_COMPONENT,
+    add_hosts_to_cluster,
+    turn_mm_on,
+)
 from tests.functional.maintenance_mode.test_hosts_behavior import ACTION_ALLOWED_IN_MM
 from tests.functional.tools import build_hc_for_hc_acl_action, create_config_group_and_add_host, get_inventory_file
 from tests.library.assertions import sets_are_equal

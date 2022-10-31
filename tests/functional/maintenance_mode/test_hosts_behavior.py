@@ -21,11 +21,22 @@ import pytest
 from adcm_client.objects import Cluster, Component, Host
 
 from tests.functional.conftest import only_clean_adcm
-from tests.functional.maintenance_mode.conftest import (ANOTHER_SERVICE_NAME, BUNDLES_DIR, DEFAULT_SERVICE_NAME,
-                                                        MM_IS_OFF, MM_IS_ON, MM_NOT_ALLOWED, add_hosts_to_cluster,
-                                                        check_hosts_mm_is, check_mm_availability,
-                                                        get_disabled_actions_names, get_enabled_actions_names,
-                                                        remove_hosts_from_cluster, turn_mm_off, turn_mm_on)
+from tests.functional.maintenance_mode.conftest import (
+    ANOTHER_SERVICE_NAME,
+    BUNDLES_DIR,
+    DEFAULT_SERVICE_NAME,
+    MM_IS_OFF,
+    MM_IS_ON,
+    MM_NOT_ALLOWED,
+    add_hosts_to_cluster,
+    check_hosts_mm_is,
+    check_mm_availability,
+    get_disabled_actions_names,
+    get_enabled_actions_names,
+    remove_hosts_from_cluster,
+    turn_mm_off,
+    turn_mm_on,
+)
 from tests.functional.tools import AnyADCMObject, build_hc_for_hc_acl_action, get_object_represent
 from tests.library.assertions import expect_api_error, expect_no_api_error, is_empty, sets_are_equal
 from tests.library.errorcodes import ACTION_ERROR, INVALID_HC_HOST_IN_MM, MAINTENANCE_MODE_NOT_AVAILABLE, ADCMError

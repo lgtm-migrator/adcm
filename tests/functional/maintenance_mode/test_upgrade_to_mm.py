@@ -18,10 +18,16 @@ import allure
 import pytest
 
 from tests.conftest import DUMMY_ACTION
-from tests.functional.maintenance_mode.conftest import (MM_IS_OFF, MM_NOT_ALLOWED, add_hosts_to_cluster,
-                                                        check_hosts_mm_is, check_mm_availability,
-                                                        get_disabled_actions_names, get_enabled_actions_names,
-                                                        turn_mm_on)
+from tests.functional.maintenance_mode.conftest import (
+    MM_IS_OFF,
+    MM_NOT_ALLOWED,
+    add_hosts_to_cluster,
+    check_hosts_mm_is,
+    check_mm_availability,
+    get_disabled_actions_names,
+    get_enabled_actions_names,
+    turn_mm_on,
+)
 from tests.functional.tools import get_object_represent
 from tests.library.assertions import sets_are_equal
 
