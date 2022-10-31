@@ -56,6 +56,7 @@ from cm.models import (
     Host,
     HostComponent,
     HostProvider,
+    MaintenanceMode,
     ServiceComponent,
 )
 from cm.status_api import make_ui_host_status
@@ -229,7 +230,7 @@ class HostDetail(PermissionListMixin, DetailView):
     error_code = "HOST_NOT_FOUND"
 
     @staticmethod
-    def _check_maintenance_mode_constraint(host: Host, new_mode: bool):
+    def _check_maintenance_mode_constraint(host: Host, new_mode: MaintenanceMode.choices) -> None:
         if host.maintenance_mode == new_mode:
             return
 
