@@ -30,6 +30,7 @@ from rest_framework.status import (
 from rest_framework.viewsets import ModelViewSet
 
 from api.cluster.serializers import ClusterAuditSerializer
+from api.component.serializers import ComponentAuditSerializer
 from api.host.serializers import HostAuditSerializer
 from api.service.serializers import ServiceAuditSerializer
 from audit.cases.cases import get_audit_operation_and_object
@@ -126,6 +127,8 @@ def _get_object_changes(prev_data: dict, current_obj: Model) -> dict:
         serializer_class = HostAuditSerializer
     elif isinstance(current_obj, ClusterObject):
         serializer_class = ServiceAuditSerializer
+    elif isinstance(current_obj, ServiceComponent):
+        serializer_class = ComponentAuditSerializer
 
     if not serializer_class:
         return {}
@@ -149,6 +152,8 @@ def _get_object_changes(prev_data: dict, current_obj: Model) -> dict:
 
 
 def _get_obj_changes_data(view: GenericAPIView | ModelViewSet) -> tuple[dict | None, Model | None]:
+    # pylint: disable=too-many-branches
+
     prev_data = None
     current_obj = None
     serializer_class = None
@@ -175,6 +180,12 @@ def _get_obj_changes_data(view: GenericAPIView | ModelViewSet) -> tuple[dict | N
         if view.__class__.__name__ == "ServiceMaintenanceModeView":
             serializer_class = ServiceAuditSerializer
             pk = view.kwargs["service_id"]
+        elif view.__class__.__name__ == "HostMaintenanceModeView":
+            serializer_class = HostAuditSerializer
+            pk = view.kwargs["host_id"]
+        elif view.__class__.__name__ == "ComponentMaintenanceModeView":
+            serializer_class = ComponentAuditSerializer
+            pk = view.kwargs["component_id"]
 
     if serializer_class:
         model = view.get_queryset().model

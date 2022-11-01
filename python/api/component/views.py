@@ -74,6 +74,7 @@ class ComponentDetailView(PermissionListMixin, DetailView):
 
 class ComponentMaintenanceModeView(GenericUIView):
     queryset = ServiceComponent.objects.all()
+    permission_classes = (DjangoOnlyObjectPermissions,)
     serializer_class = ComponentChangeMaintenanceModeSerializer
     lookup_field = "id"
     lookup_url_kwarg = "component_id"
