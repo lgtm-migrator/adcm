@@ -14,6 +14,7 @@ import functools
 import hashlib
 import shutil
 import tarfile
+from pathlib import Path
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
@@ -869,7 +870,14 @@ def delete_bundle(bundle):
         msg = 'There is adcm object of bundle #{} "{}" {}'
         err("BUNDLE_CONFLICT", msg.format(bundle.id, bundle.name, bundle.version))
     if bundle.hash != "adcm":
-        shutil.rmtree(settings.BUNDLE_DIR / bundle.hash)
+        try:
+            shutil.rmtree(Path(settings.BUNDLE_DIR, bundle.hash))
+        except FileNotFoundError:
+            logger.info(
+                "Bundle %s %s was removed in file system. Delete bundle in database",
+                bundle.name,
+                bundle.version,
+            )
     bundle_id = bundle.id
     bundle.delete()
     for role in Role.objects.filter(class_name="ParentRole"):
