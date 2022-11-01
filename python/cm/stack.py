@@ -22,12 +22,12 @@ from typing import Any
 import ruyaml
 import yaml
 import yspec.checker
+from django.conf import settings
 from django.db import IntegrityError
 from rest_framework import status
 from version_utils import rpm
 
 import cm.checker
-from cm import config
 from cm.adcm_config import (
     check_config_type,
     proto_ref,
@@ -49,21 +49,21 @@ from cm.models import (
 NAME_REGEX = r"[0-9a-zA-Z_\.-]+"
 
 
-def save_definition(path, fname, conf, obj_list, bundle_hash, adcm=False):
+def save_definition(path, fname, conf, obj_list, bundle_hash, adcm_=False):
     if isinstance(conf, dict):
-        save_object_definition(path, fname, conf, obj_list, bundle_hash, adcm)
+        save_object_definition(path, fname, conf, obj_list, bundle_hash, adcm_)
     else:
         for obj_def in conf:
-            save_object_definition(path, fname, obj_def, obj_list, bundle_hash, adcm)
+            save_object_definition(path, fname, obj_def, obj_list, bundle_hash, adcm_)
 
 
 def cook_obj_id(conf):
     return f"{conf['type']}.{conf['name']}.{conf['version']}"
 
 
-def save_object_definition(path, fname, conf, obj_list, bundle_hash, adcm=False):
+def save_object_definition(path, fname, conf, obj_list, bundle_hash, adcm_=False):
     def_type = conf["type"]
-    if def_type == "adcm" and not adcm:
+    if def_type == "adcm" and not adcm_:
         msg = "Invalid type \"{}\" in object definition: {}"
         return err("INVALID_OBJECT_DEFINITION", msg.format(def_type, fname))
     check_object_definition(fname, conf, def_type, obj_list)
@@ -102,11 +102,11 @@ def get_config_files(path, bundle_hash):
 
 def check_adcm_config(conf_file):
     warnings.simplefilter("error", ruyaml.error.ReusedAnchorWarning)
-    schema_file = os.path.join(config.CODE_DIR, "cm", "adcm_schema.yaml")
-    with open(schema_file, encoding="utf_8") as fd:
+    schema_file = settings.CODE_DIR / "cm" / "adcm_schema.yaml"
+    with open(schema_file, encoding=settings.ENCODING_UTF_8) as fd:
         rules = ruyaml.round_trip_load(fd)
     try:
-        with open(conf_file, encoding="utf_8") as fd:
+        with open(conf_file, encoding=settings.ENCODING_UTF_8) as fd:
             data = cm.checker.round_trip_load(fd, version="1.1", allow_duplicate_keys=True)
     except (ruyaml.parser.ParserError, ruyaml.scanner.ScannerError, NotImplementedError) as e:
         err("STACK_LOAD_ERROR", f"YAML decode \"{conf_file}\" error: {e}")
@@ -145,7 +145,7 @@ def get_license_hash(proto, conf, bundle_hash):
         return None
     body = read_bundle_file(proto, conf["license"], bundle_hash, "license file")
     sha1 = hashlib.sha256()
-    sha1.update(body.encode("utf-8"))
+    sha1.update(body.encode(settings.ENCODING_UTF_8))
     return sha1.hexdigest()
 
 
@@ -270,21 +270,13 @@ def check_versions(proto, conf, label):
     if "min" in conf["versions"] and "min_strict" in conf["versions"]:
         msg = "min and min_strict can not be used simultaneously in versions of {} ({})"
         err("INVALID_VERSION_DEFINITION", msg.format(label, ref))
-    if (
-        "min" not in conf["versions"]
-        and "min_strict" not in conf["versions"]
-        and "import" not in label
-    ):
+    if "min" not in conf["versions"] and "min_strict" not in conf["versions"] and "import" not in label:
         msg = "min or min_strict should be present in versions of {} ({})"
         err("INVALID_VERSION_DEFINITION", msg.format(label, ref))
     if "max" in conf["versions"] and "max_strict" in conf["versions"]:
         msg = "max and max_strict can not be used simultaneously in versions of {} ({})"
         err("INVALID_VERSION_DEFINITION", msg.format(label, ref))
-    if (
-        "max" not in conf["versions"]
-        and "max_strict" not in conf["versions"]
-        and "import" not in label
-    ):
+    if "max" not in conf["versions"] and "max_strict" not in conf["versions"] and "import" not in label:
         msg = "max and max_strict should be present in versions of {} ({})"
         err("INVALID_VERSION_DEFINITION", msg.format(label, ref))
     for name in ("min", "min_strict", "max", "max_strict"):
@@ -417,9 +409,7 @@ def save_sub_actions(conf, action):
         elif isinstance(on_fail, dict):
             sub_action.state_on_fail = _deep_get(on_fail, STATE, default="")
             sub_action.multi_state_on_fail_set = _deep_get(on_fail, MULTI_STATE, SET, default=[])
-            sub_action.multi_state_on_fail_unset = _deep_get(
-                on_fail, MULTI_STATE, UNSET, default=[]
-            )
+            sub_action.multi_state_on_fail_unset = _deep_get(on_fail, MULTI_STATE, UNSET, default=[])
         sub_action.save()
 
 
@@ -495,13 +485,9 @@ def save_action(proto, ac, bundle_hash, action_name):
         action.state_on_fail = _deep_get(ac, ON_FAIL, STATE, default="")
 
         action.multi_state_available = _deep_get(ac, MASKING, MULTI_STATE, AVAILABLE, default=ANY)
-        action.multi_state_unavailable = _deep_get(
-            ac, MASKING, MULTI_STATE, UNAVAILABLE, default=[]
-        )
+        action.multi_state_unavailable = _deep_get(ac, MASKING, MULTI_STATE, UNAVAILABLE, default=[])
         action.multi_state_on_success_set = _deep_get(ac, ON_SUCCESS, MULTI_STATE, SET, default=[])
-        action.multi_state_on_success_unset = _deep_get(
-            ac, ON_SUCCESS, MULTI_STATE, UNSET, default=[]
-        )
+        action.multi_state_on_success_unset = _deep_get(ac, ON_SUCCESS, MULTI_STATE, UNSET, default=[])
         action.multi_state_on_fail_set = _deep_get(ac, ON_FAIL, MULTI_STATE, SET, default=[])
         action.multi_state_on_fail_unset = _deep_get(ac, ON_FAIL, MULTI_STATE, UNSET, default=[])
     else:
@@ -669,10 +655,7 @@ def validate_name(value, err_msg):
     if not isinstance(value, str):
         err("WRONG_NAME", f"{err_msg} should be string")
     p = re.compile(NAME_REGEX)
-    msg1 = (
-        "{} is incorrect. Only latin characters, digits,"
-        " dots (.), dashes (-), and underscores (_) are allowed."
-    )
+    msg1 = "{} is incorrect. Only latin characters, digits, dots (.), dashes (-), and underscores (_) are allowed."
     if p.fullmatch(value) is None:
         err("WRONG_NAME", msg1.format(err_msg))
     return value

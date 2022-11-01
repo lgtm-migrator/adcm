@@ -42,7 +42,7 @@ class TestBundle(BaseTestCase):
         Path(settings.DOWNLOAD_DIR, self.test_bundle_filename).unlink(missing_ok=True)
 
     def upload_bundle(self):
-        with open(self.test_bundle_path, encoding="utf-8") as f:
+        with open(self.test_bundle_path, encoding=settings.ENCODING_UTF_8) as f:
             return self.client.post(
                 path=reverse("upload-bundle"),
                 data={"file": f},
@@ -92,9 +92,7 @@ class TestBundle(BaseTestCase):
         self.assertEqual(response.data["results"][0]["id"], self.bundle_1.pk)
 
     def test_list_filter_version(self):
-        response: Response = self.client.get(
-            reverse("bundle-list"), {"version": self.bundle_1.version}
-        )
+        response: Response = self.client.get(reverse("bundle-list"), {"version": self.bundle_1.version})
 
         self.assertEqual(response.data["results"][0]["id"], self.bundle_1.pk)
 

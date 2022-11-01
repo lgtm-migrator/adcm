@@ -10,8 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
-
 import copy
 import json
 import subprocess
@@ -19,6 +17,7 @@ from configparser import ConfigParser
 from pathlib import Path
 from typing import Any, Hashable, List, Optional, Tuple, Union
 
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
@@ -45,16 +44,6 @@ from cm.api import (
     save_hc,
 )
 from cm.api_context import ctx
-from cm.config import (
-    BASE_DIR,
-    BUNDLE_DIR,
-    CODE_DIR,
-    LOG_DIR,
-    PYTHON_SITE_PACKAGES,
-    RUN_DIR,
-    STATUS_SECRET_KEY,
-    Job,
-)
 from cm.errors import AdcmEx, raise_adcm_ex
 from cm.hierarchy import Tree
 from cm.inventory import get_obj_config, prepare_job_inventory, process_config_and_attr
@@ -79,6 +68,7 @@ from cm.models import (
     HostComponent,
     HostProvider,
     JobLog,
+    JobStatus,
     LogStorage,
     ObjectType,
     Prototype,
@@ -123,9 +113,7 @@ def check_action_hosts(action: Action, obj: ADCMEntity, cluster: Cluster, hosts:
         return
 
     if not action.partial_execution:
-        raise_adcm_ex(
-            "TASK_ERROR", "Only action with partial_execution permission can receive host list"
-        )
+        raise_adcm_ex("TASK_ERROR", "Only action with partial_execution permission can receive host list")
 
     if not isinstance(hosts, list):
         raise_adcm_ex("TASK_ERROR", "Hosts should be array")
@@ -139,9 +127,7 @@ def check_action_hosts(action: Action, obj: ADCMEntity, cluster: Cluster, hosts:
             raise_adcm_ex("TASK_ERROR", f"host #{host_id} does not belong to cluster #{cluster.pk}")
 
         if provider and host.provider != provider:
-            raise_adcm_ex(
-                "TASK_ERROR", f"host #{host_id} does not belong to host provider #{provider.pk}"
-            )
+            raise_adcm_ex("TASK_ERROR", f"host #{host_id} does not belong to host provider #{provider.pk}")
 
 
 def prepare_task(
@@ -188,12 +174,12 @@ def prepare_task(
 
 
 def restart_task(task: TaskLog):
-    if task.status in (Job.CREATED, Job.RUNNING):
+    if task.status in (JobStatus.CREATED, JobStatus.RUNNING):
         raise_adcm_ex("TASK_ERROR", f"task #{task.pk} is running")
-    elif task.status == Job.SUCCESS:
+    elif task.status == JobStatus.SUCCESS:
         run_task(task, ctx.event)
         ctx.event.send_state()
-    elif task.status in (Job.FAILED, Job.ABORTED):
+    elif task.status in (JobStatus.FAILED, JobStatus.ABORTED):
         run_task(task, ctx.event, "restart")
         ctx.event.send_state()
     else:
@@ -230,9 +216,7 @@ def check_action_state(action: Action, task_object: ADCMEntity, cluster: Cluster
     raise_adcm_ex("TASK_ERROR", "action is disabled")
 
 
-def check_action_config(
-    action: Action, obj: ADCMEntity, conf: dict, attr: dict
-) -> Tuple[dict, dict]:
+def check_action_config(action: Action, obj: ADCMEntity, conf: dict, attr: dict) -> Tuple[dict, dict]:
     proto = action.prototype
     spec, flat_spec, _, _ = get_prototype_config(proto, action)
     if not spec:
@@ -255,9 +239,7 @@ def add_to_dict(my_dict: dict, key: Hashable, subkey: Hashable, value: Any):
     my_dict[key][subkey] = value
 
 
-def check_action_hc(
-    action_hc: List[dict], service: ClusterObject, component: ServiceComponent, action: Action
-) -> bool:
+def check_action_hc(action_hc: List[dict], service: ClusterObject, component: ServiceComponent, action: Action) -> bool:
     for item in action_hc:
         if item["service"] == service and item["component"] == component:
             if item["action"] == action:
@@ -280,8 +262,7 @@ def cook_delta(  # pylint: disable=too-many-branches
         _service, _comp = _key.split(".")
         if not check_action_hc(action_hc, _service, _comp, action):
             msg = (
-                f'no permission to "{action}" component "{_comp}" of '
-                f'service "{_service}" to/from hostcomponentmap'
+                f'no permission to "{action}" component "{_comp}" of ' f'service "{_service}" to/from hostcomponentmap'
             )
             raise_adcm_ex("WRONG_ACTION_HC", msg)
 
@@ -358,9 +339,7 @@ def check_constraints_for_upgrade(cluster, upgrade, host_comp_list):
     try:
         for service in ClusterObject.objects.filter(cluster=cluster):
             try:
-                prototype = Prototype.objects.get(
-                    name=service.name, type="service", bundle=upgrade.bundle
-                )
+                prototype = Prototype.objects.get(name=service.name, type="service", bundle=upgrade.bundle)
                 check_component_constraint(
                     cluster,
                     prototype,
@@ -424,10 +403,7 @@ def check_service_task(cluster_id: int, action: Action) -> ClusterObject | None:
         service = ClusterObject.objects.get(cluster=cluster, prototype=action.prototype)
         return service
     except ClusterObject.DoesNotExist:
-        msg = (
-            f"service #{action.prototype.pk} for action "
-            f'"{action.name}" is not installed in cluster #{cluster.pk}'
-        )
+        msg = f"service #{action.prototype.pk} for action " f'"{action.name}" is not installed in cluster #{cluster.pk}'
         raise_adcm_ex("CLUSTER_SERVICE_NOT_FOUND", msg)
 
     return None
@@ -441,8 +417,7 @@ def check_component_task(cluster_id: int, action: Action) -> ServiceComponent | 
         return component
     except ServiceComponent.DoesNotExist:
         msg = (
-            f"component #{action.prototype.pk} for action "
-            f'"{action.name}" is not installed in cluster #{cluster.pk}'
+            f"component #{action.prototype.pk} for action " f'"{action.name}" is not installed in cluster #{cluster.pk}'
         )
         raise_adcm_ex("COMPONENT_NOT_FOUND", msg)
 
@@ -463,9 +438,9 @@ def check_adcm(adcm_id: int) -> ADCM:
 
 def get_bundle_root(action: Action) -> str:
     if action.prototype.type == "adcm":
-        return str(Path(BASE_DIR, "conf"))
+        return str(Path(settings.BASE_DIR, "conf"))
 
-    return BUNDLE_DIR
+    return str(settings.BUNDLE_DIR)
 
 
 def cook_script(action: Action, sub_action: SubAction):
@@ -482,9 +457,9 @@ def cook_script(action: Action, sub_action: SubAction):
 
 
 def get_adcm_config():
-    adcm = ADCM.obj.get()
+    adcm_ = ADCM.obj.get()
 
-    return get_obj_config(adcm)
+    return get_obj_config(adcm_)
 
 
 def get_actual_hc(cluster: Cluster):
@@ -549,9 +524,7 @@ def prepare_job(  # pylint: disable=too-many-arguments
     prepare_ansible_config(job_id, action, sub_action)
 
 
-def get_selector(
-    obj: ADCM | Cluster | ClusterObject | ServiceComponent | HostProvider | Host, action: Action
-) -> dict:
+def get_selector(obj: ADCM | Cluster | ClusterObject | ServiceComponent | HostProvider | Host, action: Action) -> dict:
     selector = {obj.prototype.type: {"id": obj.pk, "name": obj.display_name}}
 
     if obj.prototype.type == ObjectType.Service:
@@ -567,13 +540,9 @@ def get_selector(
                 service = ClusterObject.objects.get(prototype=action.prototype, cluster=cluster)
                 selector[ObjectType.Service] = {"id": service.pk, "name": service.display_name}
             elif action.prototype.type == ObjectType.Component:
-                service = ClusterObject.objects.get(
-                    prototype=action.prototype.parent, cluster=cluster
-                )
+                service = ClusterObject.objects.get(prototype=action.prototype.parent, cluster=cluster)
                 selector[ObjectType.Service] = {"id": service.pk, "name": service.display_name}
-                component = ServiceComponent.objects.get(
-                    prototype=action.prototype, cluster=cluster, service=service
-                )
+                component = ServiceComponent.objects.get(prototype=action.prototype, cluster=cluster, service=service)
                 selector[ObjectType.Component] = {
                     "id": component.pk,
                     "name": component.display_name,
@@ -615,11 +584,11 @@ def prepare_job_config(
         "adcm": {"config": get_adcm_config()},
         "context": prepare_context(action, obj),
         "env": {
-            "run_dir": RUN_DIR,
-            "log_dir": LOG_DIR,
-            "tmp_dir": str(Path(RUN_DIR, f"{job_id}", "tmp")),
+            "run_dir": str(settings.RUN_DIR),
+            "log_dir": str(settings.LOG_DIR),
+            "tmp_dir": str(Path(settings.RUN_DIR, f"{job_id}", "tmp")),
             "stack_dir": str(Path(get_bundle_root(action), action.prototype.bundle.hash)),
-            "status_api_token": STATUS_SECRET_KEY,
+            "status_api_token": str(settings.STATUS_SECRET_KEY),
         },
         "job": {
             "id": job_id,
@@ -659,9 +628,7 @@ def prepare_job_config(
     elif action.prototype.type == "component":
         if action.host_action:
             service = ClusterObject.obj.get(prototype=action.prototype.parent, cluster=cluster)
-            comp = ServiceComponent.obj.get(
-                prototype=action.prototype, cluster=cluster, service=service
-            )
+            comp = ServiceComponent.obj.get(prototype=action.prototype, cluster=cluster, service=service)
             job_conf["job"]["hostgroup"] = f"{service.name}.{comp.name}"
             job_conf["job"]["service_id"] = service.pk
             job_conf["job"]["component_id"] = comp.pk
@@ -690,7 +657,7 @@ def prepare_job_config(
     if conf:
         job_conf["job"]["config"] = conf
 
-    fd = open(Path(RUN_DIR, f"{job_id}", "config.json"), "w", encoding="utf_8")
+    fd = open(Path(settings.RUN_DIR, f"{job_id}", "config.json"), "w", encoding=settings.ENCODING_UTF_8)
     json.dump(job_conf, fd, indent=3, sort_keys=True)
     fd.close()
 
@@ -716,10 +683,10 @@ def create_task(  # pylint: disable=too-many-arguments
         verbose=verbose,
         start_date=timezone.now(),
         finish_date=timezone.now(),
-        status=Job.CREATED,
+        status=JobStatus.CREATED,
         selector=get_selector(obj, action),
     )
-    set_task_status(task, Job.CREATED, ctx.event)
+    set_task_status(task, JobStatus.CREATED, ctx.event)
 
     if action.type == ActionType.Job.value:
         sub_actions = [None]
@@ -734,14 +701,14 @@ def create_task(  # pylint: disable=too-many-arguments
             log_files=action.log_files,
             start_date=timezone.now(),
             finish_date=timezone.now(),
-            status=Job.CREATED,
+            status=JobStatus.CREATED,
             selector=get_selector(obj, action),
         )
         log_type = sub_action.script_type if sub_action else action.script_type
         LogStorage.objects.create(job=job, name=log_type, type="stdout", format="txt")
         LogStorage.objects.create(job=job, name=log_type, type="stderr", format="txt")
-        set_job_status(job.pk, Job.CREATED, ctx.event)
-        Path(RUN_DIR, f"{job.pk}", "tmp").mkdir(parents=True, exist_ok=True)
+        set_job_status(job.pk, JobStatus.CREATED, ctx.event)
+        Path(settings.RUN_DIR, f"{job.pk}", "tmp").mkdir(parents=True, exist_ok=True)
 
     tree = Tree(obj)
     affected = (node.value for node in tree.get_all_affected(tree.built_from))
@@ -750,20 +717,18 @@ def create_task(  # pylint: disable=too-many-arguments
     return task
 
 
-def get_state(
-    action: Action, job: JobLog, status: str
-) -> Tuple[Optional[str], List[str], List[str]]:
+def get_state(action: Action, job: JobLog, status: str) -> Tuple[Optional[str], List[str], List[str]]:
     sub_action = None
     if job and job.sub_action:
         sub_action = job.sub_action
 
-    if status == Job.SUCCESS:
+    if status == JobStatus.SUCCESS:
         multi_state_set = action.multi_state_on_success_set
         multi_state_unset = action.multi_state_on_success_unset
         state = action.state_on_success
         if not state:
             logger.warning('action "%s" success state is not set', action.name)
-    elif status == Job.FAILED:
+    elif status == JobStatus.FAILED:
         state = getattr_first("state_on_fail", sub_action, action)
         multi_state_set = getattr_first("multi_state_on_fail_set", sub_action, action)
         multi_state_unset = getattr_first("multi_state_on_fail_unset", sub_action, action)
@@ -813,7 +778,7 @@ def set_action_state(
 
 
 def restore_hc(task: TaskLog, action: Action, status: str):
-    if status not in {Job.FAILED, Job.ABORTED}:
+    if status not in {JobStatus.FAILED, JobStatus.ABORTED}:
         return
 
     if not action.hostcomponentmap:
@@ -912,11 +877,11 @@ def log_custom(job_id, name, log_format, body):
 
 
 def run_task(task: TaskLog, event, args: str = ""):
-    err_file = open(Path(LOG_DIR, "task_runner.err"), "a+", encoding="utf_8")
+    err_file = open(Path(settings.LOG_DIR, "task_runner.err"), "a+", encoding=settings.ENCODING_UTF_8)
     cmd = [
         "/adcm/python/job_venv_wrapper.sh",
         task.action.venv,
-        str(Path(CODE_DIR, "task_runner.py")),
+        str(Path(settings.CODE_DIR, "task_runner.py")),
         str(task.pk),
         args,
     ]
@@ -927,7 +892,7 @@ def run_task(task: TaskLog, event, args: str = ""):
     )
     logger.info("task run #%s, python process %s", task.pk, proc.pid)
 
-    set_task_status(task, Job.RUNNING, event)
+    set_task_status(task, JobStatus.RUNNING, event)
 
 
 def prepare_ansible_config(job_id: int, action: Action, sub_action: SubAction):
@@ -944,7 +909,7 @@ def prepare_ansible_config(job_id: int, action: Action, sub_action: SubAction):
     if mitogen:
         config_parser["defaults"]["strategy"] = "mitogen_linear"
         config_parser["defaults"]["strategy_plugins"] = str(
-            Path(PYTHON_SITE_PACKAGES, "ansible_mitogen", "plugins", "strategy")
+            Path(settings.PYTHON_SITE_PACKAGES, "ansible_mitogen", "plugins", "strategy")
         )
         config_parser["defaults"]["host_key_checking"] = "False"
 
@@ -958,7 +923,7 @@ def prepare_ansible_config(job_id: int, action: Action, sub_action: SubAction):
     if "jinja2_native" in params:
         config_parser["defaults"]["jinja2_native"] = str(params["jinja2_native"])
 
-    with open(Path(RUN_DIR, f"{job_id}", "ansible.cfg"), "w", encoding="utf_8") as config_file:
+    with open(Path(settings.RUN_DIR, f"{job_id}", "ansible.cfg"), "w", encoding=settings.ENCODING_UTF_8) as config_file:
         config_parser.write(config_file)
 
 
@@ -975,12 +940,11 @@ def set_job_status(job_id: int, status: str, event, pid: int = 0):
 
 
 def abort_all(event):
-    for task in TaskLog.objects.filter(status=Job.RUNNING):
-        set_task_status(task, Job.ABORTED, event)
+    for task in TaskLog.objects.filter(status=JobStatus.RUNNING):
+        set_task_status(task, JobStatus.ABORTED, event)
         task.unlock_affected()
-    for job in JobLog.objects.filter(status=Job.RUNNING):
-        set_job_status(job.pk, Job.ABORTED, event)
-
+    for job in JobLog.objects.filter(status=JobStatus.RUNNING):
+        set_job_status(job.pk, JobStatus.ABORTED, event)
     ctx.event.send_state()
 
 
