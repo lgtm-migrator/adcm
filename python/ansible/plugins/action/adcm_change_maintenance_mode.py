@@ -50,6 +50,8 @@ from ansible.plugins.action import ActionBase
 
 import adcm.init_django  # pylint: disable=unused-import
 from cm.ansible_plugin import get_object_id_from_context
+from cm.api import load_host_map
+from cm.issue import update_hierarchy_issues
 from cm.models import ClusterObject, Host, ServiceComponent
 
 
@@ -76,7 +78,7 @@ class ActionModule(ActionBase):
         if self._task.args["type"] not in type_choices:
             raise AnsibleActionFail(f'"type" should be one of {type_choices}')
 
-        if self._task.args["value"] not in {True, False}:
+        if not isinstance(self._task.args["value"], bool):
             raise AnsibleActionFail('"value" should be boolean')
 
         obj_type = self._task.args["type"]
@@ -90,16 +92,14 @@ class ActionModule(ActionBase):
 
         obj = type_class_map[obj_type].objects.filter(pk=obj_pk).first()
         if not obj:
-            raise AnsibleActionFail(
-                f'Object of type "{obj_type}" with PK "{obj_pk}" does not exist'
-            )
+            raise AnsibleActionFail(f'Object of type "{obj_type}" with PK "{obj_pk}" does not exist')
 
         if obj.maintenance_mode != "CHANGING":
-            raise AnsibleActionFail(
-                'Only "CHANGING" state of object maintenance mode can be changed'
-            )
+            raise AnsibleActionFail('Only "CHANGING" state of object maintenance mode can be changed')
 
         obj.maintenance_mode = obj_value
         obj.save()
+        update_hierarchy_issues(obj.cluster)
+        load_host_map()
 
         return {"failed": False, "changed": True}
