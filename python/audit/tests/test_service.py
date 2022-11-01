@@ -37,6 +37,7 @@ from cm.models import (
     ClusterBind,
     ClusterObject,
     ConfigLog,
+    MaintenanceMode,
     ObjectConfig,
     Prototype,
     PrototypeExport,
@@ -47,7 +48,7 @@ from rbac.upgrade.role import init_roles
 
 
 class TestService(BaseTestCase):
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes,too-many-public-methods
 
     def setUp(self) -> None:
         super().setUp()
@@ -178,26 +179,6 @@ class TestService(BaseTestCase):
         PrototypeImport.objects.create(prototype=self.service_prototype, name="Export_service")
 
         return service, cluster
-
-    def test_update(self):
-        self.client.patch(
-            path=reverse("service-details", kwargs={"service_id": self.service.pk}),
-            data={"maintenance_mode": True},
-            content_type=APPLICATION_JSON,
-        )
-
-        log: AuditLog = AuditLog.objects.order_by("operation_time").last()
-
-        self.check_log(
-            log=log,
-            obj=self.service,
-            obj_name=f"{self.cluster.name}/{self.service.display_name}",
-            object_type=AuditObjectType.Service,
-            operation_name="Service updated",
-            operation_type=AuditLogOperationType.Update,
-            operation_result=AuditLogOperationResult.Success,
-            user=self.test_user,
-        )
 
     def test_update_config(self):
         self.client.post(
@@ -357,7 +338,7 @@ class TestService(BaseTestCase):
         bundle_filename = "import.tar"
         with open(
             Path(settings.BASE_DIR, "python/audit/tests/files", bundle_filename),
-            encoding="utf-8",
+            encoding=settings.ENCODING_UTF_8,
         ) as f:
             self.client.post(
                 path=reverse("upload-bundle"),
@@ -513,9 +494,7 @@ class TestService(BaseTestCase):
 
         bind = ClusterBind.objects.first()
         self.client.delete(
-            path=reverse(
-                "service-bind-details", kwargs={"service_id": self.service.pk, "bind_id": bind.pk}
-            ),
+            path=reverse("service-bind-details", kwargs={"service_id": self.service.pk, "bind_id": bind.pk}),
             content_type=APPLICATION_JSON,
         )
 
@@ -555,9 +534,7 @@ class TestService(BaseTestCase):
 
         bind = ClusterBind.objects.first()
         self.client.delete(
-            path=reverse(
-                "service-bind-details", kwargs={"service_id": self.service.pk, "bind_id": bind.pk}
-            ),
+            path=reverse("service-bind-details", kwargs={"service_id": self.service.pk, "bind_id": bind.pk}),
             content_type=APPLICATION_JSON,
         )
 
@@ -629,9 +606,7 @@ class TestService(BaseTestCase):
     def test_action_launch(self):
         with patch("api.action.views.create", return_value=Response(status=HTTP_201_CREATED)):
             self.client.post(
-                path=reverse(
-                    "run-task", kwargs={"service_id": self.service.pk, "action_id": self.action.pk}
-                )
+                path=reverse("run-task", kwargs={"service_id": self.service.pk, "action_id": self.action.pk})
             )
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
@@ -653,3 +628,83 @@ class TestService(BaseTestCase):
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
         self.check_action_log(log=log)
+
+    def test_change_maintenance_mode(self):
+        self.client.post(
+            path=reverse("service-maintenance-mode", kwargs={"service_id": self.service.pk}),
+            data={"maintenance_mode": MaintenanceMode.ON},
+        )
+
+        log: AuditLog = AuditLog.objects.order_by("operation_time").last()
+
+        self.check_log(
+            log=log,
+            obj=self.service,
+            obj_name=f"{self.cluster.name}/{self.service.display_name}",
+            operation_name="Service updated",
+            object_type=AuditObjectType.Service,
+            operation_type=AuditLogOperationType.Update,
+            operation_result=AuditLogOperationResult.Success,
+            user=self.test_user,
+        )
+
+    def test_change_maintenance_mode_via_cluster(self):
+        self.client.post(
+            path=reverse(
+                "service-maintenance-mode",
+                kwargs={"cluster_id": self.cluster.pk, "service_id": self.service.pk},
+            ),
+            data={"maintenance_mode": MaintenanceMode.ON},
+        )
+
+        log: AuditLog = AuditLog.objects.order_by("operation_time").last()
+
+        self.check_log(
+            log=log,
+            obj=self.service,
+            obj_name=f"{self.cluster.name}/{self.service.display_name}",
+            operation_name="Service updated",
+            object_type=AuditObjectType.Service,
+            operation_type=AuditLogOperationType.Update,
+            operation_result=AuditLogOperationResult.Success,
+            user=self.test_user,
+        )
+
+    def test_change_maintenance_mode_failed(self):
+        self.client.post(
+            path=reverse("service-maintenance-mode", kwargs={"service_id": self.service.pk}),
+            data={"maintenance_mode": MaintenanceMode.CHANGING},
+        )
+
+        log: AuditLog = AuditLog.objects.order_by("operation_time").last()
+
+        self.check_log(
+            log=log,
+            obj=self.service,
+            obj_name=f"{self.cluster.name}/{self.service.display_name}",
+            operation_name="Service updated",
+            object_type=AuditObjectType.Service,
+            operation_type=AuditLogOperationType.Update,
+            operation_result=AuditLogOperationResult.Fail,
+            user=self.test_user,
+        )
+
+    def test_change_maintenance_mode_denied(self):
+        with self.no_rights_user_logged_in:
+            self.client.post(
+                path=reverse("service-maintenance-mode", kwargs={"service_id": self.service.pk}),
+                data={"maintenance_mode": MaintenanceMode.ON},
+            )
+
+        log: AuditLog = AuditLog.objects.order_by("operation_time").last()
+
+        self.check_log(
+            log=log,
+            obj=self.service,
+            obj_name=f"{self.cluster.name}/{self.service.display_name}",
+            operation_name="Service updated",
+            object_type=AuditObjectType.Service,
+            operation_type=AuditLogOperationType.Update,
+            operation_result=AuditLogOperationResult.Denied,
+            user=self.no_rights_user,
+        )

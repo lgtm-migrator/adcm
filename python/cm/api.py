@@ -46,6 +46,7 @@ from cm.models import (
     Host,
     HostComponent,
     HostProvider,
+    MaintenanceMode,
     Prototype,
     PrototypeExport,
     PrototypeImport,
@@ -85,7 +86,14 @@ def check_proto_type(proto, check_type):
 
 
 def load_host_map():
-    hosts = list(Host.objects.values("id", "maintenance_mode"))
+    hosts = [
+        {
+            "id": host_data["id"],
+            "maintenance_mode": not host_data["maintenance_mode"] == MaintenanceMode.OFF,
+        }
+        for host_data in Host.objects.values("id", "maintenance_mode")
+    ]
+
     return cm.status_api.api_request("post", "/object/host/", hosts)
 
 
@@ -247,9 +255,7 @@ def add_host_to_cluster(cluster, host):
 
     cm.status_api.post_event("add", "host", host.id, "cluster", str(cluster.id))
     load_service_map()
-    logger.info(
-        "host #%s %s is added to cluster #%s %s", host.id, host.fqdn, cluster.id, cluster.name
-    )
+    logger.info("host #%s %s is added to cluster #%s %s", host.id, host.fqdn, cluster.id, cluster.name)
     return host
 
 
@@ -394,11 +400,11 @@ def delete_cluster(cluster, cancel_tasks=True):
     cluster_id = cluster.id
     hosts = cluster.host_set.all()
     host_ids = [str(host.id) for host in hosts]
-    hosts.update(maintenance_mode=False)
+    hosts.update(maintenance_mode=MaintenanceMode.OFF)
     logger.debug(
         "Deleting cluster #%s. Set `%s` maintenance mode value for `%s` hosts.",
         cluster_id,
-        False,
+        MaintenanceMode.OFF,
         ", ".join(host_ids),
     )
     cluster.delete()
@@ -414,7 +420,7 @@ def remove_host_from_cluster(host):
         return err("HOST_CONFLICT", f"Host #{host.id} has component(s)")
 
     with transaction.atomic():
-        host.maintenance_mode = False
+        host.maintenance_mode = MaintenanceMode.OFF
         host.cluster = None
         host.save()
         for group in cluster.group_config.all():
@@ -454,9 +460,7 @@ def add_service_to_cluster(cluster, proto):
             msg = '{} does not belong to bundle "{}" {}'
             err(
                 "SERVICE_CONFLICT",
-                msg.format(
-                    proto_ref(proto), cluster.prototype.bundle.name, cluster.prototype.version
-                ),
+                msg.format(proto_ref(proto), cluster.prototype.bundle.name, cluster.prototype.version),
             )
 
     with transaction.atomic():
@@ -470,9 +474,7 @@ def add_service_to_cluster(cluster, proto):
 
     cm.status_api.post_event("add", "service", cs.id, "cluster", str(cluster.id))
     load_service_map()
-    logger.info(
-        f"service #{cs.id} {cs.prototype.name} is added to cluster #{cluster.id} {cluster.name}"
-    )
+    logger.info(f"service #{cs.id} {cs.prototype.name} is added to cluster #{cluster.id} {cluster.name}")
 
     return cs
 
@@ -612,9 +614,7 @@ def check_hc(cluster, hc_in):
     check_sub_key(hc_in)
     host_comp_list = make_host_comp_list(cluster, hc_in)
     for service in ClusterObject.objects.filter(cluster=cluster):
-        cm.issue.check_component_constraint(
-            cluster, service.prototype, [i for i in host_comp_list if i[0] == service]
-        )
+        cm.issue.check_component_constraint(cluster, service.prototype, [i for i in host_comp_list if i[0] == service])
 
     cm.issue.check_component_requires(host_comp_list)
     cm.issue.check_bound_components(host_comp_list)
@@ -628,7 +628,7 @@ def check_maintenance_mode(cluster, host_comp_list):
         try:
             HostComponent.objects.get(cluster=cluster, service=service, host=host, component=comp)
         except HostComponent.DoesNotExist:
-            if host.maintenance_mode:
+            if host.maintenance_mode == MaintenanceMode.ON:
                 raise AdcmEx("INVALID_HC_HOST_IN_MM")  # pylint: disable=raise-missing-from
 
 
@@ -636,9 +636,7 @@ def still_existed_hc(cluster, host_comp_list):
     result = []
     for (service, host, comp) in host_comp_list:
         try:
-            existed_hc = HostComponent.objects.get(
-                cluster=cluster, service=service, host=host, component=comp
-            )
+            existed_hc = HostComponent.objects.get(cluster=cluster, service=service, host=host, component=comp)
             result.append(existed_hc)
         except HostComponent.DoesNotExist:
             continue
