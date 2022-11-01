@@ -115,7 +115,6 @@ def order_model_versions(model):
     ):
         if ver != obj.version:
             count += 1
-        # log.debug("MODEL %s count: %s, %s %s", model, count, obj.name, obj.version)
         obj.version_order = count
         ver = obj.version
     # Update all table in one time. That is much faster than one by one method
@@ -197,21 +196,21 @@ def load_adcm():
 
 
 def process_adcm():
-    sp = StagePrototype.objects.get(type="adcm")
+    adcm_stage_proto = StagePrototype.objects.get(type="adcm")
     adcm = ADCM.objects.filter()
     if adcm:
         old_proto = adcm[0].prototype
-        new_proto = sp
+        new_proto = adcm_stage_proto
         if old_proto.version == new_proto.version:
             logger.debug("adcm vesrion %s, skip upgrade", old_proto.version)
         elif rpm.compare_versions(old_proto.version, new_proto.version) < 0:
-            bundle = copy_stage("adcm", sp)
+            bundle = copy_stage("adcm", adcm_stage_proto)
             upgrade_adcm(adcm[0], bundle)
         else:
             msg = "Current adcm version {} is more than or equal to upgrade version {}"
             err("UPGRADE_ERROR", msg.format(old_proto.version, new_proto.version))
     else:
-        bundle = copy_stage("adcm", sp)
+        bundle = copy_stage("adcm", adcm_stage_proto)
         init_adcm(bundle)
 
 
@@ -276,15 +275,20 @@ def re_check_actions():
         hc = act.hostcomponentmap
         ref = f'in hc_acl of action "{act.name}" of {proto_ref(act.prototype)}'
         for item in hc:
-            sp = StagePrototype.objects.filter(type="service", name=item["service"]).first()
-            if not sp:
+            stage_proto = StagePrototype.objects.filter(
+                type="service", name=item["service"]
+            ).first()
+            if not stage_proto:
                 msg = 'Unknown service "{}" {}'
                 err("INVALID_ACTION_DEFINITION", msg.format(item["service"], ref))
             if not StagePrototype.objects.filter(
-                parent=sp, type="component", name=item["component"]
+                parent=stage_proto, type="component", name=item["component"]
             ):
                 msg = 'Unknown component "{}" of service "{}" {}'
-                err("INVALID_ACTION_DEFINITION", msg.format(item["component"], sp.name, ref))
+                err(
+                    "INVALID_ACTION_DEFINITION",
+                    msg.format(item["component"], stage_proto.name, ref),
+                )
 
 
 def check_component_requires(comp):
@@ -325,13 +329,10 @@ def re_check_components():
 
 
 def check_variant_host(args, ref):
-    # log.debug("check_variant_host args: %s", args)
     def check_predicate(predicate, args):
         if predicate == "in_service":
-            # log.debug("check in_service %s", args)
             StagePrototype.obj.get(type="service", name=args["service"])
         elif predicate == "in_component":
-            # log.debug("check in_component %s", args)
             service = StagePrototype.obj.get(type="service", name=args["service"])
             StagePrototype.obj.get(type="component", name=args["component"], parent=service)
 
@@ -399,7 +400,7 @@ def second_pass():
 def copy_stage_prototype(stage_prototypes, bundle):
     prototypes = []  # Map for stage prototype id: new prototype
     for sp in stage_prototypes:
-        p = copy_obj(
+        proto = copy_obj(
             sp,
             Prototype,
             (
@@ -418,8 +419,8 @@ def copy_stage_prototype(stage_prototypes, bundle):
                 "allow_maintenance_mode",
             ),
         )
-        p.bundle = bundle
-        prototypes.append(p)
+        proto.bundle = bundle
+        prototypes.append(proto)
     Prototype.objects.bulk_create(prototypes)
 
 
@@ -561,9 +562,11 @@ def copy_stage_component(stage_components, stage_proto, prototype, bundle):
         componets.append(comp)
     Prototype.objects.bulk_create(componets)
     for sp in StagePrototype.objects.filter(type="component", parent=stage_proto):
-        p = Prototype.objects.get(name=sp.name, type="component", parent=prototype, bundle=bundle)
-        copy_stage_actions(StageAction.objects.filter(prototype=sp), p)
-        copy_stage_config(StagePrototypeConfig.objects.filter(prototype=sp), p)
+        proto = Prototype.objects.get(
+            name=sp.name, type="component", parent=prototype, bundle=bundle
+        )
+        copy_stage_actions(StageAction.objects.filter(prototype=sp), proto)
+        copy_stage_config(StagePrototypeConfig.objects.filter(prototype=sp), proto)
 
 
 def copy_stage_import(stage_imports, prototype):
@@ -612,8 +615,7 @@ def copy_stage_config(stage_config, prototype):
 
 
 def check_license(bundle):
-    b = Bundle.objects.filter(license_hash=bundle.license_hash, license="accepted")
-    if not b:
+    if not Bundle.objects.filter(license_hash=bundle.license_hash, license="accepted").exists():
         return False
     return True
 
@@ -641,16 +643,16 @@ def copy_stage(bundle_hash, bundle_proto):
     copy_stage_prototype(stage_prototypes, bundle)
 
     for sp in stage_prototypes:
-        p = Prototype.objects.get(name=sp.name, type=sp.type, bundle=bundle)
-        copy_stage_actions(StageAction.objects.filter(prototype=sp), p)
-        copy_stage_config(StagePrototypeConfig.objects.filter(prototype=sp), p)
+        proto = Prototype.objects.get(name=sp.name, type=sp.type, bundle=bundle)
+        copy_stage_actions(StageAction.objects.filter(prototype=sp), proto)
+        copy_stage_config(StagePrototypeConfig.objects.filter(prototype=sp), proto)
         copy_stage_component(
-            StagePrototype.objects.filter(parent=sp, type="component"), sp, p, bundle
+            StagePrototype.objects.filter(parent=sp, type="component"), sp, proto, bundle
         )
         for se in StagePrototypeExport.objects.filter(prototype=sp):
-            pe = PrototypeExport(prototype=p, name=se.name)
+            pe = PrototypeExport(prototype=proto, name=se.name)
             pe.save()
-        copy_stage_import(StagePrototypeImport.objects.filter(prototype=sp), p)
+        copy_stage_import(StagePrototypeImport.objects.filter(prototype=sp), proto)
 
     copy_stage_sub_actons(bundle)
     copy_stage_upgrade(StageUpgrade.objects.all(), bundle)

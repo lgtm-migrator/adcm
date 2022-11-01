@@ -241,7 +241,6 @@ def get_service(service_id):
         "id",
         "prototype",
         "prototype__name",
-        # "service",  # TODO: you need to remove the field from the ClusterObject model
         "config",
         "state",
         "_multi_state",
