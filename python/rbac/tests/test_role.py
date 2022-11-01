@@ -29,6 +29,7 @@ from cm.models import (
     ClusterObject,
     Host,
     HostProvider,
+    MaintenanceMode,
     ProductCategory,
     Prototype,
     ServiceComponent,
@@ -639,14 +640,14 @@ class TestMMRoles(RBACBaseTestCase):
         check_custom_perm(
             self.test_user, "change_maintenance_mode", self.host._meta.model_name, self.host
         )
-        # self.host.refresh_from_db()
-        # response = self.client.patch(
-        #     path=reverse("host-details", kwargs={'host_id': self.host.pk}),
-        #     data={"maintenance_mode": not self.host.maintenance_mode},
-        #     format="json",
-        #     content_type=APPLICATION_JSON,
-        # )
-        # self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(
+            path=reverse("host-maintenance-mode", kwargs={'host_id': self.host.pk}),
+            data={"maintenance_mode": MaintenanceMode.ON},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
 
     def test_mm_cluster_role(self):
         policy_create(
@@ -668,34 +669,31 @@ class TestMMRoles(RBACBaseTestCase):
             self.test_user, "change_maintenance_mode", self.service._meta.model_name, self.service
         )
 
-        # self.host.refresh_from_db()
-        # response = self.client.patch(
-        #     path=reverse("host-details", kwargs={'host_id': self.host.pk}),
-        #     data={"maintenance_mode": not self.host.maintenance_mode},
-        #     format="json",
-        #     content_type=APPLICATION_JSON,
-        # )
-        # self.assertEqual(response.status_code, 200)
-        #
-        # self.component.refresh_from_db()
-        # response = self.client.patch(
-        #     path=reverse("component-details", kwargs={'component_id': self.component.pk}),
-        #     data={"maintenance_mode": not self.component.maintenance_mode},
-        #     format="json",
-        #     content_type=APPLICATION_JSON,
-        # )
-        # self.assertEqual(response.status_code, 200)
-        #
-        # self.service.refresh_from_db()
-        # response = self.client.patch(
-        #     path=reverse("service-details", kwargs={'service_id': self.service.pk}),
-        #     data={"maintenance_mode": not self.service.maintenance_mode},
-        #     format="json",
-        #     content_type=APPLICATION_JSON,
-        # )
-        # self.assertEqual(response.status_code, 200)
+        response = self.client.post(
+            path=reverse("host-maintenance-mode", kwargs={'host_id': self.host.pk}),
+            data={"maintenance_mode": MaintenanceMode.ON},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
 
-    def test_cl_adm_mm_role(self):
+        response = self.client.post(
+            path=reverse("component-maintenance-mode", kwargs={'component_id': self.component.pk}),
+            data={"maintenance_mode": MaintenanceMode.ON},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(
+            path=reverse("service-maintenance-mode", kwargs={'service_id': self.service.pk}),
+            data={"maintenance_mode": MaintenanceMode.ON},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_mm_cl_adm_role(self):
         policy_create(
             name="mm cluster policy",
             object=[self.cluster],
@@ -715,29 +713,26 @@ class TestMMRoles(RBACBaseTestCase):
             self.test_user, "change_maintenance_mode", self.service._meta.model_name, self.service
         )
 
-        # self.host.refresh_from_db()
-        # response = self.client.patch(
-        #     path=reverse("host-details", kwargs={'host_id': self.host.pk}),
-        #     data={"maintenance_mode": not self.host.maintenance_mode},
-        #     format="json",
-        #     content_type=APPLICATION_JSON,
-        # )
-        # self.assertEqual(response.status_code, 200)
-        #
-        # self.component.refresh_from_db()
-        # response = self.client.patch(
-        #     path=reverse("component-details", kwargs={'component_id': self.component.pk}),
-        #     data={"maintenance_mode": not self.component.maintenance_mode},
-        #     format="json",
-        #     content_type=APPLICATION_JSON,
-        # )
-        # self.assertEqual(response.status_code, 200)
-        #
-        # self.service.refresh_from_db()
-        # response = self.client.patch(
-        #     path=reverse("service-details", kwargs={'service_id': self.service.pk}),
-        #     data={"maintenance_mode": not self.service.maintenance_mode},
-        #     format="json",
-        #     content_type=APPLICATION_JSON,
-        # )
-        # self.assertEqual(response.status_code, 200)
+        response = self.client.post(
+            path=reverse("host-maintenance-mode", kwargs={'host_id': self.host.pk}),
+            data={"maintenance_mode": MaintenanceMode.ON},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(
+            path=reverse("component-maintenance-mode", kwargs={'component_id': self.component.pk}),
+            data={"maintenance_mode": MaintenanceMode.ON},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(
+            path=reverse("service-maintenance-mode", kwargs={'service_id': self.service.pk}),
+            data={"maintenance_mode": MaintenanceMode.ON},
+            format="json",
+            content_type=APPLICATION_JSON,
+        )
+        self.assertEqual(response.status_code, 200)
