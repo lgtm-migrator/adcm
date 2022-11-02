@@ -15,6 +15,26 @@
 from django.db import migrations, models
 
 
+def migrate_host_maintenance_mode(apps, schema_editor):
+    host_model = apps.get_model("cm", "Host")
+
+    host_model.objects.filter(maintenance_mode="on").update(maintenance_mode="ON")
+    host_model.objects.filter(maintenance_mode="off").update(maintenance_mode="OFF")
+    host_model.objects.filter(maintenance_mode="disabled").update(maintenance_mode="OFF")
+
+
+def migrate_host_maintenance_mode_reverse(apps, schema_editor):
+    host_model = apps.get_model("cm", "Host")
+
+    host_model.objects.filter(maintenance_mode="ON").update(maintenance_mode="on")
+    host_model.objects.filter(maintenance_mode="OFF", cluster__prototype__allow_maintenance_mode=True).update(
+        maintenance_mode="off"
+    )
+    host_model.objects.filter(maintenance_mode="OFF", cluster__prototype__allow_maintenance_mode=False).update(
+        maintenance_mode="disabled"
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -57,4 +77,5 @@ class Migration(migrations.Migration):
                 max_length=64,
             ),
         ),
+        migrations.RunPython(code=migrate_host_maintenance_mode, reverse_code=migrate_host_maintenance_mode_reverse),
     ]
