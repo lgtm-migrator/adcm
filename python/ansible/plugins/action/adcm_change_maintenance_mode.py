@@ -72,7 +72,7 @@ class ActionModule(ActionBase):
         if not self._task.args.get("type"):
             raise AnsibleActionFail('"type" option is required')
 
-        if not self._task.args.get("value"):
+        if self._task.args.get("value") is None:
             raise AnsibleActionFail('"value" option is required')
 
         if self._task.args["type"] not in type_choices:
