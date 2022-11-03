@@ -273,7 +273,7 @@ def get_host_groups(cluster: Cluster, delta: dict, action_host: Host | None = No
             for fqdn in delta[htype][key]:
                 host = delta[htype][key][fqdn]
                 # TODO: What is `delta`? Need calculate delta for group_config?
-                if not host.maintenance_mode:
+                if host.maintenance_mode != MaintenanceMode.ON:
                     groups[lkey]["hosts"][host.fqdn] = get_obj_config(host)
 
     return groups
