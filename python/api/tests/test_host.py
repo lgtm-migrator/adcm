@@ -37,10 +37,16 @@ class TestHostAPI(BaseTestCase):
         super().setUp()
 
         self.bundle = Bundle.objects.create()
+        self.cluster_prototype = Prototype.objects.create(
+            bundle=self.bundle, type="cluster", allow_maintenance_mode=True
+        )
+        cluster = Cluster.objects.create(name="test_cluster", prototype=self.cluster_prototype)
+
         self.host_prototype = Prototype.objects.create(bundle=self.bundle, type="host")
         self.host = Host.objects.create(
             fqdn="test_host_fqdn",
             prototype=self.host_prototype,
+            cluster=cluster,
         )
 
     def test_change_maintenance_mode_wrong_name_fail(self):
@@ -181,7 +187,7 @@ class TestHostAPI(BaseTestCase):
             ),
         )
 
-        self.upload_and_load_bundle(
+        cluster_bundle = self.upload_and_load_bundle(
             path=Path(
                 settings.BASE_DIR,
                 "python/api/tests/files/bundle_test_cluster_with_mm.tar",
@@ -203,7 +209,7 @@ class TestHostAPI(BaseTestCase):
 
         self.assertTrue(host.concerns.exists())
 
-        cluster_prototype = Prototype.objects.filter(type="cluster").first()
+        cluster_prototype = Prototype.objects.get(bundle_id=cluster_bundle.pk, type="cluster")
         cluster_response: Response = self.client.post(
             path=reverse("cluster"),
             data={"name": "test-cluster", "prototype_id": cluster_prototype.pk},
@@ -240,3 +246,25 @@ class TestHostAPI(BaseTestCase):
         )
 
         self.assertFalse(cluster.concerns.exists())
+
+    def test_maintenance_mode_constraint_by_no_cluster_fail(self):
+        self.host.cluster = None
+        self.host.save(update_fields=["cluster"])
+
+        response: Response = self.client.post(
+            path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+            data={"maintenance_mode": MaintenanceMode.ON},
+        )
+
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
+
+    def test_maintenance_mode_constraint_by_cluster_without_maintenance_mode_fail(self):
+        self.cluster_prototype.allow_maintenance_mode = False
+        self.cluster_prototype.save(update_fields=["allow_maintenance_mode"])
+
+        response: Response = self.client.post(
+            path=reverse("host-maintenance-mode", kwargs={"host_id": self.host.pk}),
+            data={"maintenance_mode": MaintenanceMode.ON},
+        )
+
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
