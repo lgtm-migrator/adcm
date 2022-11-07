@@ -145,6 +145,25 @@ class TestBundle(BaseTestCase):
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
         self.assertEqual(response.data["code"], "INVALID_OBJECT_DEFINITION")
 
+    def test_load_bundle_cluster_with_host_mm_has_ui_options_fail(self):
+        bundle_filename = "bundle_test_cluster_action_with_ui_options.tar"
+
+        self.upload_bundle(
+            Path(
+                settings.BASE_DIR,
+                "python/api/tests/files",
+                bundle_filename,
+            )
+        )
+
+        response: Response = self.client.post(
+            path=reverse("load-bundle"),
+            data={"bundle_file": bundle_filename},
+        )
+
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
+        self.assertEqual(response.data["code"], "INVALID_OBJECT_DEFINITION")
+
     def test_load_servicemap(self):
         with patch("api.stack.views.load_service_map"):
             response: Response = self.client.put(
