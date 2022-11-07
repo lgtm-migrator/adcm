@@ -45,8 +45,12 @@ EXAMPLES = r"""
     value: False
 """
 
+import sys
+
 from ansible.errors import AnsibleActionFail
 from ansible.plugins.action import ActionBase
+
+sys.path.append("/adcm/python")
 
 import adcm.init_django  # pylint: disable=unused-import
 from cm.ansible_plugin import get_object_id_from_context
