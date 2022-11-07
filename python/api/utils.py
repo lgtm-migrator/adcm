@@ -12,6 +12,7 @@
 
 from typing import List
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.http.request import QueryDict
 from django_filters import rest_framework as drf_filters
@@ -166,21 +167,18 @@ def fix_ordering(field, view):
 
 
 def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, serializer: Serializer) -> Response:
-    turn_on_action_name = "turn_on_maintenance_mode"
-    turn_off_action_name = "turn_off_maintenance_mode"
+    turn_on_action_name = settings.ADCM_TURN_ON_MM_ACTION_NAME
+    turn_off_action_name = settings.ADCM_TURN_OFF_MM_ACTION_NAME
     if isinstance(obj, Host):
         obj_name = "host"
-        turn_on_action_name = f"{obj_name}_turn_on_maintenance_mode"
-        turn_off_action_name = f"{obj_name}_turn_off_maintenance_mode"
+        turn_on_action_name = settings.ADCM_HOST_TURN_ON_MM_ACTION_NAME
+        turn_off_action_name = settings.ADCM_HOST_TURN_OFF_MM_ACTION_NAME
     elif isinstance(obj, ClusterObject):
         obj_name = "service"
     elif isinstance(obj, ServiceComponent):
         obj_name = "component"
     else:
         obj_name = "obj"
-
-    turn_on_action_name = f"adcm_{turn_on_action_name}"
-    turn_off_action_name = f"adcm_{turn_off_action_name}"
 
     if obj.maintenance_mode == MaintenanceMode.CHANGING:
         return Response(

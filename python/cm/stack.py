@@ -64,7 +64,7 @@ def cook_obj_id(conf):
 def save_object_definition(path, fname, conf, obj_list, bundle_hash, adcm_=False):
     def_type = conf["type"]
     if def_type == "adcm" and not adcm_:
-        return err("INVALID_OBJECT_DEFINITION", f"Invalid type \"{def_type}\" in object definition: {fname}")
+        return err("INVALID_OBJECT_DEFINITION", f'Invalid type "{def_type}" in object definition: {fname}')
 
     check_object_definition(fname, conf, def_type, obj_list)
     obj = save_prototype(path, conf, def_type, bundle_hash)
@@ -358,7 +358,7 @@ def save_export(proto, conf):
 
     for key in export:
         if not StagePrototypeConfig.objects.filter(prototype=proto, name=key):
-            err("INVALID_OBJECT_DEFINITION", f"{ref} does not has \"{key}\" config group")
+            err("INVALID_OBJECT_DEFINITION", f'{ref} does not has "{key}" config group')
 
         se = StagePrototypeExport(prototype=proto, name=key)
         se.save()
@@ -553,15 +553,15 @@ def is_group(conf):
 
 def get_yspec(proto, ref, bundle_hash, conf, name, subname):
     schema = None
-    yspec_body = read_bundle_file(proto, conf["yspec"], bundle_hash, f"yspec file of config key \"{name}/{subname}\":")
+    yspec_body = read_bundle_file(proto, conf["yspec"], bundle_hash, f'yspec file of config key "{name}/{subname}":')
     try:
         schema = yaml.safe_load(yspec_body)
     except (yaml.parser.ParserError, yaml.scanner.ScannerError) as e:
-        err("CONFIG_TYPE_ERROR", f"yspec file of config key \"{name}/{subname}\" yaml decode error: {e}")
+        err("CONFIG_TYPE_ERROR", f'yspec file of config key "{name}/{subname}" yaml decode error: {e}')
 
     ok, error = yspec.checker.check_rule(schema)
     if not ok:
-        err("CONFIG_TYPE_ERROR", f"yspec file of config key \"{name}/{subname}\" error: {error}")
+        err("CONFIG_TYPE_ERROR", f'yspec file of config key "{name}/{subname}" error: {error}')
 
     return schema
 
