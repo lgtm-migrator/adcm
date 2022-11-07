@@ -12,6 +12,7 @@
 
 from itertools import compress
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from guardian.mixins import PermissionListMixin
 from rest_framework.exceptions import PermissionDenied
@@ -72,7 +73,9 @@ class ActionList(PermissionListMixin, GenericUIView):
                         filter_actions(
                             connect_obj,
                             self.filter_queryset(
-                                self.get_queryset().filter(prototype=connect_obj.prototype, host_action=True)
+                                self.get_queryset()
+                                .filter(prototype=connect_obj.prototype, host_action=True)
+                                .exclude(name__in=settings.ADCM_MM_ACTION_NAMES_SET)
                             ),
                         )
                     )
