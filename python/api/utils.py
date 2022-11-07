@@ -179,6 +179,9 @@ def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, 
     else:
         obj_name = "obj"
 
+    turn_on_action_name = f"adcm_{turn_on_action_name}"
+    turn_off_action_name = f"adcm_{turn_off_action_name}"
+
     if obj.maintenance_mode == MaintenanceMode.CHANGING:
         return Response(
             data={"error": f"{obj_name.capitalize()} maintenance mode is changing now"},
