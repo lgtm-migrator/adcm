@@ -16,10 +16,21 @@ from adcm_client.objects import ADCMClient, Bundle, Cluster, Component, Host, Se
 
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.maintenance_mode.conftest import BUNDLES_DIR, MM_IS_OFF, MM_IS_ON, check_mm_is
+from tests.functional.tools import AnyADCMObject, get_object_represent
+from tests.library.assertions import does_not_intersect
 
 # pylint: disable=redefined-outer-name
 
 pytestmark = [only_clean_adcm]
+
+MM_CHANGE_RELATED_ACTION_NAMES = frozenset(
+    {
+        "host_turn_on_maintenance_mode",
+        "host_turn_off_maintenance_mode",
+        "turn_on_maintenance_mode",
+        "turn_off_maintenance_mode",
+    }
+)
 
 
 @pytest.fixture()
@@ -66,6 +77,10 @@ def test_changing_mm_via_plugin(  # pylint: disable=too-many-arguments
     service, component_with_plugin, component_wo_plugin, *another_service_objects = first_cluster_objects
     hosts = *first_cluster_hosts, *second_cluster_hosts
 
+    check_mm_related_actions_are_absent_on(
+        service.cluster(), *first_cluster_objects, second_cluster_objects[0].cluster(), *second_cluster_objects, *hosts
+    )
+
     with allure.step("Change service's MM to 'ON' with action bond to it"):
         api_client.service.change_maintenance_mode(service.id, MM_IS_ON).check_code(200)
         _wait_all_tasks_succeed(sdk_client_fs, 1)
@@ -87,6 +102,10 @@ def test_changing_mm_via_plugin(  # pylint: disable=too-many-arguments
         api_client.component.change_maintenance_mode(component_with_plugin.id, MM_IS_OFF).check_code(200)
         _wait_all_tasks_succeed(sdk_client_fs, 4)
         check_mm_is(MM_IS_OFF, *first_cluster_objects, *second_cluster_objects, *hosts)
+
+    check_mm_related_actions_are_absent_on(
+        service.cluster(), *first_cluster_objects, second_cluster_objects[0].cluster(), *second_cluster_objects, *hosts
+    )
 
 
 def test_changing_host_mm_via_plugin(  # pylint: disable=too-many-arguments,too-many-locals
@@ -141,6 +160,17 @@ def test_changing_host_mm_via_plugin(  # pylint: disable=too-many-arguments,too-
         api_client.host.change_maintenance_mode(host_1.id, MM_IS_OFF).check_code(200)
         _wait_all_tasks_succeed(sdk_client_fs, 6)
         check_mm_is(MM_IS_OFF, *first_cluster_hosts, *first_cluster_objects, *second_objects)
+
+
+@allure.step("Check MM related actions are not shown in actions list")
+def check_mm_related_actions_are_absent_on(*adcm_objects: AnyADCMObject) -> None:
+    for adcm_object in adcm_objects:
+        action_names = {action.name for action in adcm_object.action_list()}
+        does_not_intersect(
+            action_names,
+            MM_CHANGE_RELATED_ACTION_NAMES,
+            f"One or more MM related actions are visible in actions list of {get_object_represent(adcm_object)}",
+        )
 
 
 @allure.step("Check amount of jobs is {expected_amount} and all tasks finish successfully")
