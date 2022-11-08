@@ -207,8 +207,8 @@ def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, 
             )
             serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
 
-            if isinstance(obj, Host):
-                update_hierarchy_issues(obj.provider)
+        if isinstance(obj, Host):
+            update_hierarchy_issues(obj.provider)
 
         serializer.save()
         update_hierarchy_issues(obj.cluster)
@@ -234,8 +234,8 @@ def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, 
             )
             serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
 
-            if isinstance(obj, Host):
-                update_hierarchy_issues(obj.provider)
+        if isinstance(obj, Host):
+            update_hierarchy_issues(obj.provider)
 
         serializer.save()
         update_hierarchy_issues(obj.cluster)
