@@ -207,10 +207,10 @@ def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, 
             )
             serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
 
+        serializer.save()
         if isinstance(obj, Host):
             update_hierarchy_issues(obj.provider)
 
-        serializer.save()
         update_hierarchy_issues(obj.cluster)
         update_issue_after_deleting()
         load_host_map()
@@ -234,10 +234,10 @@ def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, 
             )
             serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
 
+        serializer.save()
         if isinstance(obj, Host):
             update_hierarchy_issues(obj.provider)
 
-        serializer.save()
         update_hierarchy_issues(obj.cluster)
         load_host_map()
 
