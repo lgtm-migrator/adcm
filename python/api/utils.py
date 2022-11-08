@@ -167,6 +167,8 @@ def fix_ordering(field, view):
 
 
 def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, serializer: Serializer) -> Response:
+    # pylint: disable=too-many-branches
+
     turn_on_action_name = settings.ADCM_TURN_ON_MM_ACTION_NAME
     turn_off_action_name = settings.ADCM_TURN_OFF_MM_ACTION_NAME
     prototype = obj.prototype
@@ -205,6 +207,9 @@ def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, 
             )
             serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
 
+            if isinstance(obj, Host):
+                update_hierarchy_issues(obj.provider)
+
         serializer.save()
         update_hierarchy_issues(obj.cluster)
         update_issue_after_deleting()
@@ -228,6 +233,9 @@ def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, 
                 verbose=False,
             )
             serializer.validated_data["maintenance_mode"] = MaintenanceMode.CHANGING
+
+            if isinstance(obj, Host):
+                update_hierarchy_issues(obj.provider)
 
         serializer.save()
         update_hierarchy_issues(obj.cluster)
