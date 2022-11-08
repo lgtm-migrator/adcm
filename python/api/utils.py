@@ -169,10 +169,12 @@ def fix_ordering(field, view):
 def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, serializer: Serializer) -> Response:
     turn_on_action_name = settings.ADCM_TURN_ON_MM_ACTION_NAME
     turn_off_action_name = settings.ADCM_TURN_OFF_MM_ACTION_NAME
+    prototype = obj.prototype
     if isinstance(obj, Host):
         obj_name = "host"
         turn_on_action_name = settings.ADCM_HOST_TURN_ON_MM_ACTION_NAME
         turn_off_action_name = settings.ADCM_HOST_TURN_OFF_MM_ACTION_NAME
+        prototype = obj.cluster.prototype
     elif isinstance(obj, ClusterObject):
         obj_name = "service"
     elif isinstance(obj, ServiceComponent):
@@ -190,7 +192,7 @@ def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, 
         if serializer.validated_data["maintenance_mode"] == MaintenanceMode.OFF:
             return Response()
 
-        turn_on_action = Action.objects.filter(prototype=obj.prototype, name=turn_on_action_name).first()
+        turn_on_action = Action.objects.filter(prototype=prototype, name=turn_on_action_name).first()
         if turn_on_action:
             start_task(
                 action=turn_on_action,
@@ -214,7 +216,7 @@ def get_maintenance_mode_response(obj: Host | ClusterObject | ServiceComponent, 
         if serializer.validated_data["maintenance_mode"] == MaintenanceMode.ON:
             return Response()
 
-        turn_off_action = Action.objects.filter(prototype=obj.prototype, name=turn_off_action_name).first()
+        turn_off_action = Action.objects.filter(prototype=prototype, name=turn_off_action_name).first()
         if turn_off_action:
             start_task(
                 action=turn_off_action,
