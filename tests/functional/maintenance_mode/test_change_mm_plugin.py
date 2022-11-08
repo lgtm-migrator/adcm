@@ -25,10 +25,10 @@ pytestmark = [only_clean_adcm]
 
 MM_CHANGE_RELATED_ACTION_NAMES = frozenset(
     {
-        "host_turn_on_maintenance_mode",
-        "host_turn_off_maintenance_mode",
-        "turn_on_maintenance_mode",
-        "turn_off_maintenance_mode",
+        "adcm_host_turn_on_maintenance_mode",
+        "adcm_host_turn_off_maintenance_mode",
+        "adcm_turn_on_maintenance_mode",
+        "adcm_turn_off_maintenance_mode",
     }
 )
 
@@ -114,7 +114,8 @@ def test_changing_host_mm_via_plugin(  # pylint: disable=too-many-arguments,too-
     """
     Test changing MM flag of host via bonded action with MM changing plugin call
     """
-    first_cluster_hosts, *_ = host_1, host_2, host_3, *_ = hosts
+    host_1, host_2, host_3, *_ = hosts
+    first_cluster_hosts = host_1, host_2, host_3
     second_objects = *second_cluster_objects, *second_cluster_hosts
 
     with allure.step("Check that MM of host outside of cluster can't be changed via bonded action"):
