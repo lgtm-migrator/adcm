@@ -29,14 +29,14 @@ import { BaseDirective } from '@app/shared/directives';
 export class LoginComponent extends BaseDirective implements OnInit, OnDestroy {
   authForm = new FormGroup({ login: new FormControl('', Validators.required), password: new FormControl('', Validators.required) });
   message: string;
-  checkGL$: Observable<any>;
+  checkSocials$: Observable<any>;
 
   constructor(private auth: AuthService, private router: Router, private store: Store<AuthState>, private route: ActivatedRoute) {
     super();
   }
 
   ngOnInit() {
-    this.checkGL$ = this.auth.checkGoogle();
+    this.checkSocials$ = this.auth.checkSocials();
     this.store.dispatch(authLogout());
 
     const a$ = this.store
@@ -70,5 +70,9 @@ export class LoginComponent extends BaseDirective implements OnInit, OnDestroy {
 
   google() {
     window.location.href = '/social/login/google-oauth2/';
+  }
+
+  yandex() {
+    window.location.href = '/social/login/yandex-oauth2/';
   }
 }

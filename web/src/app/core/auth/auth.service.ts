@@ -16,6 +16,12 @@ import { catchError, map, tap } from 'rxjs/operators';
 
 import { ApiService } from '../api';
 
+interface AuthInfo {
+  adcm_version: string;
+  google_oauth: boolean;
+  yandex_oauth: boolean;
+}
+
 @Injectable()
 export class AuthService {
   public get token(): string {
@@ -35,8 +41,8 @@ export class AuthService {
 
   constructor(private api: ApiService) {}
 
-  checkGoogle() {
-    return this.api.get<{ google_oauth: boolean }>(`${environment.apiRoot}info/`).pipe(map(a => a.google_oauth));
+  checkSocials(): Observable<any> {
+    return this.api.get<AuthInfo>(`${environment.apiRoot}info/`).pipe(map(response => ({ yandex_oauth: response['yandex_oauth'], google_oauth: response['google_oauth'] })));
   }
 
   login(login: string, password: string): Observable<{ token: string }> {

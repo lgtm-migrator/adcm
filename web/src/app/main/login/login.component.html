@@ -1,11 +1,13 @@
 <div [style.height.px]="100"></div>
-<div class="container" [formGroup]="authForm">
-  <div *ngIf="checkGL$ | async; else form" class="double-auth">
+<div class="container" *ngIf="checkSocials$ | async; let social;" [formGroup]="authForm">
+  <div *ngIf="social.yandex_oauth || social.google_oauth; else form" class="double-auth">
     <div class="social">
-      <button mat-raised-button class="google-auth" color="primary" (click)="google()">
-        <svg>
-          <use xlink:href="assets/google_icons.svg#btn_google_dark_normal_ios"></use>
-        </svg>
+      <button *ngIf="social?.yandex_oauth" mat-raised-button class="yandex-auth" color="primary" (click)="yandex()">
+        <svg></svg>
+        <span>Sign in with Yandex</span>
+      </button>
+      <button *ngIf="social?.google_oauth" mat-raised-button class="google-auth" color="primary" (click)="google()">
+        <svg></svg>
         <span>Sign in with Google</span>
       </button>
     </div>
