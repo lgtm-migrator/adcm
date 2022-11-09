@@ -11,7 +11,10 @@
 // limitations under the License.
 package status
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type Status struct {
 	Status  int `json:"status"`
@@ -65,35 +68,42 @@ type Storage struct {
 
 // maintenance mode objects
 
-type MMObjects struct {
+type MMObjectsData struct {
 	Hosts      []int `json:"hosts"`
 	Services   []int `json:"services"`
 	Components []int `json:"components"`
 }
 
-func newMMObjects() *MMObjects {
-	return &MMObjects{}
+type MMObjects struct {
+	data  MMObjectsData
+	mutex sync.Mutex
 }
 
-func (mm *MMObjects) merge(data MMObjects) {
+func newMMObjects() *MMObjects {
+	return &MMObjects{
+		data: MMObjectsData{},
+	}
+}
+
+func (mm *MMObjects) merge(data MMObjectsData) {
 	for _, id := range data.Hosts {
-		if !IntSliceContains(mm.Hosts, id) {
-			mm.Hosts = append(mm.Hosts, id)
+		if !IntSliceContains(mm.data.Hosts, id) {
+			mm.data.Hosts = append(mm.data.Hosts, id)
 		}
 	}
 	for _, id := range data.Services {
-		if !IntSliceContains(mm.Services, id) {
-			mm.Services = append(mm.Services, id)
+		if !IntSliceContains(mm.data.Services, id) {
+			mm.data.Services = append(mm.data.Services, id)
 		}
 	}
 	for _, id := range data.Components {
-		if !IntSliceContains(mm.Components, id) {
-			mm.Components = append(mm.Components, id)
+		if !IntSliceContains(mm.data.Components, id) {
+			mm.data.Components = append(mm.data.Components, id)
 		}
 	}
 }
 
-func (mm *MMObjects) remove(data MMObjects) {
+func (mm *MMObjects) remove(data MMObjectsData) {
 	return // TODO
 }
 
