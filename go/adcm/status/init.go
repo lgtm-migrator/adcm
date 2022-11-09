@@ -42,7 +42,7 @@ func Start(secrets *SecretConfig, logFile string, logLevel string) {
 	initLog(logFile, logLevel)
 	initSignal()
 
-    hub.MMObjects = newMMObjects()
+	hub.MMObjects = newMMObjects()
 
 	hub.HostComponentStorage = newStorage(dbMap2{}, "HostComponent")
 	go hub.HostComponentStorage.run()
