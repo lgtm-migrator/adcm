@@ -63,6 +63,49 @@ type Storage struct {
 	label   string
 }
 
+// maintenance mode objects
+
+type MMObjects struct {
+	Hosts      []int `json:"hosts"`
+	Services   []int `json:"services"`
+	Components []int `json:"components"`
+}
+
+func newMMObjects() *MMObjects{
+    return &MMObjects{}
+}
+
+func (mm *MMObjects) merge(data MMObjects) {
+    for _, id := range data.Hosts {
+        if !IntSliceContains(mm.Hosts, id) {
+            mm.Hosts = append(mm.Hosts, id)
+        }
+    }
+    for _, id := range data.Services {
+        if !IntSliceContains(mm.Services, id) {
+            mm.Services = append(mm.Services, id)
+        }
+    }
+    for _, id := range data.Components {
+        if !IntSliceContains(mm.Components, id) {
+            mm.Components = append(mm.Components, id)
+        }
+    }
+}
+
+func (mm *MMObjects) remove(data MMObjects) {
+    return  // TODO
+}
+
+func IntSliceContains(a []int, x int) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}
+
 // Server
 
 func newStorage(db dbStorage, label string) *Storage {

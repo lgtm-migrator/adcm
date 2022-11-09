@@ -422,6 +422,23 @@ func postServiceMap(h Hub, w http.ResponseWriter, r *http.Request) {
 	// h.ServiceStorage.pure()
 }
 
+func postMMObjects(h Hub, w http.ResponseWriter, r *http.Request) {
+    allow(w, "POST")
+    var mmObjects MMObjects
+	_, err := decodeBody(w, r, &mmObjects)
+	if err != nil {
+		ErrOut4(w, r, "JSON_ERROR", err.Error())
+		return
+	}
+	h.MMObjects.merge(mmObjects)
+}
+
+// debug purposes
+func getMMObjects(h Hub, w http.ResponseWriter, r *http.Request) {
+    allow(w, "GET")
+    jsonOut(w, r, h.MMObjects)
+}
+
 // Helpers
 
 func getGet(r *http.Request, key string) (string, bool) {
