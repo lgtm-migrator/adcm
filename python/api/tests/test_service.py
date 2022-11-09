@@ -15,7 +15,12 @@ from unittest.mock import patch
 from django.conf import settings
 from django.urls import reverse
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_409_CONFLICT,
+)
 
 from adcm.tests.base import BaseTestCase
 from cm.models import Action, Bundle, Cluster, ClusterObject, MaintenanceMode, Prototype
@@ -156,3 +161,21 @@ class TestServiceAPI(BaseTestCase):
 
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
         self.assertEqual(response.data["error"], "Service maintenance mode is changing now")
+
+    def test_delete_without_action(self):
+        response: Response = self.client.delete(path=reverse("service-details", kwargs={"service_id": self.service.pk}))
+
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+
+    def test_delete_with_action(self):
+        action = Action.objects.create(prototype=self.service.prototype, name=settings.ADCM_DELETE_SERVICE_ACTION_NAME)
+
+        with patch("api.service.views.delete_service"), patch("api.service.views.start_task") as start_task_mock:
+            response: Response = self.client.delete(
+                path=reverse("service-details", kwargs={"service_id": self.service.pk})
+            )
+
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+        start_task_mock.assert_called_once_with(
+            action=action, obj=self.service, conf={}, attr={}, hc=[], hosts=[], verbose=False
+        )

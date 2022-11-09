@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from django.conf import settings
 from guardian.mixins import PermissionListMixin
 from rest_framework import permissions
 from rest_framework.request import Request
@@ -41,7 +42,15 @@ from api.utils import (
 from audit.utils import audit
 from cm.api import delete_service, get_import, unbind
 from cm.errors import raise_adcm_ex
-from cm.models import Cluster, ClusterBind, ClusterObject, HostComponent, Prototype
+from cm.job import start_task
+from cm.models import (
+    Action,
+    Cluster,
+    ClusterBind,
+    ClusterObject,
+    HostComponent,
+    Prototype,
+)
 from cm.status_api import make_ui_service_status
 from rbac.viewsets import DjangoOnlyObjectPermissions
 
@@ -103,6 +112,20 @@ class ServiceDetailView(PermissionListMixin, DetailView):
         instance = self.get_object()
         if instance.state != "created":
             raise_adcm_ex("SERVICE_DELETE_ERROR")
+
+        delete_action = Action.objects.filter(
+            prototype=instance.prototype, name=settings.ADCM_DELETE_SERVICE_ACTION_NAME
+        ).first()
+        if delete_action:
+            start_task(
+                action=delete_action,
+                obj=instance,
+                conf={},
+                attr={},
+                hc=[],
+                hosts=[],
+                verbose=False,
+            )
 
         delete_service(instance)
 
