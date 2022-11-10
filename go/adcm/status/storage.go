@@ -69,9 +69,9 @@ type Storage struct {
 // maintenance mode objects
 
 type MMObjectsData struct {
-	Hosts      []int `json:"hosts"`
 	Services   []int `json:"services"`
 	Components []int `json:"components"`
+	Hosts      []int `json:"hosts"`
 }
 
 type MMObjects struct {

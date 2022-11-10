@@ -81,10 +81,15 @@ func getServiceStatus(h Hub, cluster int, service int) (Status, []hostCompStatus
 	hc := []hostCompStatus{}
 	hostComp, _ := h.ServiceMap.getServiceHC(cluster, service)
 	servStatus := Status{}
+	numComps := len(hostComp)
+	compsInMM := 0
 	for _, key := range hostComp {
 		spl := strings.Split(key, ".")
 		hostId, _ := strconv.Atoi(spl[0])
 		compId, _ := strconv.Atoi(spl[1])
+		if intSliceContains(h.MMObjects.data.Components, compId) {
+			compsInMM++
+		}
 		host, ok := h.HostStorage.retrieve(hostId)
 		if ok && host.MaintenanceMode {
 			continue
@@ -98,6 +103,9 @@ func getServiceStatus(h Hub, cluster int, service int) (Status, []hostCompStatus
 			servStatus = status
 		}
 	}
+	if intSliceContains(h.MMObjects.data.Services, service) || compsInMM == numComps {
+		servStatus.Status = 0
+	}
 	return servStatus, hc
 }
 
@@ -107,10 +115,15 @@ func getComponentStatus(h Hub, compId int) (Status, map[int]Status) {
 	if len(hostList) == 0 {
 		return Status{Status: 32}, hosts
 	}
+
 	status := 0
+	numHosts := len(hostList)
+	hostsInMM := 0
 	for _, hostId := range hostList {
 		host, ok := h.HostStorage.retrieve(hostId)
-		if ok && host.MaintenanceMode {
+		// `host.MaintenanceMode` == `hostId in h.MMObjects.data.Hosts`
+		if ok && (host.MaintenanceMode || intSliceContains(h.MMObjects.data.Hosts, hostId)) {
+			hostsInMM++
 			continue
 		}
 		hostStatus, ok := h.HostComponentStorage.get(hostId, compId)
@@ -121,6 +134,9 @@ func getComponentStatus(h Hub, compId int) (Status, map[int]Status) {
 			status = hostStatus.Status
 		}
 		hosts[hostId] = hostStatus
+	}
+	if intSliceContains(h.MMObjects.data.Components, compId) || hostsInMM == numHosts {
+		status = 0
 	}
 	return Status{Status: status}, hosts
 }
@@ -184,4 +200,13 @@ func getClusterStatus(h Hub, clusterId int) Status {
 	serviceStatus, _ := getClusterServiceStatus(h, clusterId)
 	hostStatus, _ := getClusterHostStatus(h, clusterId)
 	return Status{Status: cookClusterStatus(serviceStatus, hostStatus)}
+}
+
+func intSliceContains(a []int, x int) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
 }
