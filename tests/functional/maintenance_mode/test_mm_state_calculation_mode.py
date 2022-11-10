@@ -15,7 +15,9 @@ Test designed to check MM state calculation logic for services/components
 """
 
 import allure
+import pytest
 
+from adcm_client.objects import Cluster
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.maintenance_mode.conftest import (
     ANOTHER_SERVICE_NAME,
@@ -24,11 +26,19 @@ from tests.functional.maintenance_mode.conftest import (
     MM_IS_ON,
     add_hosts_to_cluster,
     check_mm_is,
-    set_maintenance_mode,
+    set_maintenance_mode, BUNDLES_DIR,
 )
 
 
 # pylint: disable=redefined-outer-name
+
+@pytest.fixture()
+def cluster_with_issue_on_service_component(sdk_client_fs) -> Cluster:
+    """Create cluster and add service"""
+    bundle = sdk_client_fs.upload_from_fs(BUNDLES_DIR / "cluster_with_issues" / "issue_service_component")
+    cluster = bundle.cluster_create("Cluster issues service component")
+    cluster.service_add(name="first_service")
+    return cluster
 
 
 @only_clean_adcm
@@ -126,3 +136,35 @@ def test_mm_state_host(api_client, cluster_with_mm, hosts):
 
         set_maintenance_mode(api_client=api_client, adcm_object=second_host, maintenance_mode=MM_IS_ON)
         check_mm_is(MM_IS_ON, second_host, second_component)
+
+
+def test_mm_state_with_issue(api_client, cluster_with_issue_on_service_component):
+    """
+    Test to check maintenance_mode on components with issue
+    Issue on first_service and second_component
+    """
+    first_service = cluster_with_issue_on_service_component.service(name="first_service")
+    first_component = first_service.component(name="first_component")
+    second_component = first_service.component(name="second_component")
+
+    with allure.step('Check MM state calculation logic for component with issue'):
+        set_maintenance_mode(api_client=api_client, adcm_object=second_component, maintenance_mode=MM_IS_ON)
+        check_mm_is(MM_IS_ON, second_component)
+        check_mm_is(MM_IS_OFF, first_component, first_service)
+
+        set_maintenance_mode(api_client=api_client, adcm_object=first_component, maintenance_mode=MM_IS_ON)
+        check_mm_is(MM_IS_ON, second_component, first_component, first_service)
+
+        set_maintenance_mode(api_client=api_client, adcm_object=first_component, maintenance_mode=MM_IS_OFF)
+        set_maintenance_mode(api_client=api_client, adcm_object=second_component, maintenance_mode=MM_IS_OFF)
+        check_mm_is(MM_IS_OFF, first_component, first_service)
+
+    with allure.step('Check MM state calculation logic for service with issue'):
+        set_maintenance_mode(api_client=api_client, adcm_object=first_service, maintenance_mode=MM_IS_ON)
+        check_mm_is(MM_IS_ON, first_service)
+        check_mm_is(MM_IS_OFF, first_component, second_component)
+
+        set_maintenance_mode(api_client=api_client, adcm_object=first_service, maintenance_mode=MM_IS_OFF)
+        check_mm_is(MM_IS_OFF, first_service, first_component, second_component)
+
+    # TODO: add check with hosts issue, and add check that service/component in MM 'ON' turn to MM 'ON'
