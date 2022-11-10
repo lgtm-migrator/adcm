@@ -433,7 +433,7 @@ func postMMObjects(h Hub, w http.ResponseWriter, r *http.Request) {
 		ErrOut4(w, r, "JSON_ERROR", err.Error())
 		return
 	}
-	h.MMObjects.merge(mmData)
+	h.MMObjects.data = mmData
 }
 
 // debug purposes

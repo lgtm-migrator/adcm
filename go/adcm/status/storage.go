@@ -85,37 +85,6 @@ func newMMObjects() *MMObjects {
 	}
 }
 
-func (mm *MMObjects) merge(data MMObjectsData) {
-	for _, id := range data.Hosts {
-		if !IntSliceContains(mm.data.Hosts, id) {
-			mm.data.Hosts = append(mm.data.Hosts, id)
-		}
-	}
-	for _, id := range data.Services {
-		if !IntSliceContains(mm.data.Services, id) {
-			mm.data.Services = append(mm.data.Services, id)
-		}
-	}
-	for _, id := range data.Components {
-		if !IntSliceContains(mm.data.Components, id) {
-			mm.data.Components = append(mm.data.Components, id)
-		}
-	}
-}
-
-func (mm *MMObjects) remove(data MMObjectsData) {
-	return // TODO
-}
-
-func IntSliceContains(a []int, x int) bool {
-	for _, n := range a {
-		if x == n {
-			return true
-		}
-	}
-	return false
-}
-
 // Server
 
 func newStorage(db dbStorage, label string) *Storage {
