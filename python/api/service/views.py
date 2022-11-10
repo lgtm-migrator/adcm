@@ -126,8 +126,8 @@ class ServiceDetailView(PermissionListMixin, DetailView):
                 hosts=[],
                 verbose=False,
             )
-
-        delete_service(instance)
+        else:
+            delete_service(instance)
 
         return Response(status=HTTP_204_NO_CONTENT)
 
