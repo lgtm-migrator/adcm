@@ -24,7 +24,7 @@
 
 
 - type: service
-  name: first_service
+  name: test_service
   version: 4.3
 
   config: &config_issue
@@ -38,3 +38,14 @@
 
     second_component:
       config: *config_issue
+
+- type: service
+  name: another_service
+  version: 6.5
+
+  components:
+    first_component:
+      config: *config_no_issue
+
+    second_component:
+      config: *config_no_issue
