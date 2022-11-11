@@ -102,12 +102,20 @@ func getServiceStatus(h Hub, cluster int, service int) (Status, []hostCompStatus
 }
 
 func getComponentStatus(h Hub, compId int) (Status, map[int]Status) {
+	status := 0
+
 	hosts := map[int]Status{}
 	hostList, _ := h.ServiceMap.getComponentHosts(compId)
 	if len(hostList) == 0 {
 		return Status{Status: 32}, hosts
 	}
-	status := 0
+
+	// check parent service's mm state
+	serviceId, ok := h.ServiceMap.getServiceIdByCompId(compId)
+	if ok && intSliceContains(h.MMObjects.data.Services, serviceId) {
+		return Status{Status: status}, hosts
+	}
+
 	for _, hostId := range hostList {
 		host, ok := h.HostStorage.retrieve(hostId)
 		if ok && (host.MaintenanceMode || intSliceContains(h.MMObjects.data.Hosts, hostId)) {
