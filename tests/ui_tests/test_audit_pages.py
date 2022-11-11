@@ -49,7 +49,8 @@ def prepare_cluster_objects(generic_cluster) -> tuple[Cluster, Service, Componen
     service: Service = generic_cluster.service_add(name="simple_service")
     try:  # it's expected to fail
         service.config_set_diff({"key": False})
-    except:  # pylint: disable=bare-except
+    # pylint: disable-next=bare-except
+    except:  # noqa: E722
         pass
     service.component().config_set_diff({"key": "hehehe"})
     service.delete()
@@ -78,8 +79,8 @@ def prepare_audit_entries(sdk_client_fs, prepare_rbac_entries, prepare_cluster_o
     return sdk_client_fs.audit_operation_list()
 
 
-@pytest.mark.usefixtures("prepare_audit_entries")
-def test_audit_operations_page(app_fs, sdk_client_fs, _login_to_adcm_over_api):
+@pytest.mark.usefixtures("prepare_audit_entries", "_login_to_adcm_over_api")
+def test_audit_operations_page(app_fs, sdk_client_fs):
     page = OperationsAuditPage(app_fs.driver, app_fs.adcm.url).open()
 
     # remove after https://tracker.yandex.ru/ADCM-3335
