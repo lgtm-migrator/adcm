@@ -198,10 +198,10 @@ class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors
     @action(methods=["get"], detail=True)
     def license(request, *args, **kwargs):
         bundle = check_obj(Bundle, kwargs["bundle_pk"], "BUNDLE_NOT_FOUND")
-        body = get_license(bundle)
-        url = reverse("accept-license", kwargs={"bundle_pk": bundle.id}, request=request)
-
-        return Response({"license": bundle.license, "accept": url, "text": body})
+        proto = Prototype.objects.filter(bundle=bundle, name=bundle.name)[0]
+        body = get_license(proto)
+        url = reverse("accept-license", kwargs={"prototype_pk": proto.id}, request=request)
+        return Response({"license": proto.license, "accept": url, "text": body})
 
     @audit
     @action(methods=["put"], detail=True)
@@ -209,7 +209,8 @@ class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors
         # self is necessary for audit
 
         bundle = check_obj(Bundle, kwargs["bundle_pk"], "BUNDLE_NOT_FOUND")
-        accept_license(bundle)
+        proto = Prototype.objects.filter(bundle=bundle, name=bundle.name)[0]
+        accept_license(proto)
 
         return Response()
 
@@ -222,6 +223,14 @@ class PrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     ordering_fields = ("display_name", "version_order")
     lookup_url_kwarg = "prototype_pk"
 
+    def get_permissions(self):
+        if self.action == "list":
+            permission_classes = (IsAuthenticated,)
+        else:
+            permission_classes = (ModelPermOrReadOnlyForAuth,)
+
+        return [permission() for permission in permission_classes]
+
     def get_serializer_class(self):
         if self.is_for_ui():
             return PrototypeUISerializer
@@ -229,6 +238,25 @@ class PrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
             return PrototypeDetailSerializer
 
         return super().get_serializer_class()
+
+    @staticmethod
+    @action(methods=["get"], detail=True)
+    def license(request, *args, **kwargs):
+        prototype = check_obj(Prototype, kwargs["prototype_pk"], "PROTOTYPE_NOT_FOUND")
+        body = get_license(prototype)
+        url = reverse("accept-license", kwargs={"prototype_pk": prototype.id}, request=request)
+
+        return Response({"license": prototype.license, "accept": url, "text": body})
+
+    @audit
+    @action(methods=["put"], detail=True)
+    def accept_license(self, request, *args, **kwargs):
+        # self is necessary for audit
+
+        prototype = check_obj(Prototype, kwargs["prototype_pk"], "PROTOTYPE_NOT_FOUND")
+        accept_license(prototype)
+
+        return Response()
 
 
 class ProtoActionViewSet(RetrieveModelMixin, GenericUIViewSet):

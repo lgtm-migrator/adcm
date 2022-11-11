@@ -40,6 +40,7 @@ class LoadBundleSerializer(EmptySerializer):
 class BundleSerializer(HyperlinkedModelSerializer):
     license_url = HyperlinkedIdentityField(view_name="bundle-license", lookup_field="pk", lookup_url_kwarg="bundle_pk")
     update = HyperlinkedIdentityField(view_name="bundle-update", lookup_field="pk", lookup_url_kwarg="bundle_pk")
+    license = SerializerMethodField()
 
     class Meta:
         model = Bundle
@@ -49,8 +50,6 @@ class BundleSerializer(HyperlinkedModelSerializer):
             "version",
             "edition",
             "license",
-            "license_path",
-            "license_hash",
             "hash",
             "description",
             "date",
@@ -69,8 +68,17 @@ class BundleSerializer(HyperlinkedModelSerializer):
 
         return data
 
+    def get_license(self, obj):
+        proto = Prototype.objects.filter(bundle=obj, name=obj.name)
+        return proto[0].license
+
 
 class PrototypeSerializer(HyperlinkedModelSerializer):
+    license_url = HyperlinkedIdentityField(
+        view_name="prototype-license",
+        lookup_field="pk",
+        lookup_url_kwarg="prototype_pk"
+    )
     bundle_edition = CharField(source="bundle.edition")
 
     class Meta:
@@ -81,6 +89,10 @@ class PrototypeSerializer(HyperlinkedModelSerializer):
             "type",
             "path",
             "name",
+            "license",
+            "license_path",
+            "license_hash",
+            "license_url",
             "display_name",
             "version",
             "required",

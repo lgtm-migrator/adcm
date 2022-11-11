@@ -19,7 +19,7 @@ from audit.models import (
     AuditObjectType,
     AuditOperation,
 )
-from cm.models import Bundle
+from cm.models import Bundle, Prototype
 
 
 def stack_case(
@@ -61,12 +61,20 @@ def stack_case(
                 operation_type=AuditLogOperationType.Update,
                 obj_pk=bundle_pk,
             )
-
         case ["stack", "bundle", bundle_pk, "license", "accept"]:
+            bundle = Bundle.objects.get(pk=bundle_pk)
+            prototype = Prototype.objects.get(bundle=bundle, name=bundle.name)
             audit_operation, audit_object = obj_pk_case(
-                obj_type=AuditObjectType.Bundle,
+                obj_type=AuditObjectType.Prototype,
                 operation_type=AuditLogOperationType.Update,
-                obj_pk=bundle_pk,
+                obj_pk=prototype.pk,
+                operation_aux_str="license accepted",
+            )
+        case ["stack", "prototype", prototype_pk, "license", "accept"]:
+            audit_operation, audit_object = obj_pk_case(
+                obj_type=AuditObjectType.Prototype,
+                operation_type=AuditLogOperationType.Update,
+                obj_pk=prototype_pk,
                 operation_aux_str="license accepted",
             )
 

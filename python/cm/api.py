@@ -488,31 +488,23 @@ def add_components_to_service(cluster, service):
         cm.issue.update_hierarchy_issues(sc)
 
 
-def get_bundle_proto(bundle):
-    proto = Prototype.objects.filter(bundle=bundle, name=bundle.name)
-
-    return proto[0]
-
-
-def get_license(bundle):
-    if not bundle.license_path:
+def get_license(proto: Prototype):
+    if not proto.license_path:
         return None
-
-    ref = f'bundle "{bundle.name}" {bundle.version}'
-    proto = get_bundle_proto(bundle)
-
-    return read_bundle_file(proto, bundle.license_path, bundle.hash, "license file", ref)
+    if not isinstance(proto, Prototype):
+        err("LICENSE_ERROR")
+    return read_bundle_file(proto, proto.license_path, proto.bundle.hash, "license file")
 
 
-def accept_license(bundle):
-    if not bundle.license_path:
+def accept_license(proto: Prototype):
+    if not proto.license_path:
         err("LICENSE_ERROR", "This bundle has no license")
 
-    if bundle.license == "absent":
+    if proto.license == "absent":
         err("LICENSE_ERROR", "This bundle has no license")
 
-    bundle.license = "accepted"
-    bundle.save()
+    proto.license = "accepted"
+    proto.save()
 
 
 def update_obj_config(obj_conf, conf, attr, desc=""):
