@@ -36,10 +36,7 @@ class TestBundle(BaseTestCase):
         )
         self.bundle_2 = Bundle.objects.create(name="test_bundle_2", version="456", version_order=2)
         Prototype.objects.create(
-            bundle=self.bundle_1,
-            name=self.bundle_1.name,
-            license_path="some_path",
-            license="unaccepted"
+            bundle=self.bundle_1, name=self.bundle_1.name, license_path="some_path", license="unaccepted"
         )
         Prototype.objects.create(bundle=self.bundle_2, name=self.bundle_2.name)
 

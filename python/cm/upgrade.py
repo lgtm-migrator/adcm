@@ -270,7 +270,8 @@ def get_upgrade(obj: Union[Cluster, HostProvider], order=None) -> List[Upgrade]:
 
         ok, _msg = check_upgrade_state(obj, upg)
         upg.upgradable = bool(ok)
-        upg.license = upg.bundle.license
+        upgrade_proto = Prototype.objects.get(bundle=upg.bundle, name=upg.bundle.name)
+        upg.license = upgrade_proto.license
         if upg.upgradable:
             res.append(upg)
 
