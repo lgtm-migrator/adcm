@@ -35,7 +35,6 @@ from cm.errors import raise_adcm_ex as err
 from cm.logger import logger
 from cm.models import (
     ADCMEntity,
-    Bundle,
     Cluster,
     ClusterBind,
     ClusterObject,
