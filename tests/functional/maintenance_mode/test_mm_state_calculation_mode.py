@@ -41,7 +41,7 @@ def cluster_with_mm(sdk_client_fs: ADCMClient) -> Cluster:
     """
     bundle = sdk_client_fs.upload_from_fs(BUNDLES_DIR / 'cluster_mm_allowed')
     cluster = bundle.cluster_create("Cluster with mm")
-    cluster.service_add(name="first_service")
+    cluster.service_add(name="test_service")
     return cluster
 
 
