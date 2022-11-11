@@ -80,18 +80,13 @@ func newEventMsg(status int, objType string, objId int) eventMsg {
 func getServiceStatus(h Hub, cluster int, service int) (Status, []hostCompStatus) {
 	hc := []hostCompStatus{}
 	hostComp, _ := h.ServiceMap.getServiceHC(cluster, service)
-	servStatus := Status{}
-	numComps := len(hostComp)
-	compsInMM := 0
+	servStatus := Status{Status: 0}
 	for _, key := range hostComp {
 		spl := strings.Split(key, ".")
 		hostId, _ := strconv.Atoi(spl[0])
 		compId, _ := strconv.Atoi(spl[1])
-		if intSliceContains(h.MMObjects.data.Components, compId) {
-			compsInMM++
-		}
 		host, ok := h.HostStorage.retrieve(hostId)
-		if ok && host.MaintenanceMode {
+		if intSliceContains(h.MMObjects.data.Components, compId) || (ok && host.MaintenanceMode) {
 			continue
 		}
 		status, ok := h.HostComponentStorage.get(hostId, compId)
@@ -102,9 +97,6 @@ func getServiceStatus(h Hub, cluster int, service int) (Status, []hostCompStatus
 		if status.Status != 0 {
 			servStatus = status
 		}
-	}
-	if intSliceContains(h.MMObjects.data.Services, service) || compsInMM == numComps {
-		servStatus.Status = 0
 	}
 	return servStatus, hc
 }
