@@ -47,6 +47,7 @@ from cm.models import (
     HostComponent,
     HostProvider,
     MaintenanceMode,
+    ObjectType,
     Prototype,
     PrototypeExport,
     PrototypeImport,
@@ -145,6 +146,33 @@ def load_service_map():
     }
     cm.status_api.api_request("post", "/servicemap/", m)
     load_host_map()
+    update_mm_objects()
+
+
+def update_mm_objects():
+    """send ids of all objects in mm to status server"""
+    clusters = Cluster.objects.filter(
+        prototype__in=Prototype.objects.filter(type=ObjectType.Cluster, allow_maintenance_mode=True)
+    )
+
+    service_ids = []
+    component_ids = []
+    host_ids = []
+    services_qs = ClusterObject.objects.filter(cluster__in=clusters)
+    components_qs = ServiceComponent.objects.filter(cluster__in=clusters)
+    hosts_qs = Host.objects.filter(cluster__in=clusters)
+
+    for qs, container in ((services_qs, service_ids), (components_qs, component_ids), (hosts_qs, host_ids)):
+        for obj in qs:
+            if obj.maintenance_mode == MaintenanceMode.ON:
+                container.append(obj.pk)
+
+    data = {
+        "services": service_ids,
+        "components": component_ids,
+        "hosts": host_ids,
+    }
+    return cm.status_api.api_request("post", "/object/mm/", data)
 
 
 def add_cluster(proto, name, desc=""):
