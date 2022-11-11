@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pathlib import Path
 from unittest.mock import patch
 
 from django.conf import settings
@@ -22,8 +23,18 @@ from rest_framework.status import (
     HTTP_409_CONFLICT,
 )
 
-from adcm.tests.base import BaseTestCase
-from cm.models import Action, Bundle, Cluster, ClusterObject, MaintenanceMode, Prototype
+from adcm.tests.base import APPLICATION_JSON, BaseTestCase
+from cm.models import (
+    Action,
+    Bundle,
+    Cluster,
+    ClusterObject,
+    Host,
+    HostProvider,
+    MaintenanceMode,
+    Prototype,
+    ServiceComponent,
+)
 
 
 class TestServiceAPI(BaseTestCase):
@@ -179,3 +190,81 @@ class TestServiceAPI(BaseTestCase):
         start_task_mock.assert_called_once_with(
             action=action, obj=self.service, conf={}, attr={}, hc=[], hosts=[], verbose=False
         )
+
+    def test_delete_service_with_requires_fail(self):
+        provider_bundle = self.upload_and_load_bundle(
+            path=Path(
+                settings.BASE_DIR,
+                "python/api/tests/files/bundle_test_provider_concern.tar",
+            ),
+        )
+        cluster_bundle = self.upload_and_load_bundle(
+            path=Path(
+                settings.BASE_DIR,
+                "python/api/tests/files/bundle_cluster_requires.tar",
+            ),
+        )
+
+        provider_prototype = Prototype.objects.get(bundle=provider_bundle, type="provider")
+        provider_response: Response = self.client.post(
+            path=reverse("provider"),
+            data={"name": "test_provider", "prototype_id": provider_prototype.pk},
+        )
+        provider = HostProvider.objects.get(pk=provider_response.data["id"])
+
+        host_response: Response = self.client.post(
+            path=reverse("host", kwargs={"provider_id": provider.pk}),
+            data={"fqdn": "test-host"},
+        )
+        host = Host.objects.get(pk=host_response.data["id"])
+
+        cluster_prototype = Prototype.objects.get(bundle_id=cluster_bundle.pk, type="cluster")
+        cluster_response: Response = self.client.post(
+            path=reverse("cluster"),
+            data={"name": "test-cluster", "prototype_id": cluster_prototype.pk},
+        )
+        cluster = Cluster.objects.get(pk=cluster_response.data["id"])
+
+        service_1_prototype = Prototype.objects.get(name="service_1", type="service")
+        service_1_response: Response = self.client.post(
+            path=reverse("service", kwargs={"cluster_id": cluster.pk}),
+            data={"prototype_id": service_1_prototype.pk},
+        )
+        service_1 = ClusterObject.objects.get(pk=service_1_response.data["id"])
+
+        service_2_prototype = Prototype.objects.get(name="service_2", type="service")
+        service_2_response: Response = self.client.post(
+            path=reverse("service", kwargs={"cluster_id": cluster.pk}),
+            data={"prototype_id": service_2_prototype.pk},
+        )
+        service_2 = ClusterObject.objects.get(pk=service_2_response.data["id"])
+
+        with patch("api.service.views.delete_service"):
+            response: Response = self.client.delete(
+                path=reverse("service-details", kwargs={"service_id": service_1.pk})
+            )
+
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+
+        self.client.post(
+            path=reverse("host", kwargs={"cluster_id": cluster.pk}),
+            data={"host_id": host.pk},
+        )
+
+        component_2_1 = ServiceComponent.objects.get(service=service_2, prototype__name="component_1")
+        component_1_1 = ServiceComponent.objects.get(service=service_1, prototype__name="component_1")
+
+        self.client.post(
+            path=reverse("host-component", kwargs={"cluster_id": cluster.pk}),
+            data={
+                "hc": [
+                    {"service_id": service_2.pk, "component_id": component_2_1.pk, "host_id": host.pk},
+                    {"service_id": service_1.pk, "component_id": component_1_1.pk, "host_id": host.pk},
+                ]
+            },
+            content_type=APPLICATION_JSON,
+        )
+
+        response: Response = self.client.delete(path=reverse("service-details", kwargs={"service_id": service_1.pk}))
+
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)

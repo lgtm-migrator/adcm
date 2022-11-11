@@ -373,12 +373,6 @@ def delete_service_by_name(service_name, cluster_id):
 
 
 def delete_service(service: ClusterObject, cancel_tasks=True) -> None:
-    if HostComponent.objects.filter(cluster=service.cluster, service=service).exists():
-        err("SERVICE_CONFLICT", f"Service #{service.id} has component(s) on host(s)")
-
-    if ClusterBind.objects.filter(source_service=service).exists():
-        err("SERVICE_CONFLICT", f"Service #{service.id} has exports(s)")
-
     if cancel_tasks:
         _cancel_locking_tasks(service, obj_deletion=True)
 
