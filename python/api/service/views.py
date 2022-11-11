@@ -40,7 +40,7 @@ from api.utils import (
     get_object_for_user,
 )
 from audit.utils import audit
-from cm.api import delete_service, get_import, unbind
+from cm.api import cancel_locking_tasks, delete_service, get_import, unbind
 from cm.errors import raise_adcm_ex
 from cm.job import start_task
 from cm.models import (
@@ -136,7 +136,8 @@ class ServiceDetailView(PermissionListMixin, DetailView):
                 verbose=False,
             )
         else:
-            delete_service(instance)
+            cancel_locking_tasks(obj=instance, obj_deletion=True)
+            delete_service(service=instance)
 
         return Response(status=HTTP_204_NO_CONTENT)
 

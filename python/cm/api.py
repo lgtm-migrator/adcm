@@ -215,8 +215,7 @@ def add_host_provider(proto, name, desc=""):
     return provider
 
 
-def _cancel_locking_tasks(obj: ADCMEntity, obj_deletion=False):
-    """Cancel all tasks that have locks on object"""
+def cancel_locking_tasks(obj: ADCMEntity, obj_deletion=False):
     for lock in obj.concerns.filter(type=ConcernType.Lock):
         for task in TaskLog.objects.filter(lock=lock):
             task.cancel(obj_deletion=obj_deletion)
@@ -228,7 +227,7 @@ def delete_host_provider(provider, cancel_tasks=True):
         msg = 'There is host #{} "{}" of host {}'
         err("PROVIDER_CONFLICT", msg.format(hosts[0].id, hosts[0].fqdn, obj_ref(provider)))
     if cancel_tasks:
-        _cancel_locking_tasks(provider, obj_deletion=True)
+        cancel_locking_tasks(provider, obj_deletion=True)
 
     provider_id = provider.id
     provider.delete()
@@ -305,7 +304,7 @@ def delete_host(host, cancel_tasks=True):
         err("HOST_CONFLICT", msg.format(host.id, host.fqdn, obj_ref(cluster)))
 
     if cancel_tasks:
-        _cancel_locking_tasks(host, obj_deletion=True)
+        cancel_locking_tasks(host, obj_deletion=True)
 
     host_id = host.id
     host.delete()
@@ -355,7 +354,7 @@ def delete_service_by_id(service_id):
         service = ClusterObject.obj.get(id=service_id)
         _clean_up_related_hc(service)
         _clean_up_related_bind(service)
-        delete_service(service, cancel_tasks=False)
+        delete_service(service=service)
 
 
 def delete_service_by_name(service_name, cluster_id):
@@ -369,27 +368,23 @@ def delete_service_by_name(service_name, cluster_id):
         service = ClusterObject.obj.get(cluster__id=cluster_id, prototype__name=service_name)
         _clean_up_related_hc(service)
         _clean_up_related_bind(service)
-        delete_service(service, cancel_tasks=False)
+        delete_service(service=service)
 
 
-def delete_service(service: ClusterObject, cancel_tasks=True) -> None:
-    if cancel_tasks:
-        _cancel_locking_tasks(service, obj_deletion=True)
-
-    service_id = service.id
-    cluster = service.cluster
+def delete_service(service: ClusterObject) -> None:
+    service_pk = service.pk
     service.delete()
     cm.issue.update_issue_after_deleting()
-    cm.issue.update_hierarchy_issues(cluster)
-    re_apply_object_policy(cluster)
-    cm.status_api.post_event("delete", "service", service_id)
+    cm.issue.update_hierarchy_issues(service.cluster)
+    re_apply_object_policy(service.cluster)
+    cm.status_api.post_event("delete", "service", service_pk)
     load_service_map()
-    logger.info(f"service #{service_id} is deleted")
+    logger.info(f"service #{service_pk} is deleted")
 
 
 def delete_cluster(cluster, cancel_tasks=True):
     if cancel_tasks:
-        _cancel_locking_tasks(cluster, obj_deletion=True)
+        cancel_locking_tasks(cluster, obj_deletion=True)
 
     cluster_id = cluster.id
     hosts = cluster.host_set.all()
