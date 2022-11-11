@@ -43,7 +43,7 @@ class TestBundle(BaseTestCase):
             type="cluster",
             name=bundle_name,
             license_path="test_bundle_license_path",
-            license="unaccepted"
+            license="unaccepted",
         )
 
     def check_log_upload(self, log: AuditLog, operation_result: AuditLogOperationResult, user: User) -> None:

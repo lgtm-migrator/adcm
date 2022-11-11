@@ -75,9 +75,7 @@ class BundleSerializer(HyperlinkedModelSerializer):
 
 class PrototypeSerializer(HyperlinkedModelSerializer):
     license_url = HyperlinkedIdentityField(
-        view_name="prototype-license",
-        lookup_field="pk",
-        lookup_url_kwarg="prototype_pk"
+        view_name="prototype-license", lookup_field="pk", lookup_url_kwarg="prototype_pk"
     )
     bundle_edition = CharField(source="bundle.edition")
 
@@ -298,7 +296,6 @@ class ADCMPrototypeSerializer(PrototypeSerializer):
 
 
 class ClusterPrototypeSerializer(PrototypeSerializer):
-    license = CharField(source="bundle.license")
     url = HyperlinkedIdentityField(
         view_name="cluster-prototype-detail", lookup_field="pk", lookup_url_kwarg="prototype_pk"
     )
@@ -307,7 +304,6 @@ class ClusterPrototypeSerializer(PrototypeSerializer):
         model = Prototype
         fields = (
             *PrototypeSerializer.Meta.fields,
-            "license",
             "url",
         )
         read_only_fields = fields
@@ -330,7 +326,6 @@ class HostPrototypeSerializer(PrototypeSerializer):
 
 
 class ProviderPrototypeSerializer(PrototypeSerializer):
-    license = CharField(source="bundle.license")
     url = HyperlinkedIdentityField(
         view_name="provider-prototype-detail", lookup_field="pk", lookup_url_kwarg="prototype_pk"
     )
@@ -339,7 +334,6 @@ class ProviderPrototypeSerializer(PrototypeSerializer):
         model = Prototype
         fields = (
             *PrototypeSerializer.Meta.fields,
-            "license",
             "url",
         )
         read_only_fields = fields

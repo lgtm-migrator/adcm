@@ -311,8 +311,9 @@ def do_upgrade(
     hc: list,
 ) -> dict:
     old_proto = obj.prototype
-    check_license(obj.prototype.bundle)
-    check_license(upgrade.bundle)
+    check_license(obj.prototype)
+    upgrade_proto = Prototype.objects.get(bundle=upgrade.bundle, name=upgrade.bundle.name)
+    check_license(upgrade_proto)
     ok, msg = check_upgrade(obj, upgrade)
     if not ok:
         return raise_adcm_ex("UPGRADE_ERROR", msg)

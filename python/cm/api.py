@@ -56,10 +56,10 @@ from cm.models import (
 from rbac.models import re_apply_object_policy
 
 
-def check_license(bundle: Bundle) -> None:
-    if bundle.license == "unaccepted":
-        msg = 'License for bundle "{}" {} {} is not accepted'
-        err("LICENSE_ERROR", msg.format(bundle.name, bundle.version, bundle.edition))
+def check_license(proto: Prototype) -> None:
+    if proto.license == "unaccepted":
+        msg = 'License for prototype "{}" {} {} is not accepted'
+        err("LICENSE_ERROR", msg.format(proto.name, proto.type, proto.version))
 
 
 def version_in(version: str, ver: PrototypeImport) -> bool:
@@ -149,7 +149,7 @@ def load_service_map():
 
 def add_cluster(proto, name, desc=""):
     check_proto_type(proto, "cluster")
-    check_license(proto.bundle)
+    check_license(proto)
     with transaction.atomic():
         cluster = Cluster.objects.create(prototype=proto, name=name, description=desc)
         obj_conf = init_object_config(proto, cluster)
@@ -165,7 +165,7 @@ def add_cluster(proto, name, desc=""):
 
 def add_host(proto, provider, fqdn, desc=""):
     check_proto_type(proto, "host")
-    check_license(proto.bundle)
+    check_license(proto)
     if proto.bundle != provider.prototype.bundle:
         msg = "Host prototype bundle #{} does not match with host provider bundle #{}"
         err("FOREIGN_HOST", msg.format(proto.bundle.id, provider.prototype.bundle.id))
@@ -200,7 +200,7 @@ def add_provider_host(provider_id, fqdn, desc=""):
 
 def add_host_provider(proto, name, desc=""):
     check_proto_type(proto, "provider")
-    check_license(proto.bundle)
+    check_license(proto)
     with transaction.atomic():
         provider = HostProvider.objects.create(prototype=proto, name=name, description=desc)
         obj_conf = init_object_config(proto, provider)
@@ -454,7 +454,7 @@ def unbind(cbind):
 
 def add_service_to_cluster(cluster, proto):
     check_proto_type(proto, "service")
-    check_license(proto.bundle)
+    check_license(proto)
     if not proto.shared:
         if cluster.prototype.bundle != proto.bundle:
             msg = '{} does not belong to bundle "{}" {}'

@@ -24,7 +24,8 @@ from cm.models import (
     DummyData,
     Host,
     HostProvider,
-    ServiceComponent, Prototype,
+    ServiceComponent,
+    Prototype,
 )
 from rbac.models import Group, Policy
 

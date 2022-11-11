@@ -46,7 +46,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='prototype',
             name='license',
-            field=models.CharField(choices=[('absent', 'absent'), ('accepted', 'accepted'), ('unaccepted', 'unaccepted')], default='absent', max_length=16),
+            field=models.CharField(
+                choices=[('absent', 'absent'), ('accepted', 'accepted'), ('unaccepted', 'unaccepted')],
+                default='absent',
+                max_length=16,
+            ),
         ),
         migrations.AddField(
             model_name='prototype',
@@ -61,7 +65,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='stageprototype',
             name='license',
-            field=models.CharField(choices=[('absent', 'absent'), ('accepted', 'accepted'), ('unaccepted', 'unaccepted')], default='absent', max_length=16),
+            field=models.CharField(
+                choices=[('absent', 'absent'), ('accepted', 'accepted'), ('unaccepted', 'unaccepted')],
+                default='absent',
+                max_length=16,
+            ),
         ),
         migrations.RunPython(code=migrate_bundle_license, reverse_code=migrate_bundle_license_reverse),
         migrations.RemoveField(
