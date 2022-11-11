@@ -115,15 +115,10 @@ func getComponentStatus(h Hub, compId int) (Status, map[int]Status) {
 	if len(hostList) == 0 {
 		return Status{Status: 32}, hosts
 	}
-
 	status := 0
-	numHosts := len(hostList)
-	hostsInMM := 0
 	for _, hostId := range hostList {
 		host, ok := h.HostStorage.retrieve(hostId)
-		// `host.MaintenanceMode` == `hostId in h.MMObjects.data.Hosts`
 		if ok && (host.MaintenanceMode || intSliceContains(h.MMObjects.data.Hosts, hostId)) {
-			hostsInMM++
 			continue
 		}
 		hostStatus, ok := h.HostComponentStorage.get(hostId, compId)
@@ -134,9 +129,6 @@ func getComponentStatus(h Hub, compId int) (Status, map[int]Status) {
 			status = hostStatus.Status
 		}
 		hosts[hostId] = hostStatus
-	}
-	if intSliceContains(h.MMObjects.data.Components, compId) || hostsInMM == numHosts {
-		status = 0
 	}
 	return Status{Status: status}, hosts
 }
