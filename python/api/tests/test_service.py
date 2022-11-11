@@ -192,6 +192,8 @@ class TestServiceAPI(BaseTestCase):
         )
 
     def test_delete_service_with_requires_fail(self):
+        # pylint: disable=too-many-locals
+
         provider_bundle = self.upload_and_load_bundle(
             path=Path(
                 settings.BASE_DIR,
