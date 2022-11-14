@@ -610,9 +610,7 @@ def copy_stage_config(stage_config, prototype):
 
 
 def check_license(proto):
-    if not Prototype.objects.filter(license_hash=proto.license_hash, license="accepted").exists():
-        return False
-    return True
+    return Prototype.objects.filter(license_hash=proto.license_hash, license="accepted").exists()
 
 
 def copy_stage(bundle_hash, bundle_proto):

@@ -198,9 +198,9 @@ class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors
     @action(methods=["get"], detail=True)
     def license(request, *args, **kwargs):
         bundle = check_obj(Bundle, kwargs["bundle_pk"], "BUNDLE_NOT_FOUND")
-        proto = Prototype.objects.filter(bundle=bundle, name=bundle.name)[0]
+        proto = Prototype.objects.get(bundle=bundle, name=bundle.name)
         body = get_license(proto)
-        url = reverse("accept-license", kwargs={"prototype_pk": proto.id}, request=request)
+        url = reverse("accept-license", kwargs={"prototype_pk": proto.pk}, request=request)
         return Response({"license": proto.license, "accept": url, "text": body})
 
     @audit
@@ -209,7 +209,7 @@ class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors
         # self is necessary for audit
 
         bundle = check_obj(Bundle, kwargs["bundle_pk"], "BUNDLE_NOT_FOUND")
-        proto = Prototype.objects.filter(bundle=bundle, name=bundle.name)[0]
+        proto = Prototype.objects.get(bundle=bundle, name=bundle.name)
         accept_license(proto)
 
         return Response()
@@ -244,7 +244,7 @@ class PrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     def license(request, *args, **kwargs):
         prototype = check_obj(Prototype, kwargs["prototype_pk"], "PROTOTYPE_NOT_FOUND")
         body = get_license(prototype)
-        url = reverse("accept-license", kwargs={"prototype_pk": prototype.id}, request=request)
+        url = reverse("accept-license", kwargs={"prototype_pk": prototype.pk}, request=request)
 
         return Response({"license": prototype.license, "accept": url, "text": body})
 

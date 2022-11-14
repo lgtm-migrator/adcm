@@ -57,8 +57,7 @@ from rbac.models import re_apply_object_policy
 
 def check_license(proto: Prototype) -> None:
     if proto.license == "unaccepted":
-        msg = 'License for prototype "{}" {} {} is not accepted'
-        err("LICENSE_ERROR", msg.format(proto.name, proto.type, proto.version))
+        err("LICENSE_ERROR", f'License for prototype "{proto.name}" {proto.type} {proto.version} is not accepted')
 
 
 def version_in(version: str, ver: PrototypeImport) -> bool:

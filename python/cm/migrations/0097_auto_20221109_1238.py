@@ -30,10 +30,7 @@ def migrate_bundle_license_reverse(apps, schema_editor):
 
     prototypes = proto_model.objects.filter(license__in=["accepted", "unaccepted"], type__in=["cluster", "provider"])
     for proto in prototypes:
-        proto.bundle.license = proto.license
-        proto.bundle.license_hash = proto.license_hash
-        proto.bundle.license_path = proto.license_path
-        proto.bundle.save()
+        proto.bundle.update(license=proto.license, license_hash=proto.license_hash, license_path=proto.license_path)
 
 
 class Migration(migrations.Migration):
