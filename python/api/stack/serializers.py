@@ -62,15 +62,18 @@ class BundleSerializer(HyperlinkedModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        proto = Prototype.objects.get(bundle=instance, name=instance.name)
+        proto = Prototype.objects.filter(bundle=instance, name=instance.name).first()
         data["adcm_min_version"] = proto.adcm_min_version
         data["display_name"] = proto.display_name
 
         return data
 
     def get_license(self, obj: Bundle) -> str | None:
-        proto = Prototype.objects.get(bundle=obj, name=obj.name)
-        return proto.license
+        proto = Prototype.objects.filter(bundle=obj, name=obj.name).first()
+        if proto:
+            return proto.license
+
+        return None
 
 
 class PrototypeSerializer(HyperlinkedModelSerializer):

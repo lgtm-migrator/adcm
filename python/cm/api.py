@@ -476,7 +476,7 @@ def add_components_to_service(cluster, service):
         update_hierarchy_issues(sc)
 
 
-def get_license(proto: Prototype):
+def get_license(proto: Prototype) -> str | None:
     if not proto.license_path:
         return None
     if not isinstance(proto, Prototype):
@@ -484,7 +484,7 @@ def get_license(proto: Prototype):
     return read_bundle_file(proto, proto.license_path, proto.bundle.hash, "license file")
 
 
-def accept_license(proto: Prototype):
+def accept_license(proto: Prototype) -> None:
     if not proto.license_path:
         raise_adcm_ex("LICENSE_ERROR", "This bundle has no license")
 
@@ -495,7 +495,7 @@ def accept_license(proto: Prototype):
     proto.save()
 
 
-def update_obj_config(obj_conf, conf, attr, desc=""):
+def update_obj_config(obj_conf, conf, attr, desc="") -> ConfigLog:
     if not isinstance(attr, dict):
         raise_adcm_ex("INVALID_CONFIG_UPDATE", "attr should be a map")
 
