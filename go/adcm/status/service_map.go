@@ -150,6 +150,7 @@ func (s *ServiceServer) getServiceIDByComponentID(compId int) (resultComponentID
 		if compIdKey == compId {
 			resultComponentID = clusterService.Service
 			found = true
+			break
 		}
 	}
 	return
