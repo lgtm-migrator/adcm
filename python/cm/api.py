@@ -10,7 +10,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
+
 import json
+from functools import wraps
 
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import transaction
@@ -145,10 +148,10 @@ def load_service_map():
     }
     api_request("post", "/servicemap/", m)
     load_host_map()
-    update_mm_objects()
+    load_mm_objects()
 
 
-def update_mm_objects():
+def load_mm_objects():
     """send ids of all objects in mm to status server"""
     clusters = Cluster.objects.filter(
         prototype__in=Prototype.objects.filter(type=ObjectType.Cluster, allow_maintenance_mode=True)
@@ -171,7 +174,17 @@ def update_mm_objects():
         "components": component_ids,
         "hosts": host_ids,
     }
-    return cm.status_api.api_request("post", "/object/mm/", data)
+    return api_request("post", "/object/mm/", data)
+
+
+def update_mm_objects(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        res = func(*args, **kwargs)
+        load_mm_objects()
+        return res
+
+    return wrapper
 
 
 def add_cluster(proto, name, desc=""):
