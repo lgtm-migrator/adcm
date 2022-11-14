@@ -153,9 +153,7 @@ def load_service_map():
 
 def load_mm_objects():
     """send ids of all objects in mm to status server"""
-    clusters = Cluster.objects.filter(
-        prototype__in=Prototype.objects.filter(type=ObjectType.Cluster, allow_maintenance_mode=True)
-    )
+    clusters = Cluster.objects.filter(prototype__type=ObjectType.Cluster, prototype__allow_maintenance_mode=True)
 
     service_ids = []
     component_ids = []
