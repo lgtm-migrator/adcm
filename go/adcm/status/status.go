@@ -110,7 +110,7 @@ func getComponentStatus(h Hub, compId int) (Status, map[int]Status) {
 
     status := 0
 	// check parent service's mm state
-	serviceId, ok := h.ServiceMap.getServiceIdByCompId(compId)
+	serviceId, ok := h.ServiceMap.getServiceIDByComponentID(compId)
 	if ok && intSliceContains(h.MMObjects.data.Services, serviceId) {
 		return Status{Status: status}, hosts
 	}

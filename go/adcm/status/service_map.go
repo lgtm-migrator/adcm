@@ -141,7 +141,7 @@ func (s *ServiceServer) getMap() ServiceMaps {
 	return resp.smap
 }
 
-func (s *ServiceServer) getServiceIdByCompId(compId int) (int, bool) {
+func (s *ServiceServer) getServiceIDByComponentID(compId int) (int, bool) {
 	// returns serviceId, true
 	// returns 0, false if no service found by component id
 	for hostIdCompIdKey, clusterService := range s.smap.HostService {
