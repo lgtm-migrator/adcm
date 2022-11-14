@@ -1227,6 +1227,7 @@ CONFIG_FIELD_TYPE = (
     ("secretfile", "secretfile"),
     ("list", "list"),
     ("map", "map"),
+    ("secretmap", "secretmap"),
     ("structure", "structure"),
     ("group", "group"),
 )

@@ -147,11 +147,18 @@ def get_default(c, proto=None):  # pylint: disable=too-many-branches
                     read_file_type(proto, c.default, proto.bundle.hash, c.name, c.subname)
                 )
 
+    if c.type == "secretmap":
+        new_value = {}
+        for k, v in value.items():
+            new_value[k] = ansible_encrypt_and_format(v)
+
+        value = new_value
+
     return value
 
 
 def type_is_complex(conf_type):
-    if conf_type in ("json", "structure", "list", "map"):
+    if conf_type in ("json", "structure", "list", "map", "secretmap"):
         return True
 
     return False
@@ -598,7 +605,7 @@ def check_read_only(obj, spec, conf, old_conf):
                 if isinstance(flat_conf[s], list) and not flat_conf[s]:
                     continue
 
-            if spec[s].type == "map":
+            if spec[s].type in {"map", "secretmap"}:
                 if isinstance(flat_conf[s], dict) and not flat_conf[s]:
                     continue
 
@@ -743,7 +750,7 @@ def check_value_unselected_field(
                 obj,
             )
         else:
-            if spec[k]["type"] in ["list", "map", "string", "structure"]:
+            if spec[k]["type"] in {"list", "map", "secretmap", "string", "structure"}:
                 if config_is_ro(obj, k, spec[k]["limits"]) or check_empty_values(
                     k, current_config, new_config
                 ):
@@ -963,8 +970,9 @@ def check_config_type(
             raise_adcm_ex("CONFIG_VALUE_ERROR", _msg)
 
     if (
-        value is None
+        value is None  # pylint: disable=too-many-boolean-expressions
         or (spec["type"] == "map" and value == {})
+        or (spec["type"] == "secretmap" and value == {})
         or (spec["type"] == "list" and value == [])
     ):
         if inactive:
@@ -989,7 +997,7 @@ def check_config_type(
         for idx, v in enumerate(value):
             check_str(idx, v)
 
-    if spec["type"] == "map":
+    if spec["type"] in {"map", "secretmap"}:
         if not isinstance(value, dict):
             raise_adcm_ex("CONFIG_VALUE_ERROR", tmpl1.format("should be a map"))
 

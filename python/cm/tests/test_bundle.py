@@ -125,6 +125,23 @@ class TestBundle(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         return response.json()["id"]
 
+    def upload_bundle_create_cluster_config_log(self) -> tuple[Bundle, Cluster, ConfigLog]:
+        bundle = self.upload_and_load_bundle(
+            path=Path(
+                settings.BASE_DIR,
+                "python/cm/tests/files/config_cluster_secretfile.tar",
+            ),
+        )
+
+        cluster_prototype = Prototype.objects.get(bundle_id=bundle.pk, type="cluster")
+        cluster_response: Response = self.client.post(
+            path=reverse("cluster"),
+            data={"name": "test-cluster", "prototype_id": cluster_prototype.pk},
+        )
+        cluster = Cluster.objects.get(pk=cluster_response.data["id"])
+
+        return bundle, cluster, ConfigLog.objects.get(obj_ref=cluster.config)
+
     def test_upload_duplicated_upgrade_script_names(self):
         same_upgrade_name = "Upgrade name"
         same_script_name = "Script name"
@@ -182,20 +199,7 @@ class TestBundle(BaseTestCase):
                 Bundle.objects.get(pk=bundle_id).delete()
 
     def test_secretfile(self):
-        bundle = self.upload_and_load_bundle(
-            path=Path(
-                settings.BASE_DIR,
-                "python/cm/tests/files/config_cluster_secretfile.tar",
-            ),
-        )
-
-        cluster_prototype = Prototype.objects.get(bundle_id=bundle.pk, type="cluster")
-        cluster_response: Response = self.client.post(
-            path=reverse("cluster"),
-            data={"name": "test-cluster", "prototype_id": cluster_prototype.pk},
-        )
-        cluster = Cluster.objects.get(pk=cluster_response.data["id"])
-        config_log = ConfigLog.objects.get(obj_ref=cluster.config)
+        bundle, cluster, config_log = self.upload_bundle_create_cluster_config_log()
 
         with open(
             Path(settings.BUNDLE_DIR, bundle.hash, "secretfile"), encoding=settings.ENCODING_UTF_8
@@ -213,3 +217,8 @@ class TestBundle(BaseTestCase):
         self.assertIn(settings.ANSIBLE_VAULT_HEADER, secret_file_content)
 
         self.assertIn(settings.ANSIBLE_VAULT_HEADER, config_log.config["secretfile"])
+
+    def test_secretmap(self):
+        _, _, config_log = self.upload_bundle_create_cluster_config_log()
+
+        self.assertIn(settings.ANSIBLE_VAULT_HEADER, config_log.config["secretmap"]["key"])
