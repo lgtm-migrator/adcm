@@ -86,7 +86,7 @@ func getServiceStatus(h Hub, cluster int, service int) (Status, []hostCompStatus
 		hostId, _ := strconv.Atoi(spl[0])
 		compId, _ := strconv.Atoi(spl[1])
 		host, ok := h.HostStorage.retrieve(hostId)
-		if intSliceContains(h.MMObjects.data.Components, compId) || (ok && host.MaintenanceMode) {
+		if h.MMObjects.IsComponentInMM(compId) || (ok && host.MaintenanceMode) {
 			continue
 		}
 		status, ok := h.HostComponentStorage.get(hostId, compId)
@@ -108,20 +108,20 @@ func getComponentStatus(h Hub, compId int) (Status, map[int]Status) {
 		return Status{Status: 32}, hosts
 	}
 
-    status := 0
+	status := 0
 	// check parent service's mm state
 	serviceId, ok := h.ServiceMap.getServiceIDByComponentID(compId)
-	if ok && intSliceContains(h.MMObjects.data.Services, serviceId) {
+	if h.MMObjects.IsServiceInMM(serviceId) {
 		return Status{Status: status}, hosts
 	}
 
-	if intSliceContains(h.MMObjects.data.Components, compId) {
-	    return Status{Status: status}, hosts
+	if h.MMObjects.IsComponentInMM(compId) {
+		return Status{Status: status}, hosts
 	}
 
 	for _, hostId := range hostList {
 		host, ok := h.HostStorage.retrieve(hostId)
-		if ok && (host.MaintenanceMode || intSliceContains(h.MMObjects.data.Hosts, hostId)) {
+		if h.MMObjects.IsHostInMM(hostId) || ok && host.MaintenanceMode {
 			continue
 		}
 		hostStatus, ok := h.HostComponentStorage.get(hostId, compId)
@@ -195,13 +195,4 @@ func getClusterStatus(h Hub, clusterId int) Status {
 	serviceStatus, _ := getClusterServiceStatus(h, clusterId)
 	hostStatus, _ := getClusterHostStatus(h, clusterId)
 	return Status{Status: cookClusterStatus(serviceStatus, hostStatus)}
-}
-
-func intSliceContains(a []int, x int) bool {
-	for _, n := range a {
-		if x == n {
-			return true
-		}
-	}
-	return false
 }

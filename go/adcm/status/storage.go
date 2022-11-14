@@ -85,6 +85,27 @@ func newMMObjects() *MMObjects {
 	}
 }
 
+func (mm *MMObjects) IsHostInMM(hostID int) bool {
+	return intSliceContains(mm.data.Hosts, hostID)
+}
+
+func (mm *MMObjects) IsServiceInMM(serviceID int) bool {
+	return intSliceContains(mm.data.Services, serviceID)
+}
+
+func (mm *MMObjects) IsComponentInMM(componentID int) bool {
+	return intSliceContains(mm.data.Components, componentID)
+}
+
+func intSliceContains(a []int, x int) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}
+
 // Server
 
 func newStorage(db dbStorage, label string) *Storage {
