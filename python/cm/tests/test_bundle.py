@@ -20,52 +20,15 @@ from tarfile import TarFile
 
 from django.conf import settings
 from django.db import transaction
-from django.test import Client, TestCase
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.response import Response
 
-from cm.models import Bundle
-from init_db import init as init_adcm
-from rbac.upgrade.role import init_roles
-
-
-# TODO: refactor this after merging 1524 (audit) in develop
-class TestBase(TestCase):
-    files_dir = None
-
-    def setUp(self) -> None:
-        init_adcm()
-        init_roles()
-
-        self.client = Client(HTTP_USER_AGENT="Mozilla/5.0")
-        response = self.client.post(
-            path=reverse("rbac:token"),
-            data={"username": "admin", "password": "admin"},
-            content_type="application/json",
-        )
-        self.client.defaults["Authorization"] = f"Token {response.data['token']}"
-
-        self.client_unauthorized = Client(HTTP_USER_AGENT="Mozilla/5.0")
-
-    def load_bundle(self, bundle_name: str) -> int:
-        with open(Path(self.files_dir, bundle_name), encoding=settings.ENCODING_UTF_8) as f:
-            with transaction.atomic():
-                response = self.client.post(
-                    path=reverse("upload-bundle"),
-                    data={"file": f},
-                )
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        with transaction.atomic():
-            response = self.client.post(
-                path=reverse("load-bundle"),
-                data={"bundle_file": bundle_name},
-            )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        return response.json()["id"]
+from adcm.tests.base import BaseTestCase
+from cm.models import Bundle, Cluster, ConfigLog, Prototype
 
 
-class TestBundle(TestBase):
-    files_dir = settings.BASE_DIR / "python" / "cm" / "tests" / "files"
+class TestBundle(BaseTestCase):
     bundle_config_template = """
 - type: cluster
   name: Monitoring
@@ -121,6 +84,7 @@ class TestBundle(TestBase):
 
     def setUp(self) -> None:
         super().setUp()
+
         self.files_dir = os.path.join(settings.BASE_DIR, "python", "cm", "tests", "files")
         os.makedirs(self.files_dir, exist_ok=True)
         self.tar_write_cfg = {}
@@ -144,6 +108,22 @@ class TestBundle(TestBase):
             yield filename
         finally:
             os.remove(bundle_filepath)
+
+    def load_bundle(self, bundle_name: str) -> int:
+        with open(Path(self.files_dir, bundle_name), encoding=settings.ENCODING_UTF_8) as f:
+            with transaction.atomic():
+                response = self.client.post(
+                    path=reverse("upload-bundle"),
+                    data={"file": f},
+                )
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        with transaction.atomic():
+            response = self.client.post(
+                path=reverse("load-bundle"),
+                data={"bundle_file": bundle_name},
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        return response.json()["id"]
 
     def test_upload_duplicated_upgrade_script_names(self):
         same_upgrade_name = "Upgrade name"
@@ -200,3 +180,36 @@ class TestBundle(TestBase):
             ) as bundle:
                 bundle_id = self.load_bundle(bundle)
                 Bundle.objects.get(pk=bundle_id).delete()
+
+    def test_secretfile(self):
+        bundle = self.upload_and_load_bundle(
+            path=Path(
+                settings.BASE_DIR,
+                "python/cm/tests/files/config_cluster_secretfile.tar",
+            ),
+        )
+
+        cluster_prototype = Prototype.objects.get(bundle_id=bundle.pk, type="cluster")
+        cluster_response: Response = self.client.post(
+            path=reverse("cluster"),
+            data={"name": "test-cluster", "prototype_id": cluster_prototype.pk},
+        )
+        cluster = Cluster.objects.get(pk=cluster_response.data["id"])
+        config_log = ConfigLog.objects.get(obj_ref=cluster.config)
+
+        with open(
+            Path(settings.BUNDLE_DIR, bundle.hash, "secretfile"), encoding=settings.ENCODING_UTF_8
+        ) as f:
+            secret_file_bundle_content = f.read()
+
+        self.assertNotIn(settings.ANSIBLE_VAULT_HEADER, secret_file_bundle_content)
+
+        with open(
+            Path(settings.FILE_DIR, f"cluster.{cluster.pk}.secretfile."),
+            encoding=settings.ENCODING_UTF_8,
+        ) as f:
+            secret_file_content = f.read()
+
+        self.assertIn(settings.ANSIBLE_VAULT_HEADER, secret_file_content)
+
+        self.assertIn(settings.ANSIBLE_VAULT_HEADER, config_log.config["secretfile"])
