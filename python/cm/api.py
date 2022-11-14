@@ -156,14 +156,15 @@ def load_mm_objects():
     clusters = Cluster.objects.filter(prototype__type=ObjectType.Cluster, prototype__allow_maintenance_mode=True)
 
     service_ids = set()
-    component_ids = []
+    component_ids = set()
     host_ids = []
 
-    for comp in ServiceComponent.objects.filter(cluster__in=clusters).select_related("service"):
-        if comp.maintenance_mode == MaintenanceMode.ON:
-            component_ids.append(comp.pk)
-        if comp.service.pk not in service_ids and comp.service.maintenance_mode == MaintenanceMode.ON:
-            service_ids.add(comp.service.pk)
+    for service in ClusterObject.objects.filter(cluster__in=clusters).prefetch_related("servicecomponent_set"):
+        if service.maintenance_mode == MaintenanceMode.ON:
+            service_ids.add(service.pk)
+        for component in service.servicecomponent_set.all():
+            if component.maintenance_mode == MaintenanceMode.ON:
+                component_ids.add(component.pk)
 
     for host in Host.objects.filter(cluster__in=clusters):
         if host.maintenance_mode == MaintenanceMode.ON:
@@ -171,7 +172,7 @@ def load_mm_objects():
 
     data = {
         "services": list(service_ids),
-        "components": component_ids,
+        "components": list(component_ids),
         "hosts": host_ids,
     }
     return api_request("post", "/object/mm/", data)
