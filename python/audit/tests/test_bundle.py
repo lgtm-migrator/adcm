@@ -81,7 +81,7 @@ class TestBundle(BaseTestCase):
         self.assertEqual(log.audit_object.object_name, self.prototype.name)
         self.assertEqual(log.audit_object.object_type, AuditObjectType.Prototype)
         self.assertFalse(log.audit_object.is_deleted)
-        self.assertEqual(log.operation_name, "Prototype license accepted")
+        self.assertEqual(log.operation_name, "Cluster license accepted")
         self.assertEqual(log.operation_type, AuditLogOperationType.Update)
         self.assertEqual(log.operation_result, operation_result)
         self.assertIsInstance(log.operation_time, datetime)
@@ -247,7 +247,16 @@ class TestBundle(BaseTestCase):
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
-        self.check_prototype_licence(log, AuditLogOperationResult.Success, self.test_user)
+        self.assertEqual(log.audit_object.object_id, self.bundle.pk)
+        self.assertEqual(log.audit_object.object_name, self.bundle.name)
+        self.assertEqual(log.audit_object.object_type, AuditObjectType.Bundle)
+        self.assertFalse(log.audit_object.is_deleted)
+        self.assertEqual(log.operation_name, "Bundle license accepted")
+        self.assertEqual(log.operation_type, AuditLogOperationType.Update)
+        self.assertEqual(log.operation_result, AuditLogOperationResult.Success)
+        self.assertIsInstance(log.operation_time, datetime)
+        self.assertEqual(log.user.pk, self.test_user.pk)
+        self.assertEqual(log.object_changes, {})
 
     def test_license_accepted_denied(self):
         with self.no_rights_user_logged_in:
@@ -256,7 +265,11 @@ class TestBundle(BaseTestCase):
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
         self.assertEqual(response.status_code, HTTP_403_FORBIDDEN)
-        self.check_prototype_licence(log, AuditLogOperationResult.Denied, self.no_rights_user)
+        self.check_log_denied(
+            log=log,
+            operation_name="Bundle license accepted",
+            operation_type=AuditLogOperationType.Update,
+        )
 
     def test_prototype_license_accepted(self):
         self.client.put(path=reverse("accept-license", kwargs={"prototype_pk": self.prototype.pk}))
