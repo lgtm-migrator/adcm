@@ -141,15 +141,18 @@ func (s *ServiceServer) getMap() ServiceMaps {
 	return resp.smap
 }
 
-func (s *ServiceServer) getServiceIDByComponentID(compId int) (int, bool) {
+func (s *ServiceServer) getServiceIDByComponentID(compId int) (resultComponentID int, found bool) {
+	resultComponentID = 0
+    found = false
 	for hostIDCompIDKey, clusterService := range s.smap.HostService {
 		splittedHostIDCompID := strings.Split(hostIDCompIDKey, ".")
 		compIdKey, _ := strconv.Atoi(splittedHostIDCompID[1])
 		if compIdKey == compId {
-			return clusterService.Service, true
+		    resultComponentID = clusterService.Service
+		    found = true
 		}
 	}
-	return 0, false
+    return
 }
 
 func (s *ServiceServer) getHosts(clusterId int) ([]int, bool) {
