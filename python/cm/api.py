@@ -155,20 +155,22 @@ def load_mm_objects():
     """send ids of all objects in mm to status server"""
     clusters = Cluster.objects.filter(prototype__type=ObjectType.Cluster, prototype__allow_maintenance_mode=True)
 
-    service_ids = []
+    service_ids = set()
     component_ids = []
     host_ids = []
-    services_qs = ClusterObject.objects.filter(cluster__in=clusters)
-    components_qs = ServiceComponent.objects.filter(cluster__in=clusters)
-    hosts_qs = Host.objects.filter(cluster__in=clusters)
 
-    for qs, container in ((services_qs, service_ids), (components_qs, component_ids), (hosts_qs, host_ids)):
-        for obj in qs:
-            if obj.maintenance_mode == MaintenanceMode.ON:
-                container.append(obj.pk)
+    for comp in ServiceComponent.objects.filter(cluster__in=clusters).select_related("service"):
+        if comp.maintenance_mode == MaintenanceMode.ON:
+            component_ids.append(comp.pk)
+        if comp.service.pk not in service_ids and comp.service.maintenance_mode == MaintenanceMode.ON:
+            service_ids.add(comp.service.pk)
+
+    for host in Host.objects.filter(cluster__in=clusters):
+        if host.maintenance_mode == MaintenanceMode.ON:
+            host_ids.append(host.pk)
 
     data = {
-        "services": service_ids,
+        "services": list(service_ids),
         "components": component_ids,
         "hosts": host_ids,
     }
