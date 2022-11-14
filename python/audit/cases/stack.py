@@ -12,7 +12,7 @@
 from django.db.models import Model
 from rest_framework.response import Response
 
-from audit.cases.common import obj_pk_case, response_case, get_or_create_audit_obj
+from audit.cases.common import get_or_create_audit_obj, obj_pk_case, response_case
 from audit.models import (
     AuditLogOperationType,
     AuditObject,
