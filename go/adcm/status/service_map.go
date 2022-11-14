@@ -142,8 +142,6 @@ func (s *ServiceServer) getMap() ServiceMaps {
 }
 
 func (s *ServiceServer) getServiceIDByComponentID(compId int) (int, bool) {
-	// returns serviceId, true
-	// returns 0, false if no service found by component id
 	for hostIdCompIdKey, clusterService := range s.smap.HostService {
 		spl := strings.Split(hostIdCompIdKey, ".")
 		compIdKey, _ := strconv.Atoi(spl[1])
