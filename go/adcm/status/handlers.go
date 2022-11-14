@@ -428,8 +428,7 @@ func postMMObjects(h Hub, w http.ResponseWriter, r *http.Request) {
 	defer h.MMObjects.mutex.Unlock()
 
 	var mmData MMObjectsData
-	_, err := decodeBody(w, r, &mmData)
-	if err != nil {
+	if _, err := decodeBody(w, r, &mmData); err != nil {
 		ErrOut4(w, r, "JSON_ERROR", err.Error())
 		return
 	}
