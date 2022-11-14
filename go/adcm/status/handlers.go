@@ -436,7 +436,6 @@ func postMMObjects(h Hub, w http.ResponseWriter, r *http.Request) {
 	h.MMObjects.data = mmData
 }
 
-// debug purposes
 func getMMObjects(h Hub, w http.ResponseWriter, r *http.Request) {
 	allow(w, "GET")
 	jsonOut(w, r, h.MMObjects.data)
