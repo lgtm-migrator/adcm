@@ -85,8 +85,11 @@ func getServiceStatus(h Hub, cluster int, service int) (Status, []hostCompStatus
 		spl := strings.Split(key, ".")
 		hostId, _ := strconv.Atoi(spl[0])
 		compId, _ := strconv.Atoi(spl[1])
+		if h.MMObjects.IsComponentInMM(compId) {
+		    continue
+		}
 		host, ok := h.HostStorage.retrieve(hostId)
-		if h.MMObjects.IsComponentInMM(compId) || (ok && host.MaintenanceMode) {
+		if ok && host.MaintenanceMode {
 			continue
 		}
 		status, ok := h.HostComponentStorage.get(hostId, compId)
