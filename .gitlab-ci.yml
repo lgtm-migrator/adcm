@@ -7,7 +7,8 @@ include:
 Linters:
   script:
     - apk update && apk upgrade && apk add build-base linux-headers openssl libc6-compat openldap-dev python3-dev py3-pip
-    - pip install -r requirements.txt -r requirements-test.txt
+    - pip install -r requirements.txt
+    - pip install -r requirements-test.txt
     - black license_checker.py python tests
     - autoflake -r -i --remove-all-unused-imports --exclude apps.py,python/ansible/plugins,python/init_db.py,python/task_runner.py,python/backupdb.py,python/job_runner.py,python/drf_docs.py license_checker.py python
     - isort license_checker.py python
