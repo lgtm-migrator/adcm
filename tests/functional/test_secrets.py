@@ -99,7 +99,11 @@ def _check_no_secrets_in_config(cluster: Cluster):
         found_secrets = [secret for secret in SECRETS if secret in text_config]
         if not found_secrets:
             return
-        allure.attach(text_config, name='Config with revealed secrets', attachment_type=allure.attachment_type.JSON)
+        allure.attach(
+            text_config,
+            name='Config with revealed secrets',
+            attachment_type=allure.attachment_type.JSON,
+        )
         raise AssertionError('\n'.join(('Some of secrets were found in config:', *found_secrets)))
 
 
@@ -122,7 +126,9 @@ def _check_no_secrets_in_adcm_logs(container: Container):
     exit_code, output = container.exec_run(['ls', '-p', ADCM_LOG_DIR])
     ls_output = output.decode('utf-8')
     if exit_code != 0:
-        raise ValueError(f'Failed to get files from {ADCM_LOG_DIR}\nExit code {exit_code}\nOutput: {ls_output}')
+        raise ValueError(
+            f'Failed to get files from {ADCM_LOG_DIR}\nExit code {exit_code}\nOutput: {ls_output}'
+        )
     _assert_files_in_dir_for_secrets_absence(container, ADCM_LOG_DIR, ls_output)
 
 
@@ -133,7 +139,9 @@ def _check_no_secrets_in_job_dir(container: Container, job_id: int):
     exit_code, output = container.exec_run(['ls', '-p', job_dir])
     ls_output = output.decode('utf-8')
     if exit_code != 0:
-        raise ValueError(f'Failed to get files from {job_dir}\nExit code {exit_code}\nOutput: {ls_output}')
+        raise ValueError(
+            f'Failed to get files from {job_dir}\nExit code {exit_code}\nOutput: {ls_output}'
+        )
     _assert_files_in_dir_for_secrets_absence(container, job_dir, ls_output)
 
 
@@ -147,13 +155,17 @@ def _assert_files_in_dir_for_secrets_absence(container: Container, directory: st
         exit_code, output = container.exec_run(['cat', filename])
         file_content = output.decode('utf-8')
         if exit_code != 0:
-            raise ValueError(f'Failed to get content of {filename}\nExit code {exit_code}\nOutput: {file_content}')
+            raise ValueError(
+                f'Failed to get content of {filename}\nExit code {exit_code}\nOutput: {file_content}'
+            )
         for found_secret in (s for s in SECRETS if s in file_content):
             found_message = f'Secret "{found_secret}" found in {filename}'
             found_secrets.append(found_message)
             allure.attach(file_content, name=found_message)
     if found_secrets:
-        raise AssertionError("\n".join(('Some of the secrets were found in ADCM log files:\n', *found_secrets)))
+        raise AssertionError(
+            "\n".join(('Some of the secrets were found in ADCM log files:\n', *found_secrets))
+        )
 
 
 def _filtered_files(ls_out: str) -> Iterator[str]:

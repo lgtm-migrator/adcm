@@ -27,7 +27,12 @@ from docker.models.containers import Container
 
 from tests.functional.conftest import only_clean_adcm
 from tests.library.assertions import does_not_intersect, is_superset_of
-from tests.library.db import set_configs_date, set_job_directories_date, set_jobs_date, set_tasks_date
+from tests.library.db import (
+    set_configs_date,
+    set_job_directories_date,
+    set_jobs_date,
+    set_tasks_date,
+)
 
 pytestmark = [only_clean_adcm]
 
@@ -63,7 +68,10 @@ def multi_tasks(objects) -> List[Task]:
 def config_objects(objects) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
     """Spawn many configs on each object"""
     configs = [
-        [obj.config_set_diff({'param': random_string(12)}) and obj.config(full=True)['id'] for _ in range(10)]
+        [
+            obj.config_set_diff({'param': random_string(12)}) and obj.config(full=True)['id']
+            for _ in range(10)
+        ]
         for obj in objects
     ]
     bonded_configs = tuple(itertools.chain.from_iterable(c[-2:] for c in configs))
@@ -76,7 +84,9 @@ def config_group_objects(objects) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
     """Spawn many object configs on each object except Host"""
     configs = [
         [
-            group.config_set_diff({'attr': {'group_keys': {'param': True}}, 'config': {'param': random_string(12)}})
+            group.config_set_diff(
+                {'attr': {'group_keys': {'param': True}}, 'config': {'param': random_string(12)}}
+            )
             and group.config(full=True)['id']
             for _ in range(10)
         ]
@@ -91,9 +101,14 @@ def config_group_objects(objects) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
 
 
 @pytest.fixture()
-def separated_configs(config_objects, config_group_objects) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
+def separated_configs(
+    config_objects, config_group_objects
+) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
     """Return separately bonded and not bonded configs' and group configs' ids"""
-    return (*config_objects[0], *config_group_objects[0]), (*config_objects[1], *config_group_objects[1])
+    return (*config_objects[0], *config_group_objects[0]), (
+        *config_objects[1],
+        *config_group_objects[1],
+    )
 
 
 # !===== Tests =====!
@@ -196,7 +211,9 @@ def test_cleanup_multijobs(sdk_client_fs, adcm_fs, adcm_db, multi_tasks):
     seven_days_ago = datetime.datetime.utcnow() - datetime.timedelta(days=7)
     two_day_task, *another_tasks = multi_tasks
     first_task_jobs_ids = first_job_id, *other_job_ids = [j.id for j in two_day_task.job_list()]
-    another_tasks_job_ids = list(itertools.chain.from_iterable((t.id for t in t.job_list()) for t in another_tasks))
+    another_tasks_job_ids = list(
+        itertools.chain.from_iterable((t.id for t in t.job_list()) for t in another_tasks)
+    )
     old_jobs = (*other_job_ids, *another_tasks_job_ids)
 
     set_rotation_info_in_adcm_config(sdk_client_fs.adcm(), jobs_in_db=6, jobs_on_fs=6)
@@ -229,7 +246,9 @@ def test_config_rotation(sdk_client_fs, adcm_fs, adcm_db, separated_configs, obj
     _check_config_groups_exists(objects)
 
 
-def test_remove_only_expired_config_logs(sdk_client_fs, adcm_fs, adcm_db, separated_configs, objects):
+def test_remove_only_expired_config_logs(
+    sdk_client_fs, adcm_fs, adcm_db, separated_configs, objects
+):
     """
     Test config rotation removes only old enough configs, but leaves not old enough intact.
     Plain "logrotate".
@@ -251,7 +270,9 @@ def test_remove_only_expired_config_logs(sdk_client_fs, adcm_fs, adcm_db, separa
 
 
 # pylint: disable-next=too-many-arguments
-def test_logrotate_command_target_job(sdk_client_fs, adcm_fs, adcm_db, simple_tasks, separated_configs, objects):
+def test_logrotate_command_target_job(
+    sdk_client_fs, adcm_fs, adcm_db, simple_tasks, separated_configs, objects
+):
     """
     Check that "logrotate --target job" deletes only configs, but not the jobs
     """
@@ -271,7 +292,9 @@ def test_logrotate_command_target_job(sdk_client_fs, adcm_fs, adcm_db, simple_ta
 
 
 # pylint: disable-next=too-many-arguments
-def test_logrotate_command_target_config(sdk_client_fs, adcm_fs, adcm_db, simple_tasks, separated_configs, objects):
+def test_logrotate_command_target_config(
+    sdk_client_fs, adcm_fs, adcm_db, simple_tasks, separated_configs, objects
+):
     """
     Check that "logrotate --target config" deletes only configs, but not the jobs
     """
@@ -303,7 +326,9 @@ def test_old_adcm_config_removal(sdk_client_fs, adcm_fs, adcm_db):
             adcm.config_set_diff({'ansible_settings': {'forks': i}})
 
     set_rotation_info_in_adcm_config(adcm, config_in_db=1)
-    adcm_history = [ch['id'] for ch in sorted(adcm.config_history(full=True), key=lambda c: c['date'])]
+    adcm_history = [
+        ch['id'] for ch in sorted(adcm.config_history(full=True), key=lambda c: c['date'])
+    ]
     set_configs_date(adcm_db, ten_days_ago, adcm_history)
     logrotate(adcm_fs)
 
@@ -342,12 +367,17 @@ def test_only_finished_tasks_removed(sdk_client_fs, adcm_fs, adcm_db, objects):
 
 
 def set_rotation_info_in_adcm_config(
-    adcm: ADCM, jobs_in_db: Optional[int] = None, jobs_on_fs: Optional[int] = None, config_in_db: Optional[int] = None
+    adcm: ADCM,
+    jobs_in_db: Optional[int] = None,
+    jobs_on_fs: Optional[int] = None,
+    config_in_db: Optional[int] = None,
 ) -> dict:
     """Update ADCM config with new jobs/config log rotation info"""
     # `is not None` because 0 is a legit value
     if not (jobs_in_db is not None or jobs_on_fs is not None or config_in_db is not None):
-        raise ValueError('At least one of rotation fields should be provided to set rotation info in ADCM config')
+        raise ValueError(
+            'At least one of rotation fields should be provided to set rotation info in ADCM config'
+        )
     config = {}
     if jobs_on_fs is not None:
         if 'job_log' not in config:
@@ -374,7 +404,9 @@ def check_task_logs_are_removed_from_db(client: ADCMClient, task_ids: Collection
     with allure.step(f'Check that task logs are removed from DB: {", ".join(map(str, task_ids))}'):
         presented_task_ids = {job.task().id for job in client.job_list()}
         does_not_intersect(
-            presented_task_ids, task_ids, 'Some of the task logs that should be removed were found in db'
+            presented_task_ids,
+            task_ids,
+            'Some of the task logs that should be removed were found in db',
         )
 
 
@@ -382,7 +414,11 @@ def check_job_logs_are_removed_from_db(client: ADCMClient, job_ids: Collection[i
     """Check job logs are removed from the database"""
     with allure.step(f'Check that job logs are removed from DB: {", ".join(map(str, job_ids))}'):
         presented_job_ids = {job.id for job in client.job_list()}
-        does_not_intersect(presented_job_ids, job_ids, 'Some of the job logs that should be removed were found in db')
+        does_not_intersect(
+            presented_job_ids,
+            job_ids,
+            'Some of the job logs that should be removed were found in db',
+        )
 
 
 def check_job_logs_are_removed_from_fs(container: Container, job_ids: Collection[int]):
@@ -390,16 +426,22 @@ def check_job_logs_are_removed_from_fs(container: Container, job_ids: Collection
     with allure.step(f'Check that job logs are removed from FS: {", ".join(map(str, job_ids))}'):
         presented_tasks = _get_ids_of_job_logs_on_fs(container)
         does_not_intersect(
-            presented_tasks, set(job_ids), 'Some of the job logs that should be removed were found on filesystem'
+            presented_tasks,
+            set(job_ids),
+            'Some of the job logs that should be removed were found on filesystem',
         )
 
 
 def check_config_logs_are_removed(client: ADCMClient, config_ids: Collection[int]):
     """Check config logs are removed from the database"""
-    with allure.step(f'Check that config logs are removed from DB: {", ".join(map(str, config_ids))}'):
+    with allure.step(
+        f'Check that config logs are removed from DB: {", ".join(map(str, config_ids))}'
+    ):
         presented_configs = _retrieve_config_ids(client)
         does_not_intersect(
-            presented_configs, set(config_ids), 'Some of the config logs that should be removed were found in db'
+            presented_configs,
+            set(config_ids),
+            'Some of the config logs that should be removed were found in db',
         )
 
 
@@ -429,9 +471,13 @@ def check_job_logs_are_presented_on_fs(container: Container, job_ids: Collection
 
 def check_config_logs_are_presented(client: ADCMClient, config_ids: Collection[int]):
     """Check that config logs are presented in the database"""
-    with allure.step(f'Check that config logs are presented in DB: {", ".join(map(str, config_ids))}'):
+    with allure.step(
+        f'Check that config logs are presented in DB: {", ".join(map(str, config_ids))}'
+    ):
         presented_configs = _retrieve_config_ids(client)
-        is_superset_of(presented_configs, config_ids, 'Not all config logs are presented in database')
+        is_superset_of(
+            presented_configs, config_ids, 'Not all config logs are presented in database'
+        )
 
 
 # other checks
@@ -440,7 +486,9 @@ def check_config_logs_are_presented(client: ADCMClient, config_ids: Collection[i
 def _check_config_groups_exists(objects):
     """Check that there's at least one config group presented on each object except Host"""
     for obj in filter(lambda o: not isinstance(o, Host), objects):
-        assert len(obj.group_config()) > 0, f'At least one group should be presented on object {obj.__class__.__name__}'
+        assert (
+            len(obj.group_config()) > 0
+        ), f'At least one group should be presented on object {obj.__class__.__name__}'
 
 
 # !===== Utilities =====!
@@ -450,7 +498,9 @@ def _get_ids_of_job_logs_on_fs(container: Container) -> Set[int]:
     exit_code, output = container.exec_run(['ls', '/adcm/data/run/'])
     if exit_code != 0:
         raise ValueError(f'Command execution failed: {output}')
-    return set(map(int, filter(lambda x: x.isnumeric(), output.decode('utf-8').strip().split('\n'))))
+    return set(
+        map(int, filter(lambda x: x.isnumeric(), output.decode('utf-8').strip().split('\n')))
+    )
 
 
 def _retrieve_config_ids(client: ADCMClient) -> Set[int]:
@@ -466,7 +516,10 @@ def _retrieve_config_ids(client: ADCMClient) -> Set[int]:
         )
     )
     all_objects.append(client.adcm())
-    return {c['id'] for c in itertools.chain.from_iterable(obj.config_history(full=True) for obj in all_objects)}
+    return {
+        c['id']
+        for c in itertools.chain.from_iterable(obj.config_history(full=True) for obj in all_objects)
+    }
 
 
 def _all_tasks_finished(tasks):

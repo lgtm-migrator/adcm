@@ -27,7 +27,11 @@ from adcm_pytest_plugin.utils import get_data_dir
 from docker.models.containers import Container
 
 from tests.functional.conftest import only_clean_adcm
-from tests.functional.tools import BEFORE_UPGRADE_DEFAULT_STATE, create_config_group_and_add_host, get_inventory_file
+from tests.functional.tools import (
+    BEFORE_UPGRADE_DEFAULT_STATE,
+    create_config_group_and_add_host,
+    get_inventory_file,
+)
 
 # pylint: disable=redefined-outer-name
 
@@ -46,8 +50,18 @@ CONFIG_TO_CHANGE = {
         'simple_field': 1,
     },
     'attr': {
-        'group_keys': {'json_field': True, 'map_field': True, 'simple_field': False, '__main_info': False},
-        'custom_group_keys': {'json_field': True, 'map_field': True, 'simple_field': True, '__main_info': False},
+        'group_keys': {
+            'json_field': True,
+            'map_field': True,
+            'simple_field': False,
+            '__main_info': False,
+        },
+        'custom_group_keys': {
+            'json_field': True,
+            'map_field': True,
+            'simple_field': True,
+            '__main_info': False,
+        },
     },
 }
 
@@ -64,11 +78,15 @@ def provider(sdk_client_fs: ADCMClient) -> Provider:
 @pytest.fixture()
 def cluster(sdk_client_fs: ADCMClient) -> Cluster:
     """Get cluster for inventory check"""
-    cluster_bundle = sdk_client_fs.upload_from_fs(utils.get_data_dir(__file__, 'cluster_inventory_tests'))
+    cluster_bundle = sdk_client_fs.upload_from_fs(
+        utils.get_data_dir(__file__, 'cluster_inventory_tests')
+    )
     return cluster_bundle.cluster_prototype().cluster_create(CLUSTER_NAME)
 
 
-def test_check_inventories_file(cluster: Cluster, provider: Provider, adcm_fs: ADCM, request: SubRequest):
+def test_check_inventories_file(
+    cluster: Cluster, provider: Provider, adcm_fs: ADCM, request: SubRequest
+):
     """Assert inventory file contents for the action"""
     host = provider.host_create(fqdn=HOST_FQDN)
     with allure.step('Configure cluster'):
@@ -115,19 +133,25 @@ class TestStateBeforeUpgrade:
         with allure.step('Check before_upgrade state before upgrade'):
             task = old_cluster.action(name="do_nothing").run()
             task.wait()
-            self.check_before_upgrade_state_equal_to(BEFORE_UPGRADE_DEFAULT_STATE, get_inventory_file(adcm_fs, task.id))
+            self.check_before_upgrade_state_equal_to(
+                BEFORE_UPGRADE_DEFAULT_STATE, get_inventory_file(adcm_fs, task.id)
+            )
         with allure.step('Check before_upgrade state after upgrade'):
             state_before_upgrade = old_cluster.state
             old_cluster.upgrade().do()
             old_cluster.reread()
             task = old_cluster.action(name="do_nothing").run()
             task.wait()
-            self.check_before_upgrade_state_equal_to(state_before_upgrade, get_inventory_file(adcm_fs, task.id))
+            self.check_before_upgrade_state_equal_to(
+                state_before_upgrade, get_inventory_file(adcm_fs, task.id)
+            )
 
     def check_before_upgrade_state_equal_to(self, expected_state: Optional[str], inventory: dict):
         """Check that `state` key in inventory dictionary is equal to expected"""
         with utils.catch_failed(KeyError, "Structure of inventory.json file is unexpected"):
-            actual_state = inventory["all"]["children"]["CLUSTER"]["vars"]["cluster"]["before_upgrade"]["state"]
+            actual_state = inventory["all"]["children"]["CLUSTER"]["vars"]["cluster"][
+                "before_upgrade"
+            ]["state"]
         assert (
             actual_state == expected_state
         ), f'Before upgrade state should be "{expected_state}", but actual state is "{actual_state}"'
@@ -142,28 +166,47 @@ class TestHostInMultipleConfigGroups:
         return provider.host_create("host-1"), provider.host_create("host-2")
 
     @pytest.fixture()
-    def cluster_with_components(self, sdk_client_fs: ADCMClient) -> Tuple[Cluster, Service, Component, Component]:
+    def cluster_with_components(
+        self, sdk_client_fs: ADCMClient
+    ) -> Tuple[Cluster, Service, Component, Component]:
         """Create cluster, add service and return itself, service and components"""
         bundle = sdk_client_fs.upload_from_fs(get_data_dir(__file__, "cluster_with_components"))
         cluster = bundle.cluster_create("Test Cluster")
         service = cluster.service_add(name="test_service")
-        return cluster, service, service.component(name="first_component"), service.component(name="second_component")
+        return (
+            cluster,
+            service,
+            service.component(name="first_component"),
+            service.component(name="second_component"),
+        )
 
     @pytest.fixture()
-    def second_service_with_components(self, cluster_with_components) -> Tuple[Service, Component, Component]:
+    def second_service_with_components(
+        self, cluster_with_components
+    ) -> Tuple[Service, Component, Component]:
         """Add second service to the cluster"""
         cluster, *_ = cluster_with_components
         service = cluster.service_add(name="second_service")
-        return service, service.component(name="first_component"), service.component(name="second_component")
+        return (
+            service,
+            service.component(name="first_component"),
+            service.component(name="second_component"),
+        )
 
     @pytest.fixture()
-    def _map_hosts_to_components(self, hosts, cluster_with_components, second_service_with_components) -> None:
+    def _map_hosts_to_components(
+        self, hosts, cluster_with_components, second_service_with_components
+    ) -> None:
         cluster, *_, component_1, component_2 = cluster_with_components
         _, component_3, component_4 = second_service_with_components
         for host in hosts:
             cluster.host_add(host)
         cluster.hostcomponent_set(
-            *[(host, component) for host in hosts for component in (component_1, component_2, component_3, component_4)]
+            *[
+                (host, component)
+                for host in hosts
+                for component in (component_1, component_2, component_3, component_4)
+            ]
         )
 
     @allure.issue(url="https://tracker.yandex.ru/ADCM-3153")
@@ -174,8 +217,12 @@ class TestHostInMultipleConfigGroups:
         cluster, service, component_1, _ = cluster_with_components
         with allure.step("Create config groups"):
             for obj in (cluster, service, component_1):
-                group = create_config_group_and_add_host(f"{obj.__class__.__name__} group", obj, host_1)
-                group.config_set({"config": {"param": "changed"}, "attr": {"group_keys": {"param": True}}})
+                group = create_config_group_and_add_host(
+                    f"{obj.__class__.__name__} group", obj, host_1
+                )
+                group.config_set(
+                    {"config": {"param": "changed"}, "attr": {"group_keys": {"param": True}}}
+                )
         with allure.step("Run action that checks hostvars"):
             run_cluster_action_and_assert_result(cluster, "check")
 

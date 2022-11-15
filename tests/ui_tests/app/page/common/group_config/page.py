@@ -55,22 +55,34 @@ class CommonGroupConfigMenu(BasePageObject):
             self.find_child(row, self.locators.customization_chbx).get_attribute("class")
         )
 
-    def get_all_group_config_rows(self, *, displayed_only: bool = True, timeout: int = 5) -> List[WebElement]:
+    def get_all_group_config_rows(
+        self, *, displayed_only: bool = True, timeout: int = 5
+    ) -> List[WebElement]:
         """Return all config field rows"""
 
         try:
             if displayed_only:
-                return [r for r in self.find_elements(self.locators.config_row, timeout=timeout) if r.is_displayed()]
+                return [
+                    r
+                    for r in self.find_elements(self.locators.config_row, timeout=timeout)
+                    if r.is_displayed()
+                ]
             return self.find_elements(self.locators.config_row, timeout=timeout)
         except TimeoutException:
             return []
 
-    def get_all_group_rows(self, *, displayed_only: bool = True, timeout: int = 5) -> List[WebElement]:
+    def get_all_group_rows(
+        self, *, displayed_only: bool = True, timeout: int = 5
+    ) -> List[WebElement]:
         """Return all config group rows"""
 
         try:
             if displayed_only:
-                return [r for r in self.find_elements(self.locators.group_row, timeout=timeout) if r.is_displayed()]
+                return [
+                    r
+                    for r in self.find_elements(self.locators.group_row, timeout=timeout)
+                    if r.is_displayed()
+                ]
             return self.find_elements(self.locators.group_row, timeout=timeout)
         except TimeoutException:
             return []

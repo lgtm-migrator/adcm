@@ -107,7 +107,9 @@ def check_access_to_provider_objects(objects):
 
 
 @allure.step('Check that superuser has access to general actions with RBAC and bundles')
-def check_access_to_general_operations(client: ADCMClient, objects):  # pylint: disable=too-many-locals
+def check_access_to_general_operations(
+    client: ADCMClient, objects
+):  # pylint: disable=too-many-locals
     """Check that superuser has access to RBAC and bundle-related actions"""
     cluster, _, _, provider, _ = objects
     cluster_bundle, provider_bundle = cluster.bundle(), provider.bundle()
@@ -142,7 +144,9 @@ def check_access_to_general_operations(client: ADCMClient, objects):  # pylint: 
     with allure.step('Check access to manipulations with cluster, provider and bundles'):
         new_cluster = _is_allowed_to_superuser(cluster_bundle, BusinessRoles.CreateCluster)
         _is_allowed_to_superuser(new_cluster, BusinessRoles.RemoveCluster)
-        new_hostprovider = _is_allowed_to_superuser(provider_bundle, BusinessRoles.CreateHostProvider)
+        new_hostprovider = _is_allowed_to_superuser(
+            provider_bundle, BusinessRoles.CreateHostProvider
+        )
         _is_allowed_to_superuser(new_hostprovider, BusinessRoles.RemoveHostProvider)
         new_bundle = _is_allowed_to_superuser(client, BusinessRoles.UploadBundle)
         _is_allowed_to_superuser(new_bundle, BusinessRoles.RemoveBundle)

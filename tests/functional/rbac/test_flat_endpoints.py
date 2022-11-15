@@ -55,7 +55,15 @@ def test_flat_endpoints(user, clients, prepare_objects, second_objects):
       config/
     """
     cluster, service, component, provider, host = prepare_objects
-    all_objects = [*second_objects, cluster, service, provider, host, *service.component_list(), clients.admin.adcm()]
+    all_objects = [
+        *second_objects,
+        cluster,
+        service,
+        provider,
+        host,
+        *service.component_list(),
+        clients.admin.adcm(),
+    ]
 
     clients.admin.policy_create(
         name=f'Service administrator of {service.name}',
@@ -87,7 +95,9 @@ def check_jobs_and_tasks(client: ADCMClient, objects):
 
     with allure.step(f'Check jobs at "{job_flat_endpoint}/" endpoint based on task_id'):
         expected_jobs = set()
-        for task in itertools.chain.from_iterable([obj.action(name=ACTION_NAME).task_list() for obj in objects]):
+        for task in itertools.chain.from_iterable(
+            [obj.action(name=ACTION_NAME).task_list() for obj in objects]
+        ):
             expected_jobs |= {job.id for job in task.job_list()}
         actual_jobs: set = {job['id'] for job in _query_flat_endpoint(client, job_flat_endpoint)}
         sets_are_equal(
@@ -96,10 +106,13 @@ def check_jobs_and_tasks(client: ADCMClient, objects):
             f'Jobs at flat endpoint "{job_flat_endpoint}/" is not the ones that were expected',
         )
 
-    with allure.step(f'Check tasks at "{task_flat_endpoint}/" endpoint based on object_id and action_id'):
+    with allure.step(
+        f'Check tasks at "{task_flat_endpoint}/" endpoint based on object_id and action_id'
+    ):
         expected_tasks: set = {(obj.id, obj.action(name=ACTION_NAME).id) for obj in objects}
         actual_tasks: set = {
-            (task['object_id'], task['action_id']) for task in _query_flat_endpoint(client, task_flat_endpoint)
+            (task['object_id'], task['action_id'])
+            for task in _query_flat_endpoint(client, task_flat_endpoint)
         }
         sets_are_equal(
             actual_tasks,
@@ -115,13 +128,19 @@ def check_configs(client: ADCMClient, objects):
     _check_configs_endpoint(client, expected_config_logs)
 
 
-@allure.step(f'Check tasks at "{GROUP_CONFIG_EP}/" endpoint based on object type, object_id and config_id')
+@allure.step(
+    f'Check tasks at "{GROUP_CONFIG_EP}/" endpoint based on object type, object_id and config_id'
+)
 def _check_group_config_endpoint(client, objects):
     objects_with_group_config = tuple(
-        filter(lambda x: not isinstance(x, Host) and not isinstance(x, ADCM) and x.group_config(), objects)
+        filter(
+            lambda x: not isinstance(x, Host) and not isinstance(x, ADCM) and x.group_config(),
+            objects,
+        )
     )
     expected_group_configs = {
-        (lower_class_name(obj), obj.id, obj.group_config()[0].config_id) for obj in objects_with_group_config
+        (lower_class_name(obj), obj.id, obj.group_config()[0].config_id)
+        for obj in objects_with_group_config
     }
     actual_group_configs = {
         (group_config['object_type'], group_config['object_id'], group_config['config_id'])
@@ -138,11 +157,15 @@ def _check_group_config_endpoint(client, objects):
 @allure.step(f'Check config logs at "{CONFIG_LOG_EP}/" endpoint based on config_id')
 def _check_config_logs_endpoint(client, objects, objects_with_group_config):
     expected_config_logs = {
-        config['id'] for config in itertools.chain.from_iterable([obj.config_history(full=True) for obj in objects])
+        config['id']
+        for config in itertools.chain.from_iterable(
+            [obj.config_history(full=True) for obj in objects]
+        )
     } | {
         config_log['id']
         for config_log in itertools.chain.from_iterable(
-            _get_history_of_group_config(client, obj.group_config()[0]) for obj in objects_with_group_config
+            _get_history_of_group_config(client, obj.group_config()[0])
+            for obj in objects_with_group_config
         )
     }
     actual_config_logs = {config['id'] for config in _query_flat_endpoint(client, CONFIG_LOG_EP)}
@@ -164,7 +187,9 @@ def _check_configs_endpoint(client, expected_config_logs):
     }
     actual_configs = {config['id'] for config in _query_flat_endpoint(client, CONFIG_EP)}
     sets_are_equal(
-        actual_configs, expected_configs, f'Configs at flat endpoint "{CONFIG_EP}/" are not the same as expected'
+        actual_configs,
+        expected_configs,
+        f'Configs at flat endpoint "{CONFIG_EP}/" are not the same as expected',
     )
 
 
@@ -190,11 +215,16 @@ def _query_flat_endpoint(client: ADCMClient, endpoint: str):
 def _prepare_group_config(adcm_object: Cluster):
     group = adcm_object.group_config_create(f'{adcm_object.name} group {random_string(4)}')
     group.config_set_diff(
-        {'config': {'boolean': True}, 'attr': {'group_keys': {'boolean': True}, 'custom_group_keys': {'boolean': True}}}
+        {
+            'config': {'boolean': True},
+            'attr': {'group_keys': {'boolean': True}, 'custom_group_keys': {'boolean': True}},
+        }
     )
 
 
 def _get_history_of_group_config(client, group_config):
     config_id = group_config.config(full=True)['url'].split('/')[-4]
-    result = _query_flat_endpoint(client, f'group-config/{group_config.id}/config/{config_id}/config-log/')
+    result = _query_flat_endpoint(
+        client, f'group-config/{group_config.id}/config/{config_id}/config-log/'
+    )
     return result

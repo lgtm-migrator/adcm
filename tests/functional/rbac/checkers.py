@@ -125,11 +125,15 @@ class ForbiddenCallChecker:
                 **kwargs,
             )
         if (status_code := response.status_code) >= 500:
-            raise AssertionError(f'Unhandled exception on {self.method.name} call to {url} check logs')
+            raise AssertionError(
+                f'Unhandled exception on {self.method.name} call to {url} check logs'
+            )
         # if request is forbidden or object is present (404 with "correct" URL)
         if status_code == 403 or (
             status_code == 404
-            and not (response.headers['Content-Type'] == 'text/html' and 'Not Found' in response.text)
+            and not (
+                response.headers['Content-Type'] == 'text/html' and 'Not Found' in response.text
+            )
         ):
             return
         try:
@@ -156,7 +160,9 @@ class ForbiddenCallChecker:
     def _build_resource_path_for_host_on_cluster(self, adcm_object: Host, **_):
         """Build resource path string for host that belongs to a cluster"""
         if not isinstance(adcm_object, Host) or not adcm_object.cluster_id:
-            raise ValueError(f'Object {adcm_object} should be of type Host and be bond to a cluster')
+            raise ValueError(
+                f'Object {adcm_object} should be of type Host and be bond to a cluster'
+            )
         return f'cluster/{adcm_object.cluster_id}/host/{adcm_object.id}/'
 
     def _build_resource_path_for_upgrade(self, adcm_object, **_):
@@ -196,15 +202,21 @@ class Deny:
     AddServiceToCluster = ForbiddenCallChecker(Cluster, 'service', HTTPMethod.POST)
     RemoveServiceFromCluster = ForbiddenCallChecker(Service, '', HTTPMethod.DELETE)
     AddHostToCluster = ForbiddenCallChecker(Cluster, 'host', HTTPMethod.POST)
-    RemoveHostFromCluster = ForbiddenCallChecker(Host, '', HTTPMethod.DELETE, special_case='host-on-cluster')
+    RemoveHostFromCluster = ForbiddenCallChecker(
+        Host, '', HTTPMethod.DELETE, special_case='host-on-cluster'
+    )
     Delete = _deny_endpoint_call('', HTTPMethod.DELETE)
     ViewImportsOf = _deny_endpoint_call('import', HTTPMethod.GET)
     ManageImportsOf = _deny_endpoint_call('bind', HTTPMethod.POST)
     ViewHostComponentOf = _deny_endpoint_call('hostcomponent', HTTPMethod.GET)
     EditHostComponentOf = _deny_endpoint_call('hostcomponent', HTTPMethod.POST)
     # here we let special case to fully build suffix
-    CreateCluster = ForbiddenCallChecker(Bundle, '', HTTPMethod.POST, special_case='create-from-bundle')
-    CreateProvider = ForbiddenCallChecker(Bundle, '', HTTPMethod.POST, special_case='create-from-bundle')
+    CreateCluster = ForbiddenCallChecker(
+        Bundle, '', HTTPMethod.POST, special_case='create-from-bundle'
+    )
+    CreateProvider = ForbiddenCallChecker(
+        Bundle, '', HTTPMethod.POST, special_case='create-from-bundle'
+    )
     CreateHost = ForbiddenCallChecker(Provider, 'host', HTTPMethod.POST)
     UpgradeProvider = ForbiddenCallChecker(Provider, '', HTTPMethod.POST, special_case='upgrade')
     UpgradeCluster = ForbiddenCallChecker(Cluster, '', HTTPMethod.POST, special_case='upgrade')

@@ -94,27 +94,43 @@ def test_default_ansible(
     Check that by default (if developer write nothing) we have Ansible 2.8.
     """
     run_cluster_action_and_assert_result(cluster_no_venv, "no_venv", config=DEFAULT_ANSIBLE_VER)
-    run_service_action_and_assert_result(cluster_no_venv.service(name="no_venv"), "no_venv", config=DEFAULT_ANSIBLE_VER)
+    run_service_action_and_assert_result(
+        cluster_no_venv.service(name="no_venv"), "no_venv", config=DEFAULT_ANSIBLE_VER
+    )
     run_component_action_and_assert_result(
-        cluster_no_venv.service(name="no_venv").component(name="no_venv"), "no_venv", config=DEFAULT_ANSIBLE_VER
+        cluster_no_venv.service(name="no_venv").component(name="no_venv"),
+        "no_venv",
+        config=DEFAULT_ANSIBLE_VER,
     )
 
-    run_cluster_action_and_assert_result(cluster_obj_venv_default, "obj_venv_default", config=DEFAULT_ANSIBLE_VER)
+    run_cluster_action_and_assert_result(
+        cluster_obj_venv_default, "obj_venv_default", config=DEFAULT_ANSIBLE_VER
+    )
     run_service_action_and_assert_result(
-        cluster_obj_venv_default.service(name="obj_venv_default"), "obj_venv_default", config=DEFAULT_ANSIBLE_VER
+        cluster_obj_venv_default.service(name="obj_venv_default"),
+        "obj_venv_default",
+        config=DEFAULT_ANSIBLE_VER,
     )
     run_component_action_and_assert_result(
-        cluster_obj_venv_default.service(name="obj_venv_default").component(name="obj_venv_default"),
+        cluster_obj_venv_default.service(name="obj_venv_default").component(
+            name="obj_venv_default"
+        ),
         "obj_venv_default",
         config=DEFAULT_ANSIBLE_VER,
     )
 
     run_provider_action_and_assert_result(provider_no_venv, "no_venv", config=DEFAULT_ANSIBLE_VER)
-    run_host_action_and_assert_result(provider_no_venv.host(fqdn="no-venv"), "no_venv", config=DEFAULT_ANSIBLE_VER)
-
-    run_provider_action_and_assert_result(provider_obj_venv_default, "obj_venv_default", config=DEFAULT_ANSIBLE_VER)
     run_host_action_and_assert_result(
-        provider_obj_venv_default.host(fqdn="obj-venv-default"), "obj_venv_default", config=DEFAULT_ANSIBLE_VER
+        provider_no_venv.host(fqdn="no-venv"), "no_venv", config=DEFAULT_ANSIBLE_VER
+    )
+
+    run_provider_action_and_assert_result(
+        provider_obj_venv_default, "obj_venv_default", config=DEFAULT_ANSIBLE_VER
+    )
+    run_host_action_and_assert_result(
+        provider_obj_venv_default.host(fqdn="obj-venv-default"),
+        "obj_venv_default",
+        config=DEFAULT_ANSIBLE_VER,
     )
 
 
@@ -140,13 +156,19 @@ def test_ansible_set_on_prototype(cluster_obj_venv_9: Cluster, provider_obj_venv
     property for object.
     """
     run_cluster_action_and_assert_result(cluster_obj_venv_9, "obj_venv_9", config=ANSIBLE_9)
-    run_service_action_and_assert_result(cluster_obj_venv_9.service(name="obj_venv_9"), "obj_venv_9", config=ANSIBLE_9)
+    run_service_action_and_assert_result(
+        cluster_obj_venv_9.service(name="obj_venv_9"), "obj_venv_9", config=ANSIBLE_9
+    )
     run_component_action_and_assert_result(
-        cluster_obj_venv_9.service(name="obj_venv_9").component(name="obj_venv_9"), "obj_venv_9", config=ANSIBLE_9
+        cluster_obj_venv_9.service(name="obj_venv_9").component(name="obj_venv_9"),
+        "obj_venv_9",
+        config=ANSIBLE_9,
     )
 
     run_provider_action_and_assert_result(provider_obj_venv_9, "obj_venv_9", config=ANSIBLE_9)
-    run_host_action_and_assert_result(provider_obj_venv_9.host(fqdn="obj-venv-9"), "obj_venv_9", config=ANSIBLE_9)
+    run_host_action_and_assert_result(
+        provider_obj_venv_9.host(fqdn="obj-venv-9"), "obj_venv_9", config=ANSIBLE_9
+    )
 
 
 @pytest.fixture()
@@ -206,19 +228,29 @@ def test_ansible_set_on_action(
         config=ANSIBLE_9,
     )
 
-    run_cluster_action_and_assert_result(cluster_obj_no_venv_action_9, "obj_no_venv_action_9", config=ANSIBLE_9)
+    run_cluster_action_and_assert_result(
+        cluster_obj_no_venv_action_9, "obj_no_venv_action_9", config=ANSIBLE_9
+    )
     run_service_action_and_assert_result(
-        cluster_obj_no_venv_action_9.service(name="obj_no_venv_action_9"), "obj_no_venv_action_9", config=ANSIBLE_9
+        cluster_obj_no_venv_action_9.service(name="obj_no_venv_action_9"),
+        "obj_no_venv_action_9",
+        config=ANSIBLE_9,
     )
     run_component_action_and_assert_result(
-        cluster_obj_no_venv_action_9.service(name="obj_no_venv_action_9").component(name="obj_no_venv_action_9"),
+        cluster_obj_no_venv_action_9.service(name="obj_no_venv_action_9").component(
+            name="obj_no_venv_action_9"
+        ),
         "obj_no_venv_action_9",
         config=ANSIBLE_9,
     )
 
-    run_provider_action_and_assert_result(provider_no_venv_action_9, "no_venv_action_9", config=ANSIBLE_9)
+    run_provider_action_and_assert_result(
+        provider_no_venv_action_9, "no_venv_action_9", config=ANSIBLE_9
+    )
     run_host_action_and_assert_result(
-        provider_no_venv_action_9.host(fqdn="no-venv-action-9"), "no_venv_action_9", config=ANSIBLE_9
+        provider_no_venv_action_9.host(fqdn="no-venv-action-9"),
+        "no_venv_action_9",
+        config=ANSIBLE_9,
     )
 
     run_provider_action_and_assert_result(

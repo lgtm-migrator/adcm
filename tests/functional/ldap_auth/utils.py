@@ -35,7 +35,9 @@ def get_ldap_user_from_adcm(client: ADCMClient, name: str) -> User:
     try:
         return client.user(username=username)
     except ObjectNotFound as e:
-        raise AssertionError(f'LDAP user "{name}" should be available as ADCM "{username}" user') from e
+        raise AssertionError(
+            f'LDAP user "{name}" should be available as ADCM "{username}" user'
+        ) from e
 
 
 def get_ldap_group_from_adcm(client: ADCMClient, name: str) -> Group:
@@ -46,12 +48,16 @@ def get_ldap_group_from_adcm(client: ADCMClient, name: str) -> Group:
     try:
         return client.group(name=name, type='ldap')
     except ObjectNotFound as e:
-        raise AssertionError(f'LDAP group "{name}" should be available as ADCM group "{name}"') from e
+        raise AssertionError(
+            f'LDAP group "{name}" should be available as ADCM group "{name}"'
+        ) from e
 
 
 @allure.step('Check users existing in ADCM')
 def check_existing_users(
-    client: ADCMClient, expected_ldap: Collection[str] = (), expected_local: Collection[str] = DEFAULT_LOCAL_USERS
+    client: ADCMClient,
+    expected_ldap: Collection[str] = (),
+    expected_local: Collection[str] = DEFAULT_LOCAL_USERS,
 ):
     """Check that only provided users exists (both ldap and local)"""
     expected_ldap = set(expected_ldap)
@@ -74,9 +80,13 @@ def check_existing_groups(
     expected_local = set(expected_local)
     existing_local = {g.name for g in client.group_list() if g.type == 'local'}
     with allure.step('Check groups from LDAP'):
-        sets_are_equal(existing_ldap, expected_ldap, message='Not all LDAP groups are presented in ADCM')
+        sets_are_equal(
+            existing_ldap, expected_ldap, message='Not all LDAP groups are presented in ADCM'
+        )
     with allure.step('Check local groups'):
-        sets_are_equal(existing_local, expected_local, message='Not all local groups are presented in ADCM')
+        sets_are_equal(
+            existing_local, expected_local, message='Not all local groups are presented in ADCM'
+        )
 
 
 def login_should_succeed(operation_name: str, client: ADCMClient, username: str, password: str):
@@ -91,7 +101,9 @@ def login_should_succeed(operation_name: str, client: ADCMClient, username: str,
         )
 
 
-def login_should_fail(operation_name: str, client: ADCMClient, username: str, password: str, err=None):
+def login_should_fail(
+    operation_name: str, client: ADCMClient, username: str, password: str, err=None
+):
     """Check that an error is raised on login attempt with given credentials"""
     with allure.step(operation_name.capitalize()):
         expect_api_error(
@@ -107,7 +119,11 @@ def login_should_fail(operation_name: str, client: ADCMClient, username: str, pa
 def check_users_in_group(group: Group, *users: User):
     """Method to check users in group"""
     error_msg = f'Incorrect user list in group {group.name}'
-    sets_are_equal(actual=get_usernames_in_group(group), expected={u.username for u in users}, message=error_msg)
+    sets_are_equal(
+        actual=get_usernames_in_group(group),
+        expected={u.username for u in users},
+        message=error_msg,
+    )
 
 
 def get_usernames_in_group(group: Group) -> Set:

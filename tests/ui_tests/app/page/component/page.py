@@ -58,7 +58,8 @@ class ComponentPageMixin(BasePageObject):
         super().__init__(
             driver,
             base_url,
-            "/cluster/{cluster_id}/service/{service_id}/component/{component_id}/" + self.MENU_SUFFIX,
+            "/cluster/{cluster_id}/service/{service_id}/component/{component_id}/"
+            + self.MENU_SUFFIX,
             cluster_id=cluster_id,
             service_id=service_id,
             component_id=component_id,
@@ -77,7 +78,9 @@ class ComponentPageMixin(BasePageObject):
     def open_main_tab(self) -> "ComponentMainPage":
         """Open Main tab by menu click"""
         self.find_and_click(ObjectPageMenuLocators.main_tab)
-        page = ComponentMainPage(self.driver, self.base_url, self.cluster_id, self.service_id, self.component_id)
+        page = ComponentMainPage(
+            self.driver, self.base_url, self.cluster_id, self.service_id, self.component_id
+        )
         page.wait_page_is_opened()
         return page
 
@@ -85,7 +88,9 @@ class ComponentPageMixin(BasePageObject):
     def open_config_tab(self) -> "ComponentConfigPage":
         """Open Configuration tab by menu click"""
         self.find_and_click(ObjectPageMenuLocators.config_tab)
-        page = ComponentConfigPage(self.driver, self.base_url, self.cluster_id, self.service_id, self.component_id)
+        page = ComponentConfigPage(
+            self.driver, self.base_url, self.cluster_id, self.service_id, self.component_id
+        )
         page.wait_page_is_opened()
         return page
 
@@ -93,7 +98,9 @@ class ComponentPageMixin(BasePageObject):
     def open_group_config_tab(self) -> "ComponentGroupConfigPage":
         """Open Group Configuration tab by menu click"""
         self.find_and_click(ObjectPageMenuLocators.group_config_tab)
-        page = ComponentGroupConfigPage(self.driver, self.base_url, self.cluster_id, self.service_id, self.component_id)
+        page = ComponentGroupConfigPage(
+            self.driver, self.base_url, self.cluster_id, self.service_id, self.component_id
+        )
         page.wait_page_is_opened()
         return page
 
@@ -101,7 +108,9 @@ class ComponentPageMixin(BasePageObject):
     def open_status_tab(self) -> "ComponentStatusPage":
         """Open Status tab by menu click"""
         self.find_and_click(ObjectPageMenuLocators.status_tab)
-        page = ComponentStatusPage(self.driver, self.base_url, self.cluster_id, self.service_id, self.component_id)
+        page = ComponentStatusPage(
+            self.driver, self.base_url, self.cluster_id, self.service_id, self.component_id
+        )
         page.wait_page_is_opened()
         return page
 

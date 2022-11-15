@@ -286,9 +286,7 @@ TEMPLATES = {
 
 for t in TYPES:
     for config in DATA:
-        d_name = (
-            f"group_advanced_{config[0]}_invisible_{config[1]}_field_advanced_{config[2]}_invisible_{config[3]}/{t}"
-        )
+        d_name = f"group_advanced_{config[0]}_invisible_{config[1]}_field_advanced_{config[2]}_invisible_{config[3]}/{t}"
         os.makedirs(d_name)
         tmpl = ''
         with open(f"{d_name}/config.yaml", "w+", encoding='utf_8') as f:

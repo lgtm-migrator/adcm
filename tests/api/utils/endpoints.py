@@ -168,7 +168,9 @@ class Endpoints(Enum):
                 try:
                     return self.get_by_data_class(field.f_type.fk_link)
                 except AttributeError:
-                    raise ValueError(f"Field {field_name} must be a Foreign Key field type") from AttributeError
+                    raise ValueError(
+                        f"Field {field_name} must be a Foreign Key field type"
+                    ) from AttributeError
         return None
 
     Cluster = Endpoint(
@@ -297,7 +299,9 @@ class Endpoints(Enum):
         methods=ALL,
         data_class=RbacSimpleRoleFields,
         spec_link="",
-        filter_predicate=lambda i: is_not_business_role(i) and is_not_hidden_role(i) and is_not_built_in(i),
+        filter_predicate=lambda i: is_not_business_role(i)
+        and is_not_hidden_role(i)
+        and is_not_built_in(i),
     )
 
     # Test logic for "built_in"

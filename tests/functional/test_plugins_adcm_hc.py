@@ -46,7 +46,9 @@ class TestPluginWorksFromAllADCMObjects:
     @pytest.fixture()
     def cluster_with_services(self, sdk_client_fs: ADCMClient) -> Tuple[Cluster, Service, Service]:
         """Return cluster and two services connected to cluster"""
-        bundle = sdk_client_fs.upload_from_fs(get_data_dir(__file__, 'clusters', 'different_objects'))
+        bundle = sdk_client_fs.upload_from_fs(
+            get_data_dir(__file__, 'clusters', 'different_objects')
+        )
         cluster = bundle.cluster_create(CLUSTER_NAME)
         test_service = cluster.service_add(name='test_service')
         another_service = cluster.service_add(name='another_service')
@@ -103,7 +105,9 @@ class TestPluginWorksFromAllADCMObjects:
     ):
         """Check that hc_map works as expected on cluster/service/component"""
         action_owner_object = get_object(self, sdk_client_fs)
-        with allure.step(f'Change Host-Component map from action on {action_owner_object.__class__.__name__}'):
+        with allure.step(
+            f'Change Host-Component map from action on {action_owner_object.__class__.__name__}'
+        ):
             run_action_and_wait_result(action_owner_object, self.HC_CHANGE_ACTION_NAME)
         self._check_hc_map_is_correct(sdk_client_fs)
 
@@ -138,7 +142,9 @@ class TestPluginCanBreakConstraints:
         """Return provider and three hosts"""
         bundle = sdk_client_fs.upload_from_fs(get_data_dir(__file__, 'provider'))
         provider = bundle.provider_create(PROVIDER_NAME)
-        hosts = tuple((provider.host_create(f'{prefix}-host') for prefix in ('first', 'second', 'third')))
+        hosts = tuple(
+            (provider.host_create(f'{prefix}-host') for prefix in ('first', 'second', 'third'))
+        )
         return provider, *hosts
 
     @pytest.fixture()
@@ -173,7 +179,11 @@ class TestPluginCanBreakConstraints:
         """
         error = 'COMPONENT_CONSTRAINT_ERROR'
         cluster, _ = cluster_with_service
-        task = run_cluster_action_and_assert_result(cluster, 'incorrect_hc_map_change', status='failed')
+        task = run_cluster_action_and_assert_result(
+            cluster, 'incorrect_hc_map_change', status='failed'
+        )
         job: Job = task.job_list()[0]
         with allure.step(f'Check "{error}" is in log'):
-            assert error in job.log(type='stdout').content, f'Error message in log should contain {error}'
+            assert (
+                error in job.log(type='stdout').content
+            ), f'Error message in log should contain {error}'

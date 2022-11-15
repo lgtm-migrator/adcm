@@ -25,9 +25,13 @@ def test_delete_service(sdk_client_fs: ADCMClient):
     service = cluster.service_add(name="zookeeper")
     cluster.reread()
     with allure.step("Ensure there's a concern on cluster from service's config"):
-        assert len(cluster.concerns()) > 0, 'There should be a concern on cluster from config of the service'
+        assert (
+            len(cluster.concerns()) > 0
+        ), 'There should be a concern on cluster from config of the service'
     with allure.step('Delete service'):
         service.delete()
     with allure.step('Ensure that concern is gone from cluster after service removal'):
         cluster.reread()
-        assert len(cluster.concerns()) == 0, 'Concern on cluster should be removed alongside with the service'
+        assert (
+            len(cluster.concerns()) == 0
+        ), 'Concern on cluster should be removed alongside with the service'

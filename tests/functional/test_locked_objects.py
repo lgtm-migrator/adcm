@@ -219,7 +219,10 @@ class TestComponentLock:
             - Host
         """
         task = _lock_obj(
-            complete_cluster.service(name="first_service").component(name="first_service_component_1"), lock_action
+            complete_cluster.service(name="first_service").component(
+                name="first_service_component_1"
+            ),
+            lock_action,
         )
         is_locked(host)
         task.wait()
@@ -426,7 +429,9 @@ def test_expand_on_clean_locked_host(
     elif adcm_object == "Component":
         obj_for_action = dummy_component
 
-    with allure.step(f"Run {obj_for_action.__class__.__name__} action: expand on clean locked host"):
+    with allure.step(
+        f"Run {obj_for_action.__class__.__name__} action: expand on clean locked host"
+    ):
         with catch_failed(Failed, "Expand action should throw an API error as Host is locked"):
             with pytest.raises(ErrorMessage, match="is locked"):
                 obj_for_action.action(name=expand_action,).run(
@@ -664,7 +669,9 @@ def _cluster_with_components(cluster: Cluster, hosts: List[Host]):
 
 
 def _lock_obj(
-    obj: Union[Cluster, Service, Component, Provider, Host], lock_action: str = "lock", duration: int = 5
+    obj: Union[Cluster, Service, Component, Provider, Host],
+    lock_action: str = "lock",
+    duration: int = 5,
 ) -> Task:
     """
     Run action lock on object
@@ -694,5 +701,6 @@ def is_free(obj: Union[Cluster, Service, Component, Provider, Host]):
         assert_state(obj=obj, state="created")
         assert obj.locked is False, f"{obj.__class__.__name__} should be available"
         assert obj.action_list(), (
-            f"{obj.__class__.__name__} action list is empty. " f"Actions should be available for unlocked objects"
+            f"{obj.__class__.__name__} action list is empty. "
+            f"Actions should be available for unlocked objects"
         )

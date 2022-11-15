@@ -50,7 +50,9 @@ class ADCMError:
         for i in args:
             err_msg = 'Unknown'
             check.is_true(
-                i in desc or i in error_args or i in (err_msg := self._get_data_err_messages(error)),
+                i in desc
+                or i in error_args
+                or i in (err_msg := self._get_data_err_messages(error)),
                 (
                     f"Text '{i}' should be present in error message. Either in:\n"
                     f'Description: {desc}\n'

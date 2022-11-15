@@ -120,7 +120,9 @@ class ADCMTest:
         """Destroy selenium driver"""
         self.driver.quit()
 
-    def _configure_downloads(self, browser: str, downloads_directory: Optional[Union[os.PathLike, str]]):
+    def _configure_downloads(
+        self, browser: str, downloads_directory: Optional[Union[os.PathLike, str]]
+    ):
         if downloads_directory is None:
             return
         if browser == "Chrome":

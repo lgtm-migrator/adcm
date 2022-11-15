@@ -23,7 +23,9 @@ from tests.library.assertions import expect_no_api_error, expect_api_error
 
 CANCELLED_STATUS = 'aborted'
 
-pytestmark = [pytest.mark.parametrize('generic_bundle', ['action_termination_allowed'], indirect=True)]
+pytestmark = [
+    pytest.mark.parametrize('generic_bundle', ['action_termination_allowed'], indirect=True)
+]
 
 
 @pytest.fixture()
@@ -67,7 +69,9 @@ def test_disallow_to_terminate(cluster):
     with allure.step('Check that action execution is continued'):
         task.reread()
         assert task.status != CANCELLED_STATUS, 'Wrong status: task should not be cancelled'
-        assert all(j.status != CANCELLED_STATUS for j in task.job_list()), 'None of jobs in task should be cancelled'
+        assert all(
+            j.status != CANCELLED_STATUS for j in task.job_list()
+        ), 'None of jobs in task should be cancelled'
         task.wait()
         assert (
             len(cluster.concerns()) == 0
@@ -83,7 +87,13 @@ def test_terminate_action_with_hc_acl(cluster, generic_provider):
 
     with allure.step('Run action with hc_acl and terminate it right away'):
         task = cluster.action(name='with_hc_acl').run(
-            hc=[{'host_id': host.id, 'service_id': component.service_id, 'component_id': component.id}]
+            hc=[
+                {
+                    'host_id': host.id,
+                    'service_id': component.service_id,
+                    'component_id': component.id,
+                }
+            ]
         )
         # action need time to "actually" launch
         wait_until_step_succeeds(
@@ -98,7 +108,9 @@ def test_terminate_action_with_hc_acl(cluster, generic_provider):
         _wait_state_is_aborted(task)
         cluster.reread()
         new_hc = tuple(cluster.hostcomponent())
-        assert new_hc == original_hc, 'Hostcomponent is incorrect after cancellation of action with hc_acl'
+        assert (
+            new_hc == original_hc
+        ), 'Hostcomponent is incorrect after cancellation of action with hc_acl'
 
 
 def _wait_state_is_aborted(task):
@@ -107,6 +119,8 @@ def _wait_state_is_aborted(task):
         task.reread()
         assert (
             actual_status := task.status
-        ) == CANCELLED_STATUS, f'Task should be of status "{CANCELLED_STATUS}", not "{actual_status}"'
+        ) == CANCELLED_STATUS, (
+            f'Task should be of status "{CANCELLED_STATUS}", not "{actual_status}"'
+        )
 
     wait_until_step_succeeds(_wait_cancel, timeout=5, period=0.5)

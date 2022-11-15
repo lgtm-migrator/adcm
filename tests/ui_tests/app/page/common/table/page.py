@@ -78,7 +78,9 @@ class CommonTableObj(BasePageObject):
         yield
 
         def _wait_scroll():
-            assert len(self.get_all_rows()) != current_amount, "Amount of rows on the page hasn't changed"
+            assert (
+                len(self.get_all_rows()) != current_amount
+            ), "Amount of rows on the page hasn't changed"
 
         self.wait_element_hide(CommonToolbarLocators.progress_bar)
         wait_until_step_succeeds(_wait_scroll, period=1, timeout=10)
@@ -100,7 +102,9 @@ class CommonTableObj(BasePageObject):
         self.wait_element_hide(CommonToolbarLocators.progress_bar, timeout=60)
         with self.wait_rows_change():
             self.click_page_by_number(2)
-        assert self.row_count == second_page_item_amount, f"Second page should contains {second_page_item_amount} items"
+        assert (
+            self.row_count == second_page_item_amount
+        ), f"Second page should contains {second_page_item_amount} items"
         with self.wait_rows_change():
             self.click_page_by_number(1)
         assert (
@@ -108,7 +112,9 @@ class CommonTableObj(BasePageObject):
         ), f"First page should contains {params['fist_page_cluster_amount']} items"
         with self.wait_rows_change():
             self.click_next_page()
-        assert self.row_count == second_page_item_amount, f"Next page should contains {second_page_item_amount} items"
+        assert (
+            self.row_count == second_page_item_amount
+        ), f"Next page should contains {second_page_item_amount} items"
         with self.wait_rows_change():
             self.click_previous_page()
         assert (

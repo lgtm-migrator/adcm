@@ -40,7 +40,9 @@ def old_adcm_image() -> Tuple[str, str]:
 def wait_info_popup_contains(page: BasePageObject, text: str):
     """Wait for popup to be the one that's expected"""
     try:
-        assert (popup_text := page.get_info_popup_text()) == text, f'Text in popup should be {text}, not {popup_text}'
+        assert (
+            popup_text := page.get_info_popup_text()
+        ) == text, f'Text in popup should be {text}, not {popup_text}'
     except StaleElementReferenceException:
         # popups changes fast, so `get_info_popup_text` can get error during text extraction
         pass
@@ -84,7 +86,8 @@ def test_upgrade_adcm(
         intro_page.wait_config_loaded()
     with allure.step('Start ADCM upgrade with client'):
         upgrade_thread = threading.Thread(
-            target=upgrade_adcm_version, args=(app_fs.adcm, sdk_client_fs, adcm_api_credentials, adcm_image_tags)
+            target=upgrade_adcm_version,
+            args=(app_fs.adcm, sdk_client_fs, adcm_api_credentials, adcm_image_tags),
         )
         upgrade_thread.start()
     with allure.step('Check update popup messages are present'):

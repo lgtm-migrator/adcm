@@ -45,7 +45,9 @@ class GroupConfigList(BasePageObject):
 
         try:
             return [
-                r for r in self.find_elements(GroupConfigListLocators.group_config_row, timeout=5) if r.is_displayed()
+                r
+                for r in self.find_elements(GroupConfigListLocators.group_config_row, timeout=5)
+                if r.is_displayed()
             ]
         except TimeoutException:
             return []
@@ -55,7 +57,9 @@ class GroupConfigList(BasePageObject):
 
         return GroupConfigRowInfo(
             name=self.find_child(row, GroupConfigListLocators.GroupConfigRow.name).text,
-            description=self.find_child(row, GroupConfigListLocators.GroupConfigRow.description).text,
+            description=self.find_child(
+                row, GroupConfigListLocators.GroupConfigRow.description
+            ).text,
         )
 
     @allure.step('Create new group config {name}')
@@ -64,9 +68,13 @@ class GroupConfigList(BasePageObject):
 
         self.find_and_click(GroupConfigListLocators.add_btn)
         self.wait_element_visible(GroupConfigListLocators.CreateGroupPopup.block)
-        self.send_text_to_element(GroupConfigListLocators.CreateGroupPopup.name_input, name, clean_input=True)
         self.send_text_to_element(
-            GroupConfigListLocators.CreateGroupPopup.description_input, description, clean_input=True
+            GroupConfigListLocators.CreateGroupPopup.name_input, name, clean_input=True
+        )
+        self.send_text_to_element(
+            GroupConfigListLocators.CreateGroupPopup.description_input,
+            description,
+            clean_input=True,
         )
         self.find_and_click(GroupConfigListLocators.CreateGroupPopup.create_btn)
         self.wait_element_hide(GroupConfigListLocators.CreateGroupPopup.block)

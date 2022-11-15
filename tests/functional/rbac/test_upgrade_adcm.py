@@ -50,7 +50,10 @@ NEW_USER_CREDS = 'bestname', 'nevergonnabreakmedown'
     indirect=True,
 )
 def test_rbac_init_on_upgrade(
-    adcm_fs: ADCM, sdk_client_fs: ADCMClient, adcm_api_credentials: dict, adcm_image_tags: Tuple[str, str]
+    adcm_fs: ADCM,
+    sdk_client_fs: ADCMClient,
+    adcm_api_credentials: dict,
+    adcm_image_tags: Tuple[str, str],
 ):
     """
     Test that roles are created on bundles uploaded before an upgrade
@@ -85,10 +88,15 @@ def check_roles_are_created(client, bundles: Tuple[Bundle, Bundle, Bundle, Bundl
         for cluster_bundle in (first_bundle, second_bundle):
             hidden_role_prefix = get_bundle_prefix_for_role_name(cluster_bundle)
             cluster = cluster_bundle.cluster_create(name=f'Test cluster {random_string(4)}')
-            check_cluster_actions_roles_are_created_correctly(client, cluster, hidden_role_names, hidden_role_prefix)
+            check_cluster_actions_roles_are_created_correctly(
+                client, cluster, hidden_role_names, hidden_role_prefix
+            )
             for service_name in SERVICE_NAMES:
                 check_service_and_components_roles_are_created_correctly(
-                    client, cluster.service_add(name=service_name), hidden_role_names, hidden_role_prefix
+                    client,
+                    cluster.service_add(name=service_name),
+                    hidden_role_names,
+                    hidden_role_prefix,
                 )
 
     with allure.step('Check provider roles were created correctly'):

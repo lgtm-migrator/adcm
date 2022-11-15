@@ -41,7 +41,9 @@ pytestmark = [pytest.mark.ldap(), only_clean_adcm]
 
 
 @pytest.fixture()
-def two_ldap_groups_with_users(ldap_ad, ldap_basic_ous) -> Tuple[GroupInfo, UserInfo, GroupInfo, UserInfo]:
+def two_ldap_groups_with_users(
+    ldap_ad, ldap_basic_ous
+) -> Tuple[GroupInfo, UserInfo, GroupInfo, UserInfo]:
     """Create two ldap users and groups with a user in each one"""
     groups_ou, users_ou = ldap_basic_ous
     group_1 = {'name': 'group-with-users-1'}
@@ -80,14 +82,21 @@ def two_adcm_users(sdk_client_fs) -> Tuple[User, User]:
 @pytest.fixture()
 def two_adcm_groups(sdk_client_fs) -> Tuple[Group, Group]:
     """Create two ADCM groups"""
-    return sdk_client_fs.group_create('first-adcm-group'), sdk_client_fs.group_create('second-adcm-group')
+    return sdk_client_fs.group_create('first-adcm-group'), sdk_client_fs.group_create(
+        'second-adcm-group'
+    )
 
 
 @pytest.mark.usefixtures(
     'configure_adcm_ldap_ad', 'two_ldap_users'
 )  # pylint: disable-next=too-many-arguments, too-many-locals, too-many-statements
 def test_users_in_groups_sync(
-    sdk_client_fs, ldap_ad, two_adcm_users, two_adcm_groups, two_ldap_users, two_ldap_groups_with_users
+    sdk_client_fs,
+    ldap_ad,
+    two_adcm_users,
+    two_adcm_groups,
+    two_ldap_users,
+    two_ldap_groups_with_users,
 ):
     """
     Test ADCM/LDAP users in groups manipulation and sync.
@@ -105,9 +114,13 @@ def test_users_in_groups_sync(
     with allure.step('Sync and add LDAP users to ADCM groups'):
         _run_sync(sdk_client_fs)
         check_existing_groups(
-            sdk_client_fs, {group_info_1['name'], group_info_2['name']}, {adcm_group_1.name, adcm_group_2.name}
+            sdk_client_fs,
+            {group_info_1['name'], group_info_2['name']},
+            {adcm_group_1.name, adcm_group_2.name},
         )
-        check_existing_users(sdk_client_fs, {user_info_1['name'], user_info_2['name']}, adcm_user_names)
+        check_existing_users(
+            sdk_client_fs, {user_info_1['name'], user_info_2['name']}, adcm_user_names
+        )
         ldap_group_1 = get_ldap_group_from_adcm(sdk_client_fs, group_info_1['name'])
         ldap_group_2 = get_ldap_group_from_adcm(sdk_client_fs, group_info_2['name'])
         ldap_user_1 = get_ldap_user_from_adcm(sdk_client_fs, user_info_1['name'])
@@ -129,9 +142,13 @@ def test_users_in_groups_sync(
     with allure.step('Sync and check groups'):
         _run_sync(sdk_client_fs)
         check_existing_groups(
-            sdk_client_fs, {group_info_1['name'], group_info_2['name']}, {adcm_group_1.name, adcm_group_2.name}
+            sdk_client_fs,
+            {group_info_1['name'], group_info_2['name']},
+            {adcm_group_1.name, adcm_group_2.name},
         )
-        check_existing_users(sdk_client_fs, {user_info_1['name'], user_info_2['name']}, adcm_user_names)
+        check_existing_users(
+            sdk_client_fs, {user_info_1['name'], user_info_2['name']}, adcm_user_names
+        )
         _check_users_in_group(ldap_group_1, ldap_user_2)
         _check_users_in_group(adcm_group_1, adcm_user_1, ldap_user_1)
         _check_users_in_group(ldap_group_2, ldap_user_1)
@@ -144,10 +161,16 @@ def test_users_in_groups_sync(
     with allure.step('Sync and check user state'):
         _run_sync(sdk_client_fs)
         check_existing_groups(
-            sdk_client_fs, {group_info_1['name'], group_info_2['name']}, {adcm_group_1.name, adcm_group_2.name}
+            sdk_client_fs,
+            {group_info_1['name'], group_info_2['name']},
+            {adcm_group_1.name, adcm_group_2.name},
         )
-        check_existing_users(sdk_client_fs, {user_info_1['name'], user_info_2['name']}, adcm_user_names)
-        assert not get_ldap_user_from_adcm(sdk_client_fs, user_info_2['name']).is_active, 'User should be deactivated'
+        check_existing_users(
+            sdk_client_fs, {user_info_1['name'], user_info_2['name']}, adcm_user_names
+        )
+        assert not get_ldap_user_from_adcm(
+            sdk_client_fs, user_info_2['name']
+        ).is_active, 'User should be deactivated'
         _check_users_in_group(ldap_group_1)
         _check_users_in_group(adcm_group_1, adcm_user_1, ldap_user_1)
         _check_users_in_group(ldap_group_2, ldap_user_1)
@@ -155,13 +178,18 @@ def test_users_in_groups_sync(
     with allure.step('Check login permissions'):
         _check_login_succeed(sdk_client_fs, user_info_1)
         login_should_fail(
-            'login as user removed from ldap groups', sdk_client_fs, user_info_2['name'], user_info_2['password']
+            'login as user removed from ldap groups',
+            sdk_client_fs,
+            user_info_2['name'],
+            user_info_2['password'],
         )
     with allure.step('Add "free" LDAP user to a group, sync and check results'):
         ldap_ad.add_user_to_group(user_info_3['dn'], group_info_2['dn'])
         _run_sync(sdk_client_fs)
         check_existing_users(
-            sdk_client_fs, {user_info_1['name'], user_info_2['name'], user_info_3['name']}, adcm_user_names
+            sdk_client_fs,
+            {user_info_1['name'], user_info_2['name'], user_info_3['name']},
+            adcm_user_names,
         )
         ldap_user_3 = get_ldap_user_from_adcm(sdk_client_fs, user_info_3['name'])
         _check_users_in_group(ldap_group_1)
@@ -170,7 +198,9 @@ def test_users_in_groups_sync(
 
 
 def _check_login_succeed(client: ADCMClient, user_info: dict):
-    login_should_succeed(f'login as {user_info["name"]}', client, user_info['name'], user_info['password'])
+    login_should_succeed(
+        f'login as {user_info["name"]}', client, user_info['name'], user_info['password']
+    )
 
 
 def _run_sync(client: ADCMClient):
@@ -179,7 +209,9 @@ def _run_sync(client: ADCMClient):
 
 
 def _check_users_in_group(group: Group, *users: User):
-    assert {u.username for u in users} == _get_usernames_in_group(group), f'Incorrect user list in group {group.name}'
+    assert {u.username for u in users} == _get_usernames_in_group(
+        group
+    ), f'Incorrect user list in group {group.name}'
 
 
 def _get_usernames_in_group(group: Group) -> Set[str]:

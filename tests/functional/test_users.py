@@ -25,7 +25,11 @@ from docker.models.containers import Container
 
 from tests.functional.audit.conftest import make_auth_header
 from tests.functional.conftest import only_clean_adcm
-from tests.functional.ldap_auth.utils import get_ldap_user_from_adcm, login_should_fail, login_should_succeed
+from tests.functional.ldap_auth.utils import (
+    get_ldap_user_from_adcm,
+    login_should_fail,
+    login_should_succeed,
+)
 from tests.functional.tools import check_user_is_active, check_user_is_deactivated, run_ldap_sync
 from tests.library.ldap_interactions import LDAPEntityManager
 
@@ -61,7 +65,9 @@ def created_ldap_user(ldap_ad, ldap_basic_ous) -> Tuple[DN, Username]:
 def ldap_user(sdk_client_fs, created_ldap_user, configure_adcm_ldap_ad) -> User:
     """Login as LDAP user and return it as ADCM user"""
     _ = configure_adcm_ldap_ad
-    sdk_client_fs.adcm().config_set_diff({"ldap_integration": {"group_search_base": None, "sync_interval": 0}})
+    sdk_client_fs.adcm().config_set_diff(
+        {"ldap_integration": {"group_search_base": None, "sync_interval": 0}}
+    )
     _, username = created_ldap_user
     login_should_succeed("login as newly created ldap user", sdk_client_fs, username, username)
     return get_ldap_user_from_adcm(sdk_client_fs, username)
@@ -115,7 +121,8 @@ def _check_user_appeared_in_audit(client: ADCMClient, user: User) -> None:
     with allure.step(f"Check that there's a record in audit log about user {user.username}"):
         user_audit_record = next(
             filter(
-                lambda operation: operation.object_type == ObjectType.USER and operation.object_name == user.username,
+                lambda operation: operation.object_type == ObjectType.USER
+                and operation.object_name == user.username,
                 client.audit_operation_list(),
             ),
             None,

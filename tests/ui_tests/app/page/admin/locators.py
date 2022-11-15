@@ -26,7 +26,9 @@ class CommonAdminPagesLocators:
     field_error = TemplateLocator(By.XPATH, "//mat-error[contains(text(), '{}')]", 'Error "{}"')
     item = Locator(By.CSS_SELECTOR, "adwp-selection-list mat-list-option", "select items")
     save_update_btn = Locator(
-        By.XPATH, "//button[./span[contains(text(), 'Add') or contains(text(), 'Update')]]", "Save/Update button"
+        By.XPATH,
+        "//button[./span[contains(text(), 'Add') or contains(text(), 'Update')]]",
+        "Save/Update button",
     )
     cancel_btn = Locator(By.XPATH, "//button[./span[contains(text(), 'Cancel')]]", "Cancel button")
 
@@ -48,9 +50,15 @@ class AdminUsersLocators:
     create_user_button = Locator(By.XPATH, "//button[@adcm_test='create-btn']", "Add user button")
     user_row = Locator(By.CSS_SELECTOR, "mat-row", "Table row")
     filter_btn = Locator(By.CSS_SELECTOR, "app-filter .filter-toggle-button", "Fulter button")
-    filter_dropdown_select = Locator(By.CSS_SELECTOR, "app-filter mat-select", "Filter dropdown select")
-    filter_dropdown_option = Locator(By.CSS_SELECTOR, "div[role='listbox'] mat-option", "Filter dropdown option")
-    filter_dropdown_remove = Locator(By.CSS_SELECTOR, "app-filter button[aria-label='Remove']", "Filter remove button")
+    filter_dropdown_select = Locator(
+        By.CSS_SELECTOR, "app-filter mat-select", "Filter dropdown select"
+    )
+    filter_dropdown_option = Locator(
+        By.CSS_SELECTOR, "div[role='listbox'] mat-option", "Filter dropdown option"
+    )
+    filter_dropdown_remove = Locator(
+        By.CSS_SELECTOR, "app-filter button[aria-label='Remove']", "Filter remove button"
+    )
 
     class Row:
         """Existing user row"""
@@ -58,32 +66,46 @@ class AdminUsersLocators:
         username = Locator(By.XPATH, ".//mat-cell[2]", "Username in row")
         password = Locator(By.CSS_SELECTOR, "input[data-placeholder='Password']", "Password in row")
         password_confirm = Locator(
-            By.CSS_SELECTOR, "input[data-placeholder='Confirm Password']", "Password confirmation in row"
+            By.CSS_SELECTOR,
+            "input[data-placeholder='Confirm Password']",
+            "Password confirmation in row",
         )
         confirm_update_btn = Locator(
             By.XPATH,
             ".//button[.//mat-icon[text()='done']]",
             "Confirm password update button in row",
         )
-        select_checkbox = Locator(By.XPATH, ".//span[.//input[@type='checkbox']]", "Select user checkbox in row")
-        delete_btn = Locator(By.XPATH, ".//button[.//mat-icon[text()='delete']]", "Delete user button in row")
+        select_checkbox = Locator(
+            By.XPATH, ".//span[.//input[@type='checkbox']]", "Select user checkbox in row"
+        )
+        delete_btn = Locator(
+            By.XPATH, ".//button[.//mat-icon[text()='delete']]", "Delete user button in row"
+        )
 
     class AddUserPopup(CommonAdminPagesLocators):
         """Popup with new user info"""
 
         block = Locator(By.TAG_NAME, "mat-dialog-container", "Add user popup block")
         username = Locator(By.NAME, "username", "New user username")
-        password = Locator(By.CSS_SELECTOR, "input[data-placeholder='Password']", "New user password")
+        password = Locator(
+            By.CSS_SELECTOR, "input[data-placeholder='Password']", "New user password"
+        )
         password_confirm = Locator(
-            By.CSS_SELECTOR, "input[data-placeholder='Confirm password']", "New user password confirmation"
+            By.CSS_SELECTOR,
+            "input[data-placeholder='Confirm password']",
+            "New user password confirmation",
         )
         adcm_admin_chbx = Locator(
-            By.CSS_SELECTOR, "mat-checkbox[formcontrolname='is_superuser']", "Checkbox ADCM Administrator"
+            By.CSS_SELECTOR,
+            "mat-checkbox[formcontrolname='is_superuser']",
+            "Checkbox ADCM Administrator",
         )
         first_name = Locator(By.NAME, "first_name", "New user first name")
         last_name = Locator(By.NAME, "last_name", "New user last name")
         email = Locator(By.NAME, "email", "New user email")
-        select_groups = Locator(By.CSS_SELECTOR, "adwp-input-select[controlname='group']", "Select groups")
+        select_groups = Locator(
+            By.CSS_SELECTOR, "adwp-input-select[controlname='group']", "Select groups"
+        )
         group_item = Locator(By.CSS_SELECTOR, "mat-list-option[role='option']", "Group item")
 
     class FilterPopup:
@@ -110,8 +132,12 @@ class AdminGroupsLocators(CommonAdminPagesLocators):
         block = Locator(By.CSS_SELECTOR, "app-rbac-group-form", "Add group popup block")
         title = Locator(By.CSS_SELECTOR, "mat-dialog-container h3", "Popup title")
         name_input = Locator(By.CSS_SELECTOR, "adwp-input[label='Group name'] input", "Input name")
-        description_input = Locator(By.CSS_SELECTOR, "adwp-input[label='Description'] input", "Input description")
-        users_select = Locator(By.CSS_SELECTOR, "adwp-input-select[label='Select users'] adwp-select", "select users")
+        description_input = Locator(
+            By.CSS_SELECTOR, "adwp-input[label='Description'] input", "Input description"
+        )
+        users_select = Locator(
+            By.CSS_SELECTOR, "adwp-input-select[label='Select users'] adwp-select", "select users"
+        )
 
         class UserRow:
             """Locators for user row in creating groups popup"""
@@ -138,18 +164,26 @@ class AdminRolesLocators(CommonAdminPagesLocators):
             By.CSS_SELECTOR, "adwp-input[controlname='display_name'] input", "Input for role name"
         )
         description_name_input = Locator(
-            By.CSS_SELECTOR, "adwp-input[controlname='description'] input", "Input for role description"
+            By.CSS_SELECTOR,
+            "adwp-input[controlname='description'] input",
+            "Input for role description",
         )
 
         class PermissionItemsBlock:
             filter_input = Locator(
-                By.CSS_SELECTOR, ".adcm-input-rbac-permissions__selected-filter input", "Filter input"
+                By.CSS_SELECTOR,
+                ".adcm-input-rbac-permissions__selected-filter input",
+                "Filter input",
             )
             item = Locator(
-                By.CSS_SELECTOR, ".adcm-input-rbac-permissions__selected-field mat-chip", "Selected permission item"
+                By.CSS_SELECTOR,
+                ".adcm-input-rbac-permissions__selected-field mat-chip",
+                "Selected permission item",
             )
             clear_all_btn = Locator(
-                By.CSS_SELECTOR, ".adcm-input-rbac-permissions__selected-filter-clear", "Clear all button"
+                By.CSS_SELECTOR,
+                ".adcm-input-rbac-permissions__selected-filter-clear",
+                "Clear all button",
             )
 
             class PermissionItem:
@@ -158,13 +192,19 @@ class AdminRolesLocators(CommonAdminPagesLocators):
 
         class SelectPermissionsBlock:
             permissions_filters = Locator(
-                By.CSS_SELECTOR, ".adcm-rbac-permission__filter mat-chip", "filter item for permissions list"
+                By.CSS_SELECTOR,
+                ".adcm-rbac-permission__filter mat-chip",
+                "filter item for permissions list",
             )
-            permissions_search_row = Locator(By.CSS_SELECTOR, "adwp-selection-list-actions", "Permission search row")
+            permissions_search_row = Locator(
+                By.CSS_SELECTOR, "adwp-selection-list-actions", "Permission search row"
+            )
             permissions_item_row = Locator(
                 By.CSS_SELECTOR, ".adcm-rbac-permission__options mat-list-option", "Permission row"
             )
-            select_btn = Locator(By.CSS_SELECTOR, ".adcm-rbac-permission__actions button", "Select button")
+            select_btn = Locator(
+                By.CSS_SELECTOR, ".adcm-rbac-permission__actions button", "Select button"
+            )
 
             class SelectPermissionsRow:
                 checkbox = Locator(By.CSS_SELECTOR, "mat-pseudo-checkbox", "Checkbox")
@@ -188,21 +228,31 @@ class AdminPoliciesLocators(CommonAdminPagesLocators):
     class AddPolicyPopup:
         """Locators for creating policy popup"""
 
-        block = Locator(By.CSS_SELECTOR, "app-rbac-policy-form>mat-horizontal-stepper", "Add policy popup block")
+        block = Locator(
+            By.CSS_SELECTOR, "app-rbac-policy-form>mat-horizontal-stepper", "Add policy popup block"
+        )
 
         class FirstStep:
             """Locators for first step"""
 
             name_input = Locator(By.CSS_SELECTOR, "input[name='name']", "Input name")
-            description_input = Locator(By.CSS_SELECTOR, "input[name='description']", "Input description")
+            description_input = Locator(
+                By.CSS_SELECTOR, "input[name='description']", "Input description"
+            )
             role_select = Locator(By.CSS_SELECTOR, "mat-select[placeholder='Role']", "select role")
             role_item = Locator(
-                By.XPATH, "//div[./mat-option//*[@placeholderlabel='Select role']]/mat-option", "select items for role"
+                By.XPATH,
+                "//div[./mat-option//*[@placeholderlabel='Select role']]/mat-option",
+                "select items for role",
             )
 
-            users_select = Locator(By.CSS_SELECTOR, "adwp-input-select[label='User'] adwp-select", "select users")
+            users_select = Locator(
+                By.CSS_SELECTOR, "adwp-input-select[label='User'] adwp-select", "select users"
+            )
 
-            group_select = Locator(By.CSS_SELECTOR, "adwp-input-select[label='Group'] adwp-select", "select group")
+            group_select = Locator(
+                By.CSS_SELECTOR, "adwp-input-select[label='Group'] adwp-select", "select group"
+            )
 
             next_btn_first = Locator(
                 By.CSS_SELECTOR,
@@ -218,14 +268,28 @@ class AdminPoliciesLocators(CommonAdminPagesLocators):
                 "app-rbac-policy-form-step-two~div button[matstepperprevious]",
                 "Back button from second step",
             )
-            cluster_select = Locator(By.XPATH, "//div[./span//span[text()='Cluster']]//adwp-select", "select cluster")
-            service_select = Locator(By.XPATH, "//div[./span//span[text()='Service']]//mat-select", "select service")
-            service_item = Locator(By.CSS_SELECTOR, ".mat-select-panel mat-option", "select service item")
-            provider_select = Locator(By.CSS_SELECTOR, "app-parametrized-by-provider adwp-select", "select provider")
-            parent_select = Locator(By.XPATH, "//div[./span//span[text()='Parent']]//adwp-select", "select parent")
-            hosts_select = Locator(By.CSS_SELECTOR, "app-parametrized-by-host mat-form-field", "select hosts")
+            cluster_select = Locator(
+                By.XPATH, "//div[./span//span[text()='Cluster']]//adwp-select", "select cluster"
+            )
+            service_select = Locator(
+                By.XPATH, "//div[./span//span[text()='Service']]//mat-select", "select service"
+            )
+            service_item = Locator(
+                By.CSS_SELECTOR, ".mat-select-panel mat-option", "select service item"
+            )
+            provider_select = Locator(
+                By.CSS_SELECTOR, "app-parametrized-by-provider adwp-select", "select provider"
+            )
+            parent_select = Locator(
+                By.XPATH, "//div[./span//span[text()='Parent']]//adwp-select", "select parent"
+            )
+            hosts_select = Locator(
+                By.CSS_SELECTOR, "app-parametrized-by-host mat-form-field", "select hosts"
+            )
             next_btn_second = Locator(
-                By.CSS_SELECTOR, "app-rbac-policy-form-step-two~div .mat-stepper-next", "Next button from second step"
+                By.CSS_SELECTOR,
+                "app-rbac-policy-form-step-two~div .mat-stepper-next",
+                "Next button from second step",
             )
 
         class ThirdStep:

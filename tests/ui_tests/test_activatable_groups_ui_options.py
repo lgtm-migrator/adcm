@@ -31,7 +31,9 @@ pytestmark = [pytest.mark.usefixtures("_login_to_adcm_over_api")]
 
 
 @pytest.fixture()
-def create_cluster_and_open_config_page(sdk_client_fs: ADCMClient, path, app_fs) -> ClusterConfigPage:
+def create_cluster_and_open_config_page(
+    sdk_client_fs: ADCMClient, path, app_fs
+) -> ClusterConfigPage:
     """Create cluster with config and open config page in it"""
 
     cluster = prepare_cluster(sdk_client_fs, path)
@@ -75,11 +77,17 @@ class TestActivatableGroupConfigs:
         group_name = path.split("/")[-1]
         config_page.config.check_group_is_active(group_name=group_name, is_active=False)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.config.click_on_advanced()
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=False,
         )
 
     @parametrize_by_data_subdirs(
@@ -99,11 +107,17 @@ class TestActivatableGroupConfigs:
         group_name = path.split("/")[-1]
         config_page.config.check_group_is_active(group_name=group_name, is_active=False)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.config.click_on_advanced()
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=False,
         )
 
     @parametrize_by_data_subdirs(
@@ -123,11 +137,17 @@ class TestActivatableGroupConfigs:
         group_name = path.split("/")[-1]
         config_page.config.check_group_is_active(group_name=group_name)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.config.click_on_advanced()
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=False,
         )
 
     @parametrize_by_data_subdirs(
@@ -147,11 +167,17 @@ class TestActivatableGroupConfigs:
         group_name = path.split("/")[-1]
         config_page.config.check_group_is_active(group_name=group_name)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.config.click_on_advanced()
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=False,
         )
 
     @parametrize_by_data_subdirs(
@@ -174,10 +200,16 @@ class TestActivatableGroupConfigs:
             config_page.config.click_on_advanced()
         config_page.config.check_group_is_active(group_name=group_name, is_active=False)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=True
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=True,
         )
 
     @parametrize_by_data_subdirs(
@@ -200,10 +232,16 @@ class TestActivatableGroupConfigs:
             config_page.config.click_on_advanced()
         config_page.config.check_group_is_active(group_name=group_name)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=True
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=True,
         )
 
     @parametrize_by_data_subdirs(
@@ -450,10 +488,16 @@ class TestActivatableGroupConfigs:
             config_page.config.click_on_advanced()
         config_page.config.check_group_is_active(group_name=group_name)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=False,
         )
 
     @parametrize_by_data_subdirs(
@@ -476,10 +520,16 @@ class TestActivatableGroupConfigs:
             config_page.config.click_on_advanced()
         config_page.config.check_group_is_active(group_name=group_name)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=False,
         )
 
     @parametrize_by_data_subdirs(
@@ -499,11 +549,17 @@ class TestActivatableGroupConfigs:
         group_name = path.split("/")[-1]
         config_page.config.check_group_is_active(group_name=group_name, is_active=False)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.config.click_on_advanced()
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=True
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=True,
         )
 
     @parametrize_by_data_subdirs(
@@ -523,11 +579,17 @@ class TestActivatableGroupConfigs:
         group_name = path.split("/")[-1]
         config_page.config.check_group_is_active(group_name=group_name)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.config.click_on_advanced()
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=True
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=True,
         )
 
     @parametrize_by_data_subdirs(
@@ -547,14 +609,23 @@ class TestActivatableGroupConfigs:
         group_name = path.split("/")[-1]
         config_page.config.check_group_is_active(group_name=group_name, is_active=False)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=False,
         )
         config_page.config.click_on_advanced()
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=True
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=True,
         )
 
     @parametrize_by_data_subdirs(
@@ -574,14 +645,23 @@ class TestActivatableGroupConfigs:
         group_name = path.split("/")[-1]
         config_page.config.check_group_is_active(group_name=group_name)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=False,
         )
         config_page.config.click_on_advanced()
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=True
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=True,
         )
 
     @parametrize_by_data_subdirs(
@@ -604,10 +684,16 @@ class TestActivatableGroupConfigs:
             config_page.config.click_on_advanced()
         config_page.config.check_group_is_active(group_name=group_name, is_active=False)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=False,
         )
 
     @parametrize_by_data_subdirs(
@@ -630,10 +716,16 @@ class TestActivatableGroupConfigs:
             config_page.config.click_on_advanced()
         config_page.config.check_group_is_active(group_name=group_name, is_active=False)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=True
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=True,
         )
 
     @parametrize_by_data_subdirs(
@@ -656,10 +748,16 @@ class TestActivatableGroupConfigs:
             config_page.config.click_on_advanced()
         config_page.config.check_group_is_active(group_name=group_name)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=True
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=True,
         )
 
     @parametrize_by_data_subdirs(
@@ -682,8 +780,14 @@ class TestActivatableGroupConfigs:
             config_page.config.click_on_advanced()
         config_page.config.check_group_is_active(group_name=group_name, is_active=False)
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=False, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=False,
+            is_subs_visible=False,
         )
         config_page.check_groups(
-            group_names=[group_name], is_group_visible=True, is_group_active=True, is_subs_visible=False
+            group_names=[group_name],
+            is_group_visible=True,
+            is_group_active=True,
+            is_subs_visible=False,
         )

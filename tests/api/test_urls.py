@@ -18,7 +18,11 @@ import allure
 import pytest
 
 from tests.api.testdata.db_filler import DbFiller
-from tests.api.testdata.generators import get_data_for_urls_check, TestDataWithPreparedPath, TestData
+from tests.api.testdata.generators import (
+    get_data_for_urls_check,
+    TestDataWithPreparedPath,
+    TestData,
+)
 
 pytestmark = [
     allure.suite("API Urls tests"),

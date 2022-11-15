@@ -114,7 +114,9 @@ class RunActionTestMixin:
             _wait_all_finished(self.client)
 
 
-def _action_run_test_init(instance: RunActionTestMixin, admin_client: ADCMClient, new_user_client: ADCMClient) -> None:
+def _action_run_test_init(
+    instance: RunActionTestMixin, admin_client: ADCMClient, new_user_client: ADCMClient
+) -> None:
     instance.client = admin_client
     instance.admin_creds = make_auth_header(admin_client)
     instance.unauth_creds = make_auth_header(new_user_client)
@@ -149,7 +151,9 @@ class TestClusterObjectsActions(RunActionTestMixin):
         self._run_service_actions(cluster, post)
         self._run_component_actions(cluster, post)
         audit_log_checker.set_user_map(self.client)
-        audit_log_checker.check(self.client.audit_operation_list(operation_type=OperationType.UPDATE))
+        audit_log_checker.check(
+            self.client.audit_operation_list(operation_type=OperationType.UPDATE)
+        )
 
     @allure.step("Run cluster actions")
     def _run_cluster_actions(self, cluster, post):
@@ -184,7 +188,9 @@ class TestClusterObjectsActions(RunActionTestMixin):
 class TestProviderObjectActions(RunActionTestMixin):
     """Tests on audit of provider objects' actions"""
 
-    pytestmark = [pytest.mark.usefixtures("_init", "_grant_view_on_provider", "_grant_view_on_host")]
+    pytestmark = [
+        pytest.mark.usefixtures("_init", "_grant_view_on_provider", "_grant_view_on_host")
+    ]
 
     @pytest.fixture()
     def _init(self, sdk_client_fs, new_user_client):
@@ -208,20 +214,30 @@ class TestProviderObjectActions(RunActionTestMixin):
         self._run_provider_actions(provider, post)
         self._run_host_actions(provider, post)
         audit_log_checker.set_user_map(self.client)
-        audit_log_checker.check(self.client.audit_operation_list(operation_type=OperationType.UPDATE))
+        audit_log_checker.check(
+            self.client.audit_operation_list(operation_type=OperationType.UPDATE)
+        )
 
     def test_simple_run_host_action(self, provider, cluster, sdk_client_fs):
         """Test audit of successful launch of `host_action: true`"""
         host = cluster.host_add(provider.host())
         action = host.action(name="host_action")
         url = f"{sdk_client_fs.url}/api/v1/host/{host.id}/action/{action.id}/run/"
-        check_succeed(requests.post(url, json={"config": {"param": 1}}, headers=make_auth_header(sdk_client_fs)))
+        check_succeed(
+            requests.post(
+                url, json={"config": {"param": 1}}, headers=make_auth_header(sdk_client_fs)
+            )
+        )
         audit_log: AuditOperation = sdk_client_fs.audit_operation_list()[0]
         with allure.step(f"Check audit record: {audit_log}"):
             assert audit_log.user_id == sdk_client_fs.me().id, "Incorrect used_id, admin's expected"
             assert audit_log.object_type == ObjectType.HOST, "Incorrect object type"
-            assert audit_log.operation_name == f"{action.display_name} action launched", "Incorrect operation name"
-            assert audit_log.operation_result == OperationResult.SUCCESS, "Operation should've succeed"
+            assert (
+                audit_log.operation_name == f"{action.display_name} action launched"
+            ), "Incorrect operation name"
+            assert (
+                audit_log.operation_result == OperationResult.SUCCESS
+            ), "Operation should've succeed"
 
     def _run_provider_actions(self, provider: Provider, post: Callable):
         provider_action_prefix = f"provider/{provider.id}/action/"
@@ -282,7 +298,9 @@ class TestUpgrade(RunActionTestMixin):
             (self.admin_creds, f"{upgrade_base}1000/do/", check_404),
             (self.admin_creds, url, check_succeed),
         ):
-            with allure.step(f"Run upgrade '{self.SIMPLE}' on {type_name} {obj.name} via POST to {actual_url}"):
+            with allure.step(
+                f"Run upgrade '{self.SIMPLE}' on {type_name} {obj.name} via POST to {actual_url}"
+            ):
                 check_response(requests.post(actual_url, headers=headers))
             _wait_all_finished(self.client)
         for name in (self.FAIL, self.SUCCEED):
@@ -293,11 +311,15 @@ class TestUpgrade(RunActionTestMixin):
                 (self.admin_creds, {}, check_409),
                 (self.admin_creds, {"config": {"param": "asdklj"}}, check_succeed),
             ):
-                with allure.step(f"Run upgrade '{name}' on {type_name} {obj.name} via POST to {url} with body: {data}"):
+                with allure.step(
+                    f"Run upgrade '{name}' on {type_name} {obj.name} via POST to {url} with body: {data}"
+                ):
                     check_response(requests.post(url, json=data, headers=headers))
                 _wait_all_finished(self.client)
         checker = AuditLogChecker(
-            parse_with_context({"username": NEW_USER["username"], "name": obj.name, "object_type": type_name})
+            parse_with_context(
+                {"username": NEW_USER["username"], "name": obj.name, "object_type": type_name}
+            )
         )
         checker.set_user_map(self.client)
         checker.check(self.client.audit_operation_list())
@@ -318,7 +340,11 @@ class TestADCMActions:
             check_404(requests.post(url, headers=make_auth_header(new_user_client)))
         with allure.step("Fail to run action"):
             check_400(
-                requests.post(url, json={"config": {"i": "doesnotexist"}}, headers=make_auth_header(sdk_client_fs))
+                requests.post(
+                    url,
+                    json={"config": {"i": "doesnotexist"}},
+                    headers=make_auth_header(sdk_client_fs),
+                )
             )
         with allure.step("Run action successfuly"):
             check_succeed(requests.post(url, headers=make_auth_header(sdk_client_fs)))
@@ -337,14 +363,18 @@ class TestTaskCancelRestart(RunActionTestMixin):
         """Fill all utility fields for audit of actions testing"""
         _action_run_test_init(self, sdk_client_fs, new_user_client)
 
-    @parametrize_audit_scenario_parsing("cancel_restart.yaml", {**NEW_USER, "action_display_name": "Terminate Simple"})
+    @parametrize_audit_scenario_parsing(
+        "cancel_restart.yaml", {**NEW_USER, "action_display_name": "Terminate Simple"}
+    )
     def test_task_with_one_job(self, cluster, audit_log_checker):
         """Test audit of cancel/restart tasks with one job"""
         task = cluster.action(name="terminatable_simple").run(**self.correct_config)
         self._wait_for_status(task.job())
         self._test_task_cancel_restart(task, audit_log_checker)
 
-    @parametrize_audit_scenario_parsing("cancel_restart.yaml", {**NEW_USER, "action_display_name": "Terminate Multi"})
+    @parametrize_audit_scenario_parsing(
+        "cancel_restart.yaml", {**NEW_USER, "action_display_name": "Terminate Multi"}
+    )
     def test_task_with_multiple_jobs(self, cluster, audit_log_checker):
         """Test audit of cancel/restart tasks with many jobs"""
         task: Task = cluster.action(name="terminatable_multi").run(**self.correct_config)

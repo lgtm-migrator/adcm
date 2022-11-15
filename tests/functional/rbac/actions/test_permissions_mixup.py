@@ -37,16 +37,29 @@ class TestClusterAdminRoleDoNotBreakParametrization:
     """Test that granting "Cluster Administrator" role doesn't break parametrization of other objects"""
 
     @pytest.fixture()
-    def clusters(self, actions_cluster_bundle, simple_cluster_bundle) -> Tuple[Cluster, Cluster, Cluster, Cluster]:
+    def clusters(
+        self, actions_cluster_bundle, simple_cluster_bundle
+    ) -> Tuple[Cluster, Cluster, Cluster, Cluster]:
         """Prepare clusters from two bundles"""
         first_cluster = actions_cluster_bundle.cluster_create("First Cluster")
         second_cluster = actions_cluster_bundle.cluster_create("Second Cluster")
-        first_another_bundle_cluster = simple_cluster_bundle.cluster_create("Another Bundle Cluster")
-        second_another_bundle_cluster = simple_cluster_bundle.cluster_create("One More Another Bundle Cluster")
-        return first_cluster, second_cluster, first_another_bundle_cluster, second_another_bundle_cluster
+        first_another_bundle_cluster = simple_cluster_bundle.cluster_create(
+            "Another Bundle Cluster"
+        )
+        second_another_bundle_cluster = simple_cluster_bundle.cluster_create(
+            "One More Another Bundle Cluster"
+        )
+        return (
+            first_cluster,
+            second_cluster,
+            first_another_bundle_cluster,
+            second_another_bundle_cluster,
+        )
 
     @pytest.fixture()
-    def clusters_with_services(self, actions_cluster_bundle, simple_cluster_bundle) -> Tuple[Cluster, Cluster]:
+    def clusters_with_services(
+        self, actions_cluster_bundle, simple_cluster_bundle
+    ) -> Tuple[Cluster, Cluster]:
         """
         Prepare two clusters with services:
           - first from actions bundle with two services
@@ -130,7 +143,9 @@ class TestClusterAdminRoleDoNotBreakParametrization:
             user=user,
         )
 
-        first_another_bundle_cluster, *_ = as_user_objects(clients.user, first_another_bundle_cluster_admin)
+        first_another_bundle_cluster, *_ = as_user_objects(
+            clients.user, first_another_bundle_cluster_admin
+        )
 
         self.check_permissions(
             "Check that Cluster Admin does not grant access to another bundle's clusters actions",
@@ -170,7 +185,10 @@ class TestClusterAdminRoleDoNotBreakParametrization:
 
         self.check_permissions(
             "Check that Service Admin role allows actions only on one service in one cluster",
-            allowed=((user_first_service, do_nothing_role), (user_first_service, same_display_role)),
+            allowed=(
+                (user_first_service, do_nothing_role),
+                (user_first_service, same_display_role),
+            ),
             denied=((second_service, do_nothing_role), (another_cluster_service, do_nothing_role)),
             check_denied=is_denied_to_user,
         )
@@ -192,7 +210,10 @@ class TestClusterAdminRoleDoNotBreakParametrization:
                 (user_first_service, same_display_role),
                 (user_second_service, do_nothing_role),
             ),
-            denied=((second_service, same_display_role), (another_cluster_service, do_nothing_role)),
+            denied=(
+                (second_service, same_display_role),
+                (another_cluster_service, do_nothing_role),
+            ),
             check_denied=is_denied_to_user,
         )
 
@@ -214,7 +235,10 @@ class TestClusterAdminRoleDoNotBreakParametrization:
                 (user_second_service, do_nothing_role),
                 (user_another_cluster_service, do_nothing_role),
             ),
-            denied=((second_service, same_display_role), (another_cluster_service, same_display_role)),
+            denied=(
+                (second_service, same_display_role),
+                (another_cluster_service, same_display_role),
+            ),
             check_denied=is_denied_to_user,
         )
 

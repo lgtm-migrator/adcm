@@ -88,8 +88,12 @@ def test_when_cluster_has_issue_then_upgrade_locked(sdk_client_fs: ADCMClient):
         assert len(cluster.upgrade_list()) == 0, "No upgrade should be available with concern"
     with allure.step("Upgrade cluster"):
         cluster.config_set_diff({"required_param": 11})
-        assert len(cluster.upgrade_list()) == 1, "Upgrade should be available after concern is removed"
-        with catch_failed(coreapi.exceptions.ErrorMessage, "Upgrade should've launched successfuly"):
+        assert (
+            len(cluster.upgrade_list()) == 1
+        ), "Upgrade should be available after concern is removed"
+        with catch_failed(
+            coreapi.exceptions.ErrorMessage, "Upgrade should've launched successfuly"
+        ):
             cluster.upgrade().do()
 
 
@@ -105,13 +109,19 @@ def test_when_hostprovider_has_issue_then_upgrade_locked(sdk_client_fs: ADCMClie
         assert len(provider.upgrade_list()) == 0, "No upgrade should be available with concern"
     with allure.step("Upgrade provider"):
         provider.config_set_diff({"required_param": 11})
-        assert len(provider.upgrade_list()) == 1, "Upgrade should be available after concern is removed"
-        with catch_failed(coreapi.exceptions.ErrorMessage, "Upgrade should've launched successfully"):
+        assert (
+            len(provider.upgrade_list()) == 1
+        ), "Upgrade should be available after concern is removed"
+        with catch_failed(
+            coreapi.exceptions.ErrorMessage, "Upgrade should've launched successfully"
+        ):
             provider.upgrade().do()
 
 
 @allure.link("https://jira.arenadata.io/browse/ADCM-487")
-def test_when_component_has_no_constraint_then_cluster_doesnt_have_issues(sdk_client_fs: ADCMClient):
+def test_when_component_has_no_constraint_then_cluster_doesnt_have_issues(
+    sdk_client_fs: ADCMClient,
+):
     """Test no cluster issues if no constraints on components"""
     with allure.step("Create cluster (component has no constraint)"):
         bundle_path = utils.get_data_dir(__file__, "cluster_component_hasnt_constraint")
@@ -157,7 +167,9 @@ def test_host_concerns_stays_after_cluster_deletion(bundle_name: str, sdk_client
         cluster = cluster_bundle.cluster_create(name='Test Cluster')
     _, host_1, host_2 = _add_services_and_map_hosts_to_it(cluster, provider)
     with allure.step('Check there are correct amount of concerns before cluster is deleted'):
-        _check_concerns_amount(host_1, concerns_from_provider_objects + concerns_from_cluster_objects)
+        _check_concerns_amount(
+            host_1, concerns_from_provider_objects + concerns_from_cluster_objects
+        )
         _check_concerns_amount(host_2, concerns_from_provider_objects)
     cluster.delete()
     with allure.step('Check there are correct amount of concerns after cluster is deleted'):
@@ -208,7 +220,9 @@ class TestProviderIndependence:
     ) -> Provider:
         with allure.step(f'Upload provider bundle {bundle_name} and check creation event'):
             provider_bundle = client.upload_from_fs(utils.get_data_dir(__file__, bundle_name))
-            await adcm_ws.check_next_message_is(1, event='create', type='bundle', id=provider_bundle.id)
+            await adcm_ws.check_next_message_is(
+                1, event='create', type='bundle', id=provider_bundle.id
+            )
         with allure.step('Create provider and check it has no concerns'):
             provider = provider_bundle.provider_create('Provider without concerns')
             _check_object_has_no_concerns(provider)
@@ -216,7 +230,9 @@ class TestProviderIndependence:
             return provider
 
     @allure.step('Create host and ensure provider has no concerns')
-    async def _create_host_and_check_provider(self, provider: Provider, adcm_ws: ADCMWebsocket) -> Host:
+    async def _create_host_and_check_provider(
+        self, provider: Provider, adcm_ws: ADCMWebsocket
+    ) -> Host:
         host = provider.host_create('host-with-concern')
         _check_object_has_concerns(host)
         _check_object_has_no_concerns(provider)
@@ -241,7 +257,11 @@ class TestProviderIndependence:
                 (
                     EventMessage(
                         'add',
-                        {'type': 'service', 'id': service.id, 'details': {'type': 'cluster', 'value': str(cluster.id)}},
+                        {
+                            'type': 'service',
+                            'id': service.id,
+                            'details': {'type': 'cluster', 'value': str(cluster.id)},
+                        },
                     ),
                     *[
                         self._concern_add_msg(type_)
@@ -256,7 +276,9 @@ class TestProviderIndependence:
             )
         return cluster
 
-    async def _add_host_to_cluster_and_check_concerns(self, cluster: Cluster, host: Host, adcm_ws: ADCMWebsocket):
+    async def _add_host_to_cluster_and_check_concerns(
+        self, cluster: Cluster, host: Host, adcm_ws: ADCMWebsocket
+    ):
         service = cluster.service()
         component = service.component()
         with allure.step(f'Add host {host.fqdn} to a cluster'):
@@ -269,7 +291,9 @@ class TestProviderIndependence:
             _check_concerns_amount(component, 3)
             _check_object_has_concerns(host)
 
-    async def _set_hc_map_and_check_concerns(self, cluster: Cluster, host: Host, adcm_ws: ADCMWebsocket):
+    async def _set_hc_map_and_check_concerns(
+        self, cluster: Cluster, host: Host, adcm_ws: ADCMWebsocket
+    ):
         service = cluster.service()
         component = service.component()
         with allure.step(f'Map component {component.name} on host {host.fqdn}'):

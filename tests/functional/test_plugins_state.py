@@ -59,7 +59,9 @@ def two_providers(sdk_client_fs: ADCMClient) -> Tuple[Provider, Provider]:
 def two_clusters(request, sdk_client_fs: ADCMClient) -> Tuple[Cluster, Cluster]:
     """Get two clusters with both services"""
     return create_two_clusters(
-        sdk_client_fs, caller_file=__file__, bundle_dir="cluster" if not hasattr(request, 'param') else request.param
+        sdk_client_fs,
+        caller_file=__file__,
+        bundle_dir="cluster" if not hasattr(request, 'param') else request.param,
     )
 
 
@@ -127,7 +129,9 @@ def test_host_from_provider(two_providers: Tuple[Provider, Provider], sdk_client
     with check_objects_state_changed(sdk_client_fs, {host}), allure.step(
         f'Set state of {host_name} with action from {provider_name}'
     ):
-        run_provider_action_and_assert_result(provider, 'set_host_from_provider', config={'host_id': host.id})
+        run_provider_action_and_assert_result(
+            provider, 'set_host_from_provider', config={'host_id': host.id}
+        )
 
 
 # pylint: disable-next=possibly-unused-variable
@@ -158,7 +162,10 @@ def test_forbidden_state_set_actions(sdk_client_fs: ADCMClient):
         host_second = sdk_client_fs.host(fqdn=first_second_fqdn)
         with check_objects_state_changed(sdk_client_fs):
             run_host_action_and_assert_result(
-                host_first, 'set_host_from_provider', config={'host_id': host_second.id}, status='failed'
+                host_first,
+                'set_host_from_provider',
+                config={'host_id': host_second.id},
+                status='failed',
             )
 
 
@@ -172,13 +179,17 @@ def test_double_call_to_state_set(two_clusters: Tuple[Cluster, Cluster], sdk_cli
 
 
 def test_state_set_from_host_actions(
-    two_providers: Tuple[Provider, Provider], two_clusters: Tuple[Cluster, Cluster], sdk_client_fs: ADCMClient
+    two_providers: Tuple[Provider, Provider],
+    two_clusters: Tuple[Cluster, Cluster],
+    sdk_client_fs: ADCMClient,
 ):
     """Test that host actions actually change state"""
     name = "first"
     with allure.step('Bind component to host'):
         host = two_providers[0].host_list()[0]
-        component = (service := (cluster := two_clusters[0]).service(name=name)).component(name=name)
+        component = (service := (cluster := two_clusters[0]).service(name=name)).component(
+            name=name
+        )
         cluster.host_add(host)
         cluster.hostcomponent_set((host, component))
     affected_objects = set()

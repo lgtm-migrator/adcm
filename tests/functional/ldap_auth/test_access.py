@@ -24,9 +24,19 @@ from adcm_pytest_plugin.utils import random_string
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.ldap_auth.conftest import BASE_BUNDLES_DIR
 from tests.functional.ldap_auth.utils import get_ldap_user_from_adcm, get_ldap_group_from_adcm
-from tests.functional.rbac.conftest import is_denied, BusinessRoles, create_policy, is_allowed, delete_policy
+from tests.functional.rbac.conftest import (
+    is_denied,
+    BusinessRoles,
+    create_policy,
+    is_allowed,
+    delete_policy,
+)
 
-pytestmark = [only_clean_adcm, pytest.mark.usefixtures('configure_adcm_ldap_ad'), pytest.mark.ldap()]
+pytestmark = [
+    only_clean_adcm,
+    pytest.mark.usefixtures('configure_adcm_ldap_ad'),
+    pytest.mark.ldap(),
+]
 
 
 # pylint: disable=redefined-outer-name
@@ -45,10 +55,14 @@ def test_grant_policy_for_ldap_user(sdk_client_fs, cluster, ldap_user_in_group):
     """
     username, password = ldap_user_in_group['name'], ldap_user_in_group['password']
 
-    user_client, user = _login_as_ldap_user_and_check_no_access(sdk_client_fs, username, password, cluster)
+    user_client, user = _login_as_ldap_user_and_check_no_access(
+        sdk_client_fs, username, password, cluster
+    )
 
     with allure.step('Grant access for a cluster and check it is granted'):
-        policy = create_policy(sdk_client_fs, BusinessRoles.EditClusterConfigurations, [cluster], [user], [])
+        policy = create_policy(
+            sdk_client_fs, BusinessRoles.EditClusterConfigurations, [cluster], [user], []
+        )
         user_client.reread()
         user_cluster = is_allowed(user_client, BusinessRoles.GetCluster, id=cluster.id)
         is_allowed(user_cluster, BusinessRoles.EditClusterConfigurations)
@@ -60,7 +74,9 @@ def test_grant_policy_for_ldap_user(sdk_client_fs, cluster, ldap_user_in_group):
 
 
 # pylint: disable-next=unused-variable,too-many-arguments,too-many-locals
-def test_grant_policy_for_ldap_group(sdk_client_fs, cluster, ldap_ad, ldap_basic_ous, ldap_group, ldap_user_in_group):
+def test_grant_policy_for_ldap_group(
+    sdk_client_fs, cluster, ldap_ad, ldap_basic_ous, ldap_group, ldap_user_in_group
+):
     """
     Test that granting policy for LDAP group in ADCM works the same way as with regular group.
     """
@@ -68,11 +84,15 @@ def test_grant_policy_for_ldap_group(sdk_client_fs, cluster, ldap_ad, ldap_basic
     username, password = ldap_user_in_group['name'], ldap_user_in_group['password']
     second_username, second_password = f'Newcomer_{random_string(6)}', random_string(12)
 
-    user_client, _ = _login_as_ldap_user_and_check_no_access(sdk_client_fs, username, password, cluster)
+    user_client, _ = _login_as_ldap_user_and_check_no_access(
+        sdk_client_fs, username, password, cluster
+    )
 
     with allure.step('Grant access to group from LDAP and check permissions of existing users'):
         group = get_ldap_group_from_adcm(sdk_client_fs, ldap_group['name'])
-        policy = create_policy(sdk_client_fs, BusinessRoles.EditClusterConfigurations, [cluster], [], [group])
+        policy = create_policy(
+            sdk_client_fs, BusinessRoles.EditClusterConfigurations, [cluster], [], [group]
+        )
         user_client.reread()
         user_cluster = is_allowed(user_client, BusinessRoles.GetCluster, id=cluster.id)
         is_allowed(user_cluster, BusinessRoles.EditClusterConfigurations)
@@ -80,8 +100,12 @@ def test_grant_policy_for_ldap_group(sdk_client_fs, cluster, ldap_ad, ldap_basic
     with allure.step('Create new LDAP user in group and check they will have permissions'):
         new_user_dn = ldap_ad.create_user(second_username, second_password, custom_base_dn=users_ou)
         ldap_ad.add_user_to_group(new_user_dn, ldap_group['dn'])
-        second_user_client = ADCMClient(url=sdk_client_fs.url, user=second_username, password=second_password)
-        second_user_cluster = is_allowed(second_user_client, BusinessRoles.GetCluster, id=cluster.id)
+        second_user_client = ADCMClient(
+            url=sdk_client_fs.url, user=second_username, password=second_password
+        )
+        second_user_cluster = is_allowed(
+            second_user_client, BusinessRoles.GetCluster, id=cluster.id
+        )
         is_allowed(second_user_cluster, BusinessRoles.EditClusterConfigurations)
 
     with allure.step('Withdraw policy from LDAP group and check users have no permissions'):
@@ -89,10 +113,14 @@ def test_grant_policy_for_ldap_group(sdk_client_fs, cluster, ldap_ad, ldap_basic
         is_denied(user_client, BusinessRoles.GetCluster, id=cluster.id)
         is_denied(user_cluster, BusinessRoles.EditClusterConfigurations, client=user_client)
         is_denied(second_user_client, BusinessRoles.GetCluster, id=cluster.id)
-        is_denied(second_user_cluster, BusinessRoles.EditClusterConfigurations, client=second_user_client)
+        is_denied(
+            second_user_cluster, BusinessRoles.EditClusterConfigurations, client=second_user_client
+        )
 
 
-def _login_as_ldap_user_and_check_no_access(client, username, password, cluster) -> Tuple[ADCMClient, User]:
+def _login_as_ldap_user_and_check_no_access(
+    client, username, password, cluster
+) -> Tuple[ADCMClient, User]:
     """:returns: New ADCM Client connection (logged as new user) and user (from admin perspective)"""
     with allure.step('Login as LDAP user and check user is created'):
         user_sdk = ADCMClient(url=client.url, user=username, password=password)

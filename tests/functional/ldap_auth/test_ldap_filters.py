@@ -55,7 +55,9 @@ def two_adcm_groups_with_users(sdk_client_fs) -> Tuple[Group, User, Group, User]
 
 
 @pytest.fixture()
-def two_ldap_groups_with_users(ldap_ad, ldap_basic_ous) -> Tuple[GroupInfo, UserInfo, GroupInfo, UserInfo]:
+def two_ldap_groups_with_users(
+    ldap_ad, ldap_basic_ous
+) -> Tuple[GroupInfo, UserInfo, GroupInfo, UserInfo]:
     """Create two ldap users and groups with a user in each one"""
     groups_ou, users_ou = ldap_basic_ous
     group_1 = {'name': 'group-with-users-1'}
@@ -72,15 +74,24 @@ def two_ldap_groups_with_users(ldap_ad, ldap_basic_ous) -> Tuple[GroupInfo, User
 
 
 def check_sync_with_filters(
-    client: ADCMClient, user_filter: str, group_filter: str, expected_users: set, expected_groups: set
+    client: ADCMClient,
+    user_filter: str,
+    group_filter: str,
+    expected_users: set,
+    expected_groups: set,
 ) -> None:
     """Method to use filter and check result"""
     change_adcm_ldap_config(
-        client, attach_to_allure=False, user_search_filter=user_filter, group_search_filter=group_filter
+        client,
+        attach_to_allure=False,
+        user_search_filter=user_filter,
+        group_search_filter=group_filter,
     )
     sync_adcm_with_ldap(client)
 
-    active_users_records = {u.username for u in client.user_list() if u.type == "ldap" and u.is_active}
+    active_users_records = {
+        u.username for u in client.user_list() if u.type == "ldap" and u.is_active
+    }
     groups_records = {g.name for g in client.group_list() if g.type == "ldap"}
     sets_are_equal(
         actual=active_users_records,
@@ -88,7 +99,9 @@ def check_sync_with_filters(
         message="Not all filtered active LDAP users are presented in ADCM",
     )
     sets_are_equal(
-        actual=groups_records, expected=expected_groups, message="Not all filtered LDAP groups are presented in ADCM"
+        actual=groups_records,
+        expected=expected_groups,
+        message="Not all filtered LDAP groups are presented in ADCM",
     )
 
 
@@ -111,7 +124,9 @@ def test_search_filters_users(sdk_client_fs, two_ldap_groups_with_users):
     ldap_user_2 = get_ldap_user_from_adcm(sdk_client_fs, user_info_2['name'])
 
     with allure.step('Check filter for one user and check'):
-        search_filter = f"(&(objectcategory=person)(objectclass=person)(name={ldap_user_1.username}))"
+        search_filter = (
+            f"(&(objectcategory=person)(objectclass=person)(name={ldap_user_1.username}))"
+        )
         check_sync_with_filters(
             sdk_client_fs,
             user_filter=search_filter,
@@ -152,13 +167,18 @@ def test_search_filters_users(sdk_client_fs, two_ldap_groups_with_users):
     with allure.step('Check both LDAP users can login'):
         for user_info in (user_info_1, user_info_2):
             login_should_succeed(
-                f'login as {user_info["name"]}', sdk_client_fs, user_info['name'], user_info['password']
+                f'login as {user_info["name"]}',
+                sdk_client_fs,
+                user_info['name'],
+                user_info['password'],
             )
 
 
 @pytest.mark.usefixtures('configure_adcm_ldap_ad')
 # pylint: disable-next=too-many-arguments, too-many-locals, too-many-statements
-def test_search_filters_groups(sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users):
+def test_search_filters_groups(
+    sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users
+):
     """Check LDAP filters for groups"""
     turn_off_periodic_ldap_sync(client=sdk_client_fs)
     adcm_group_1, adcm_user_1, adcm_group_2, adcm_user_2 = two_adcm_groups_with_users
@@ -219,7 +239,9 @@ def test_search_filters_groups(sdk_client_fs, two_adcm_groups_with_users, two_ld
         )
 
     check_existing_groups(
-        sdk_client_fs, {group_info_1['name'], group_info_2['name']}, {adcm_group_1.name, adcm_group_2.name}
+        sdk_client_fs,
+        {group_info_1['name'], group_info_2['name']},
+        {adcm_group_1.name, adcm_group_2.name},
     )
     check_existing_users(sdk_client_fs, {user_info_1['name'], user_info_2['name']}, adcm_user_names)
 
@@ -236,7 +258,9 @@ def test_search_filters_groups(sdk_client_fs, two_adcm_groups_with_users, two_ld
 
 @pytest.mark.usefixtures('configure_adcm_ldap_ad')
 # pylint: disable-next=too-many-arguments, too-many-locals, too-many-statements
-def test_search_filters_groups_with_symbols(sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users):
+def test_search_filters_groups_with_symbols(
+    sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users
+):
     """Check LDAP filters for users and groups"""
     turn_off_periodic_ldap_sync(client=sdk_client_fs)
 
@@ -311,9 +335,13 @@ def test_search_filters_groups_with_symbols(sdk_client_fs, two_adcm_groups_with_
 
     with allure.step('Check that users are in groups'):
         check_existing_groups(
-            sdk_client_fs, {group_info_1['name'], group_info_2['name']}, {adcm_group_1.name, adcm_group_2.name}
+            sdk_client_fs,
+            {group_info_1['name'], group_info_2['name']},
+            {adcm_group_1.name, adcm_group_2.name},
         )
-        check_existing_users(sdk_client_fs, {user_info_1['name'], user_info_2['name']}, adcm_user_names)
+        check_existing_users(
+            sdk_client_fs, {user_info_1['name'], user_info_2['name']}, adcm_user_names
+        )
 
         ldap_group_1 = get_ldap_group_from_adcm(sdk_client_fs, group_info_1['name'])
         ldap_group_2 = get_ldap_group_from_adcm(sdk_client_fs, group_info_2['name'])
@@ -328,13 +356,18 @@ def test_search_filters_groups_with_symbols(sdk_client_fs, two_adcm_groups_with_
     with allure.step('Check both LDAP users can login'):
         for user_info in (user_info_1, user_info_2):
             login_should_succeed(
-                f'login as {user_info["name"]}', sdk_client_fs, user_info['name'], user_info['password']
+                f'login as {user_info["name"]}',
+                sdk_client_fs,
+                user_info['name'],
+                user_info['password'],
             )
 
 
 @pytest.mark.usefixtures('configure_adcm_ldap_ad')
 # pylint: disable-next=too-many-arguments, too-many-locals, too-many-statements
-def test_search_filters_login_users(sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users):
+def test_search_filters_login_users(
+    sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users
+):
     """Check LDAP filters for users login"""
     turn_off_periodic_ldap_sync(client=sdk_client_fs)
 
@@ -365,21 +398,35 @@ def test_search_filters_login_users(sdk_client_fs, two_adcm_groups_with_users, t
         check_users_in_group(adcm_group_2, adcm_user_2, ldap_user_2)
 
     with allure.step('Check filter for one user and check'):
-        search_filter = f"(&(objectcategory=person)(objectclass=person)(name={ldap_user_1.username}))"
+        search_filter = (
+            f"(&(objectcategory=person)(objectclass=person)(name={ldap_user_1.username}))"
+        )
         change_adcm_ldap_config(
-            sdk_client_fs, attach_to_allure=False, user_search_filter=search_filter, group_search_filter=""
+            sdk_client_fs,
+            attach_to_allure=False,
+            user_search_filter=search_filter,
+            group_search_filter="",
         )
     with allure.step('Check LDAP user_1 can login and LDAP user_2 login fail'):
         login_should_succeed(
-            f'login as {user_info_1["name"]}', sdk_client_fs, user_info_1['name'], user_info_1['password']
+            f'login as {user_info_1["name"]}',
+            sdk_client_fs,
+            user_info_1['name'],
+            user_info_1['password'],
         )
         login_should_fail(
-            f'login as {user_info_2["name"]}', sdk_client_fs, user_info_2['name'], user_info_2['password']
+            f'login as {user_info_2["name"]}',
+            sdk_client_fs,
+            user_info_2['name'],
+            user_info_2['password'],
         )
     with allure.step('Check filter for one group and check'):
         search_filter = f"(&(objectclass=group)(name={ldap_group_2.name}))"
         change_adcm_ldap_config(
-            sdk_client_fs, attach_to_allure=False, user_search_filter="", group_search_filter=search_filter
+            sdk_client_fs,
+            attach_to_allure=False,
+            user_search_filter="",
+            group_search_filter=search_filter,
         )
 
     with allure.step('Check that users are in groups'):
@@ -395,8 +442,14 @@ def test_search_filters_login_users(sdk_client_fs, two_adcm_groups_with_users, t
 
     with allure.step('Check LDAP user from filtered group can login and LDAP user_1 login fail'):
         login_should_succeed(
-            f'login as {user_info_2["name"]}', sdk_client_fs, user_info_2['name'], user_info_2['password']
+            f'login as {user_info_2["name"]}',
+            sdk_client_fs,
+            user_info_2['name'],
+            user_info_2['password'],
         )
         login_should_fail(
-            f'login as {user_info_1["name"]}', sdk_client_fs, user_info_1['name'], user_info_1['password']
+            f'login as {user_info_1["name"]}',
+            sdk_client_fs,
+            user_info_1['name'],
+            user_info_1['password'],
         )

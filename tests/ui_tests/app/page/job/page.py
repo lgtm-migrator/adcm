@@ -66,11 +66,15 @@ class JobPageMixin(BasePageObject):
         """Check title on the page"""
         self.wait_element_visible(ObjectPageLocators.title)
         current_title = self.find_element(ObjectPageLocators.title).text
-        assert current_title == expected_title, f"Title should be '{expected_title}', but was {current_title}''"
+        assert (
+            current_title == expected_title
+        ), f"Title should be '{expected_title}', but was {current_title}''"
 
     def get_job_info(self) -> DetailedPageJobInfo:
         """Get information about job from detail page"""
-        invoker_objects = self.find_element(JobPageLocators.subtitle).text.strip().replace(' / ', '/')
+        invoker_objects = (
+            self.find_element(JobPageLocators.subtitle).text.strip().replace(' / ', '/')
+        )
         return DetailedPageJobInfo(
             name=self.find_element(JobPageLocators.title).text.strip(),
             invoker_objects=invoker_objects,

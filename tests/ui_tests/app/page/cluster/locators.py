@@ -30,7 +30,9 @@ class ClusterMainLocators:
 class ClusterServicesLocators:
     """Cluster main page elements locators"""
 
-    add_services_btn = Locator(By.CSS_SELECTOR, "button[adcm_test='create-btn']", "Add services button")
+    add_services_btn = Locator(
+        By.CSS_SELECTOR, "button[adcm_test='create-btn']", "Add services button"
+    )
     service_row = Locator(By.CSS_SELECTOR, ".mat-row", "Service row")
 
     class AddServicePopup:

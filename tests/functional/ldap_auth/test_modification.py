@@ -31,7 +31,11 @@ from tests.library.errorcodes import USER_UPDATE_ERROR, GROUP_UPDATE_ERROR
 
 # pylint: disable=redefined-outer-name
 
-pytestmark = [only_clean_adcm, pytest.mark.usefixtures('configure_adcm_ldap_ad'), pytest.mark.ldap()]
+pytestmark = [
+    only_clean_adcm,
+    pytest.mark.usefixtures('configure_adcm_ldap_ad'),
+    pytest.mark.ldap(),
+]
 
 
 @pytest.fixture()
@@ -59,9 +63,15 @@ def test_ldap_user_manual_modification_is_forbidden(sdk_client_fs, ldap_user_in_
 
     with allure.step('Check that changing password for LDAP user is forbidden'):
         new_password = f'px-{ldap_user_in_group["password"]}'
-        expect_api_error('change password of a user', user.change_password, new_password, err_=USER_UPDATE_ERROR)
         expect_api_error(
-            'login with "new" password', ADCMClient, url=sdk_client_fs.url, user=user.username, password=new_password
+            'change password of a user', user.change_password, new_password, err_=USER_UPDATE_ERROR
+        )
+        expect_api_error(
+            'login with "new" password',
+            ADCMClient,
+            url=sdk_client_fs.url,
+            user=user.username,
+            password=new_password,
         )
         expect_no_api_error(
             'login with "original LDAP" password',
@@ -86,7 +96,14 @@ def test_ldap_group_manual_modification_is_forbidden(sdk_client_fs, ldap_group):
 
 
 # pylint: disable-next=too-many-arguments
-def test_membership(sdk_client_fs, local_user, local_group, ldap_group, ldap_user_in_group, another_ldap_user_in_group):
+def test_membership(
+    sdk_client_fs,
+    local_user,
+    local_group,
+    ldap_group,
+    ldap_user_in_group,
+    another_ldap_user_in_group,
+):
     """
     Test that LDAP user can be added to local groups, but not to LDAP ones in ADCM.
     And that no user can be added to an LDAP group in ADCM.
@@ -94,25 +111,35 @@ def test_membership(sdk_client_fs, local_user, local_group, ldap_group, ldap_use
     with allure.step('Sync with LDAP and retrieve user and group'):
         _sync_with_ldap(sdk_client_fs)
         user_from_ldap = get_ldap_user_from_adcm(sdk_client_fs, ldap_user_in_group['name'])
-        another_user_form_ldap = get_ldap_user_from_adcm(sdk_client_fs, another_ldap_user_in_group['name'])
+        another_user_form_ldap = get_ldap_user_from_adcm(
+            sdk_client_fs, another_ldap_user_in_group['name']
+        )
         group_from_ldap = get_ldap_group_from_adcm(sdk_client_fs, ldap_group['name'])
 
     expect_no_api_error('add LDAP user to a local group', local_group.add_user, user=user_from_ldap)
     expect_api_error('add local user to an LDAP group', group_from_ldap.add_user, user=local_user)
-    expect_api_error('add LDAP user to an LDAP group', group_from_ldap.add_user, user=another_user_form_ldap)
+    expect_api_error(
+        'add LDAP user to an LDAP group', group_from_ldap.add_user, user=another_user_form_ldap
+    )
 
 
 def _sync_with_ldap(client: ADCMClient):
-    wait_for_task_and_assert_result(client.adcm().action(name=TEST_CONNECTION_ACTION).run(), 'success')
+    wait_for_task_and_assert_result(
+        client.adcm().action(name=TEST_CONNECTION_ACTION).run(), 'success'
+    )
     wait_for_task_and_assert_result(client.adcm().action(name=SYNC_ACTION_NAME).run(), 'success')
 
 
 def _check_change_is_forbidden(entity: Union[User, Group], attr: str):
     entity_class = entity.__class__.__name__
-    with allure.step(f'Check that changing {attr} of {entity_class} is forbidden for LDAP {entity_class}'):
+    with allure.step(
+        f'Check that changing {attr} of {entity_class} is forbidden for LDAP {entity_class}'
+    ):
         err = USER_UPDATE_ERROR if isinstance(entity, User) else GROUP_UPDATE_ERROR
         original_value = getattr(entity, attr)
         changed_value = f'px-{original_value}'
-        expect_api_error(f'change {attr} of a {entity_class}', entity.update, **{attr: changed_value}, err_=err)
+        expect_api_error(
+            f'change {attr} of a {entity_class}', entity.update, **{attr: changed_value}, err_=err
+        )
         entity.reread()
         assert getattr(entity, attr) == original_value, 'Value should not be changed'

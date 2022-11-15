@@ -74,7 +74,9 @@ def parametrize_audit_scenario_parsing(scenario_name: str, context: Optional[dic
     Helper to use as decorator to provide scenario name and context for parametrizing "parsed_audit_log"
     """
     context = {} if context is None else context
-    return pytest.mark.parametrize("parsed_audit_log", [ScenarioArg(scenario_name, context)], indirect=True)
+    return pytest.mark.parametrize(
+        "parsed_audit_log", [ScenarioArg(scenario_name, context)], indirect=True
+    )
 
 
 @pytest.fixture()
@@ -89,7 +91,9 @@ def build_policy(
 ) -> Callable[[BusinessRoles, Union[ClusterRelatedObject, ProviderRelatedObject, ADCM]], Policy]:
     """Prepare "policy builder" that grants some permission to (already created) new user"""
     user_id = new_user_client.me().id
-    return lambda role, obj: create_policy(sdk_client_fs, role, [obj], [sdk_client_fs.user(id=user_id)], [])
+    return lambda role, obj: create_policy(
+        sdk_client_fs, role, [obj], [sdk_client_fs.user(id=user_id)], []
+    )
 
 
 # CREATE/DELETE utilities
@@ -213,7 +217,13 @@ def delete(sdk_client_fs) -> Callable:
     base_url = sdk_client_fs.url
     auth_header = make_auth_header(sdk_client_fs)
 
-    def _delete(path: str, *suffixes, headers: Optional[dict] = None, path_fmt: Optional[dict] = None, **kwargs):
+    def _delete(
+        path: str,
+        *suffixes,
+        headers: Optional[dict] = None,
+        path_fmt: Optional[dict] = None,
+        **kwargs,
+    ):
         headers = {**auth_header, **({} if headers is None else headers)}
         path_fmt = {} if path_fmt is None else path_fmt
         url = f'{base_url}/api/v1/{path.format(**path_fmt)}/{"/".join(map(str,suffixes))}/'
@@ -245,15 +255,17 @@ def check_succeed(response: requests.Response) -> requests.Response:
     allowed_codes = (200, 201, 204)
     assert (
         code := response.status_code
-    ) in allowed_codes, (
-        f"Request failed with code: {code}\nBody: {response.json() if not code >= 500 else response.text}"
-    )
+    ) in allowed_codes, f"Request failed with code: {code}\nBody: {response.json() if not code >= 500 else response.text}"
     return response
 
 
-def check_failed(response: requests.Response, exact_code: Optional[int] = None) -> requests.Response:
+def check_failed(
+    response: requests.Response, exact_code: Optional[int] = None
+) -> requests.Response:
     """Check that request has failed"""
-    with allure.step(f'Expecting request to fail with code {exact_code if exact_code else ">=400 and < 500"}'):
+    with allure.step(
+        f'Expecting request to fail with code {exact_code if exact_code else ">=400 and < 500"}'
+    ):
         assert response.status_code < 500, "Request should not failed with 500"
         if exact_code:
             assert (
@@ -301,7 +313,9 @@ def format_date_for_db(date: datetime) -> str:
 
 
 def set_operations_date(
-    adcm_db: QueryExecutioner, new_date: datetime, operation_records: Union[AuditOperationList, List[AuditOperation]]
+    adcm_db: QueryExecutioner,
+    new_date: datetime,
+    operation_records: Union[AuditOperationList, List[AuditOperation]],
 ):
     """Set date for given operation audit records directly in ADCM database"""
     adcm_db.exec(
@@ -312,7 +326,9 @@ def set_operations_date(
 
 
 def set_logins_date(
-    adcm_db: QueryExecutioner, new_date: datetime, login_records: Union[AuditLoginList, List[AuditLogin]]
+    adcm_db: QueryExecutioner,
+    new_date: datetime,
+    login_records: Union[AuditLoginList, List[AuditLogin]],
 ):
     """Set date for given login audit records directly in ADCM database"""
     adcm_db.exec(

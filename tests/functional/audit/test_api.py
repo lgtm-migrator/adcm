@@ -56,13 +56,17 @@ def _check_audit_logs(
             string_filter_args = {log_field_name: simple_type_filter}
             logs_from_client = operation(**plain_argument)
             assert len(logs_from_client) > 0, "There should be at least one item"
-            result = requests.get(endpoint, params=string_filter_args, headers={"Authorization": f"Token {token}"})
+            result = requests.get(
+                endpoint, params=string_filter_args, headers={"Authorization": f"Token {token}"}
+            )
             assert result.status_code == 200, (
                 f"Querying {endpoint} with filters {result} should end well, "
                 f"not with {result.status_code}: {result.json()}"
             )
             items = result.json()["results"]
-            assert len(logs_from_client) == len(items), "Client and direct API call returned different results"
+            assert len(logs_from_client) == len(
+                items
+            ), "Client and direct API call returned different results"
             sets_are_equal(
                 set(o.id for o in logs_from_client),
                 set(i["id"] for i in items),
@@ -108,7 +112,13 @@ class TestAuditLogsAPI:
         role = sdk_client_fs.role_create(
             "custom role",
             display_name="custom role",
-            child=[{"id": sdk_client_fs.role(name=BusinessRoles.ViewADCMConfigurations.value.role_name).id}],
+            child=[
+                {
+                    "id": sdk_client_fs.role(
+                        name=BusinessRoles.ViewADCMConfigurations.value.role_name
+                    ).id
+                }
+            ],
         )
         policy = sdk_client_fs.policy_create("custom policy", role=role, user=[user])
         user.update(first_name="first", last_name="second")
@@ -127,13 +137,17 @@ class TestAuditLogsAPI:
     def _prepare_denied_records(self, post, sdk_client_fs, various_rbac_objects):
         user, *_ = various_rbac_objects
         adcm_config_url = f"adcm/{sdk_client_fs.adcm().id}/config/history"
-        admin_headers = make_auth_header(ADCMClient(url=sdk_client_fs.url, user=user.username, password="password"))
+        admin_headers = make_auth_header(
+            ADCMClient(url=sdk_client_fs.url, user=user.username, password="password")
+        )
         for _ in range(10):
             check_failed(post(adcm_config_url, {"blah": "blah"}, admin_headers), exact_code=403)
 
     @allure.title("Delete all objects of all types except user")
     @pytest.fixture()
-    def _delete_objects(self, various_adcm_objects, various_rbac_objects, _run_actions, _prepare_denied_records):
+    def _delete_objects(
+        self, various_adcm_objects, various_rbac_objects, _run_actions, _prepare_denied_records
+    ):
         cluster, *_, provider, host = various_adcm_objects
         for obj in various_rbac_objects[1:] + (cluster, host, provider):
             obj.delete()
@@ -228,4 +242,6 @@ class TestAuditLoginAPI:
         _check_audit_logs(endpoint, client_func, token, field_name, filters, **kwargs)
 
     def _login(self, client, username, password):
-        requests.post(f"{client.url}/api/v1/rbac/token/", json={"username": username, "password": password})
+        requests.post(
+            f"{client.url}/api/v1/rbac/token/", json={"username": username, "password": password}
+        )

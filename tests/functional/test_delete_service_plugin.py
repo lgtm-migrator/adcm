@@ -56,7 +56,9 @@ def test_delete_service_with_export(sdk_client_fs: ADCMClient):
     import_service.bind(service)
     task = service.action(name='remove_service').run()
     task.wait()
-    with allure.step("Check that service has been deleted and imports from other service are still present"):
+    with allure.step(
+        "Check that service has been deleted and imports from other service are still present"
+    ):
         assert task.status == 'success', f"Current job status {task.status}. Expected: success"
         assert not cluster.service_list(), "Service list should be empty"
         assert cluster_import.service_list(), "Import list should not be empty"
@@ -76,7 +78,9 @@ def test_delete_service_with_host(sdk_client_fs: ADCMClient):
     provider = hostprovider_bundle.provider_create("test")
     host_1 = provider.host_create("test-host-1")
     host_2 = provider.host_create("test-host-2")
-    bundle = sdk_client_fs.upload_from_fs(utils.get_data_dir(__file__, 'cluster_service_hostcomponent', 'cluster'))
+    bundle = sdk_client_fs.upload_from_fs(
+        utils.get_data_dir(__file__, 'cluster_service_hostcomponent', 'cluster')
+    )
     cluster = bundle.cluster_create("test")
     service_1 = cluster.service_add(name="zookeeper")
     service_2 = cluster.service_add(name="second_service")
@@ -92,7 +96,9 @@ def test_delete_service_with_host(sdk_client_fs: ADCMClient):
     with allure.step("Check that service has been deleted and HC map was cleaned"):
         assert task.status == 'success', f"Current job status {task.status}. Expected: success"
         assert len(cluster.service_list()) == 1, "It should be 1 service"
-        assert cluster.service_list()[0].name == "second_service", "It should be only second service left"
+        assert (
+            cluster.service_list()[0].name == "second_service"
+        ), "It should be only second service left"
         assert len(cluster.hostcomponent()) == 1, "HC map should contain 1 mapping"
     with allure.step("Check that there is no issues on objects"):
         cluster.reread()

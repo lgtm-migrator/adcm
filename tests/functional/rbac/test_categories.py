@@ -38,15 +38,21 @@ def test_category_lifecycle(sdk_client_fs):
     }
 
     check_categories_before_bundle_upload(sdk_client_fs, expected_categories)
-    check_categories_during_cluster_bundle_uploads(sdk_client_fs, filepaths['clusters'], expected_categories)
-    check_categories_after_provider_bundle_upload(sdk_client_fs, filepaths['providers']['first'], expected_categories)
+    check_categories_during_cluster_bundle_uploads(
+        sdk_client_fs, filepaths['clusters'], expected_categories
+    )
+    check_categories_after_provider_bundle_upload(
+        sdk_client_fs, filepaths['providers']['first'], expected_categories
+    )
 
 
 @allure.step('Check categories before upload of any bundle')
 def check_categories_before_bundle_upload(client: ADCMClient, expected_categories: Set[str]):
     """Check that there's only one default category"""
     _check_category_list(client, expected_categories)
-    roles_with_categories = tuple(filter(lambda role: len(role.categories) != 0, _get_all_roles_info(client)))
+    roles_with_categories = tuple(
+        filter(lambda role: len(role.categories) != 0, _get_all_roles_info(client))
+    )
     is_empty(roles_with_categories, 'There should be no role with category.')
 
 
@@ -92,7 +98,9 @@ def check_categories_during_cluster_bundle_uploads(
 
 
 @allure.step('Check categories after provider bundle upload')
-def check_categories_after_provider_bundle_upload(client: ADCMClient, bundle_path: str, expected_categories: Set[str]):
+def check_categories_after_provider_bundle_upload(
+    client: ADCMClient, bundle_path: str, expected_categories: Set[str]
+):
     """Check that new categories wasn't created after provider bundle upload"""
     bundle = client.upload_from_fs(bundle_path)
     category_name = bundle.provider_prototype().display_name
@@ -106,7 +114,8 @@ def check_categories_after_provider_bundle_upload(client: ADCMClient, bundle_pat
 def _check_category_list(client: ADCMClient, categories: Set[str]):
     """Check if category list is the same as expected"""
     categories_request = requests.get(
-        parse.urljoin(client.url, CATEGORIES_SUFFIX), headers={'Authorization': f'Token {client.api_token()}'}
+        parse.urljoin(client.url, CATEGORIES_SUFFIX),
+        headers={'Authorization': f'Token {client.api_token()}'},
     )
     categories_request.raise_for_status()
     category_list = categories_request.json()
@@ -114,7 +123,11 @@ def _check_category_list(client: ADCMClient, categories: Set[str]):
         expected := len(categories)
     ), f'Amount of categories should be exactly {expected}, not {actual}'
     # is superset is ok, because length is the same, but if one day we have "is_equal_to", change it
-    is_superset_of(set(category_list), categories, 'Categories list is incorrect. See attachment for more details.')
+    is_superset_of(
+        set(category_list),
+        categories,
+        'Categories list is incorrect. See attachment for more details.',
+    )
 
 
 def _get_all_roles_info(client: ADCMClient) -> Generator[RoleShortInfo, None, None]:

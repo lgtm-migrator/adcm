@@ -52,7 +52,9 @@ def test_service_wo_actions(sdk_client_fs: ADCMClient):
     stack_dir = utils.get_data_dir(__file__, "service_wo_action")
     sdk_client_fs.upload_from_fs(stack_dir)
     with allure.step("Get service without actions"):
-        service_prototype = sdk_client_fs.service_prototype()._data  # pylint: disable=protected-access
+        service_prototype = (
+            sdk_client_fs.service_prototype()._data
+        )  # pylint: disable=protected-access
         with open(SCHEMAS + "/stack_list_item_schema.json", encoding='utf_8') as file:
             schema = json.load(file)
     with allure.step("Check service"):
@@ -64,7 +66,9 @@ def test_cluster_proto_wo_actions(sdk_client_fs: ADCMClient):
     stack_dir = utils.get_data_dir(__file__, "cluster_proto_wo_actions")
     sdk_client_fs.upload_from_fs(stack_dir)
     with allure.step("Get cluster without actions"):
-        cluster_prototype = sdk_client_fs.cluster_prototype()._data  # pylint: disable=protected-access
+        cluster_prototype = (
+            sdk_client_fs.cluster_prototype()._data
+        )  # pylint: disable=protected-access
         with open(SCHEMAS + "/stack_list_item_schema.json", encoding='utf_8') as file:
             schema = json.load(file)
     with allure.step("Check cluster"):
@@ -116,7 +120,9 @@ def test_stack_hasnt_scripttype_mandatory_key(sdk_client_fs: ADCMClient):
     with pytest.raises(coreapi.exceptions.ErrorMessage) as e:
         sdk_client_fs.upload_from_fs(stack_dir)
     with allure.step("Check error: has no mandatory"):
-        errorcodes.INVALID_OBJECT_DEFINITION.equal(e, 'There is no required key "script_type" in map.')
+        errorcodes.INVALID_OBJECT_DEFINITION.equal(
+            e, 'There is no required key "script_type" in map.'
+        )
 
 
 def test_playbook_path(sdk_client_fs: ADCMClient):
@@ -141,7 +147,9 @@ def test_load_stack_w_empty_config_field(sdk_client_fs: ADCMClient):
     with pytest.raises(coreapi.exceptions.ErrorMessage) as e:
         sdk_client_fs.upload_from_fs(stack_dir)
     with allure.step("Check error: config field should not be empty"):
-        errorcodes.INVALID_OBJECT_DEFINITION.equal(e, 'None of the variants for rule "config_obj" match')
+        errorcodes.INVALID_OBJECT_DEFINITION.equal(
+            e, 'None of the variants for rule "config_obj" match'
+        )
 
 
 def test_shouldn_load_config_with_wrong_name(sdk_client_fs: ADCMClient):
@@ -353,7 +361,9 @@ def test_load_bundle_with_undefined_config_parameter(sdk_client_fs: ADCMClient):
     with pytest.raises(coreapi.exceptions.ErrorMessage) as e:
         sdk_client_fs.upload_from_fs(stack_dir)
     with allure.step("Check error: should be a map"):
-        errorcodes.INVALID_OBJECT_DEFINITION.equal(e, "None of the variants", 'for rule "config_dict_obj" match')
+        errorcodes.INVALID_OBJECT_DEFINITION.equal(
+            e, "None of the variants", 'for rule "config_dict_obj" match'
+        )
 
 
 def test_when_import_has_unknown_config_parameter_shouldnt_be_loaded(
@@ -373,12 +383,16 @@ def test_when_bundle_hasnt_only_host_definition(sdk_client_fs: ADCMClient):
     with pytest.raises(coreapi.exceptions.ErrorMessage) as e:
         sdk_client_fs.upload_from_fs(bundledir)
     with allure.step("Check error: There isnt any cluster or host provider definition in bundle"):
-        errorcodes.BUNDLE_ERROR.equal(e, "There isn't any cluster or host provider definition in bundle")
+        errorcodes.BUNDLE_ERROR.equal(
+            e, "There isn't any cluster or host provider definition in bundle"
+        )
 
 
 def _get_invalid_bundle_config_params() -> List[ParameterSet]:
     def _get_pytest_param(bundle_name, adcm_err: ADCMError, msg: str):
-        return pytest.param(utils.get_data_dir(__file__, bundle_name), (adcm_err, msg), id=bundle_name)
+        return pytest.param(
+            utils.get_data_dir(__file__, bundle_name), (adcm_err, msg), id=bundle_name
+        )
 
     return [
         _get_pytest_param(
@@ -392,7 +406,9 @@ def _get_invalid_bundle_config_params() -> List[ParameterSet]:
             errorcodes.STACK_LOAD_ERROR,
             "found duplicate anchor",
         ),
-        _get_pytest_param("expected_colon", errorcodes.STACK_LOAD_ERROR, "could not find expected ':'"),
+        _get_pytest_param(
+            "expected_colon", errorcodes.STACK_LOAD_ERROR, "could not find expected ':'"
+        ),
         _get_pytest_param(
             "missed_whitespace",
             errorcodes.STACK_LOAD_ERROR,
@@ -416,7 +432,9 @@ def _get_invalid_bundle_config_params() -> List[ParameterSet]:
     _get_invalid_bundle_config_params(),
     indirect=["bundle_archive"],
 )
-def test_invalid_bundle_config(sdk_client_fs: ADCMClient, bundle_archive, expected_error: Tuple[ADCMError, str]):
+def test_invalid_bundle_config(
+    sdk_client_fs: ADCMClient, bundle_archive, expected_error: Tuple[ADCMError, str]
+):
     """Test upload bundle with invalid config"""
     (adcm_error, expected_msg) = expected_error
     with pytest.raises(coreapi.exceptions.ErrorMessage) as e:

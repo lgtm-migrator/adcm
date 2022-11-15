@@ -18,7 +18,10 @@ import allure
 import pytest
 from adcm_client.objects import Cluster, Service, Component, Provider, Task, ADCMClient
 from adcm_pytest_plugin.utils import get_data_dir, wait_until_step_succeeds
-from adcm_pytest_plugin.steps.actions import run_cluster_action_and_assert_result, run_provider_action_and_assert_result
+from adcm_pytest_plugin.steps.actions import (
+    run_cluster_action_and_assert_result,
+    run_provider_action_and_assert_result,
+)
 from coreapi.exceptions import ErrorMessage
 
 from tests.conftest import TEST_USER_CREDENTIALS
@@ -68,9 +71,13 @@ class TestMainInfo:
     def _view_import_on_cluster(self, sdk_client_fs, cluster, user):
         """Grant permission to view import on cluster to new user"""
         role = sdk_client_fs.role_create(
-            name='Wrapper role', display_name='Wrapper', child=[{'id': sdk_client_fs.role(name='View imports').id}]
+            name='Wrapper role',
+            display_name='Wrapper',
+            child=[{'id': sdk_client_fs.role(name='View imports').id}],
         )
-        sdk_client_fs.policy_create(name='Policy for cluster', role=role, objects=[cluster], user=[user])
+        sdk_client_fs.policy_create(
+            name='Policy for cluster', role=role, objects=[cluster], user=[user]
+        )
 
     @allure.issue(url='https://arenadata.atlassian.net/browse/ADCM-2563')
     @pytest.mark.usefixtures('_login_as_custom_user', '_view_import_on_cluster')
@@ -84,9 +91,7 @@ class TestMainInfo:
         cluster_page.check_all_elements()
         assert (
             description := cluster_page.get_description()
-        ) == expected_main_info, (
-            f'Description on cluster main page is expected to be {expected_main_info}, not {description}'
-        )
+        ) == expected_main_info, f'Description on cluster main page is expected to be {expected_main_info}, not {description}'
 
     @allure.issue(url='https://arenadata.atlassian.net/browse/ADCM-2676')
     @pytest.mark.usefixtures('_login_to_adcm_over_api')
@@ -97,27 +102,43 @@ class TestMainInfo:
         component = service.component()
         host = provider.host()
 
-        pages = (ClusterMainPage, ServiceMainPage, ComponentMainPage, ProviderMainPage, HostMainPage)
+        pages = (
+            ClusterMainPage,
+            ServiceMainPage,
+            ComponentMainPage,
+            ProviderMainPage,
+            HostMainPage,
+        )
         adcm_objects = (cluster, service, component, provider, host)
 
         with allure.step(
             'Check initial __main_info is correctly displayed in the description of detailed object pages'
         ):
             for page_type, adcm_object in zip(pages, adcm_objects):
-                self._check_detailed_page_main_info(app_fs, page_type, adcm_object, self._DESCRIPTION_BEFORE)
+                self._check_detailed_page_main_info(
+                    app_fs, page_type, adcm_object, self._DESCRIPTION_BEFORE
+                )
 
         with allure.step('Change __main_info and check detailed object pages again'):
             run_cluster_action_and_assert_result(cluster, change_main_info_action)
-            run_provider_action_and_assert_result(provider, change_main_info_action, config={'host_id': host.id})
+            run_provider_action_and_assert_result(
+                provider, change_main_info_action, config={'host_id': host.id}
+            )
             for page_type, adcm_object in zip(pages, adcm_objects):
-                self._check_detailed_page_main_info(app_fs, page_type, adcm_object, self._DESCRIPTION_AFTER)
+                self._check_detailed_page_main_info(
+                    app_fs, page_type, adcm_object, self._DESCRIPTION_AFTER
+                )
 
         with allure.step('Save config via UI and check that description is the same'):
             for page_type, adcm_object in zip(pages, adcm_objects):
                 self._check_main_info_after_config_save(app_fs, page_type, adcm_object)
 
     def _check_detailed_page_main_info(
-        self, app: ADCMTest, page_type: Type[BaseDetailedPage], adcm_object: AnyADCMObject, expected_text: str
+        self,
+        app: ADCMTest,
+        page_type: Type[BaseDetailedPage],
+        adcm_object: AnyADCMObject,
+        expected_text: str,
     ):
         """Check that detailed page contains the expected text from __main_info in description"""
         object_represent = get_object_represent(adcm_object)
@@ -138,7 +159,9 @@ class TestMainInfo:
         after the config was saved via UI
         """
         object_represent = get_object_represent(adcm_object)
-        with allure.step(f"Change config of {object_represent} and check that __main_info didn't change"):
+        with allure.step(
+            f"Change config of {object_represent} and check that __main_info didn't change"
+        ):
             page = self._init_page(app, page_type, adcm_object)
             page.open()
             text_before = page.get_description()
@@ -195,10 +218,14 @@ class TestAllowToTerminate:
         """Test cancelling task (job and multijob)"""
         task = self._run_cluster_action(action_name)
         with allure.step('Check that job is running'):
-            wait_until_step_succeeds(self._check_job_status, timeout=5, period=1, page=page, status=JobStatus.RUNNING)
+            wait_until_step_succeeds(
+                self._check_job_status, timeout=5, period=1, page=page, status=JobStatus.RUNNING
+            )
         with allure.step('Cancel task and check it is cancelled without page refresh'):
             self._cancel_task(task)
-            wait_until_step_succeeds(self._check_job_status, timeout=5, period=1, page=page, status=JobStatus.ABORTED)
+            wait_until_step_succeeds(
+                self._check_job_status, timeout=5, period=1, page=page, status=JobStatus.ABORTED
+            )
 
     def _run_cluster_action(self, name: str) -> Task:
         with allure.step(f'Run action "{name}" on cluster'):

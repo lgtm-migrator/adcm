@@ -32,17 +32,23 @@ class ProviderListLocators:
         """Provider List page create provider elements locators"""
 
         block = Locator(By.CSS_SELECTOR, "mat-dialog-container", "Popup block")
-        bundle_select_btn = Locator(By.CSS_SELECTOR, "mat-select[placeholder='Bundle']", "Select bundle")
+        bundle_select_btn = Locator(
+            By.CSS_SELECTOR, "mat-select[placeholder='Bundle']", "Select bundle"
+        )
         version_select_btn = Locator(
             By.CSS_SELECTOR, "mat-select[formcontrolname='bundle_id']", "Select bundle version"
         )
         select_option = Locator(By.CSS_SELECTOR, "mat-option", "Select option")
 
-        upload_bundle_btn = Locator(By.CSS_SELECTOR, "input[value='upload_bundle_file']", "Upload bundle button")
+        upload_bundle_btn = Locator(
+            By.CSS_SELECTOR, "input[value='upload_bundle_file']", "Upload bundle button"
+        )
         provider_name_input = Locator(
             By.CSS_SELECTOR, "input[data-placeholder='Hostprovider name']", "Provider name input"
         )
-        description_input = Locator(By.CSS_SELECTOR, "input[data-placeholder='Description']", "Description input")
+        description_input = Locator(
+            By.CSS_SELECTOR, "input[data-placeholder='Description']", "Description input"
+        )
 
         create_btn = Locator(By.XPATH, "//button[./span[text()='Create']]", "Create button")
         cancel_btn = Locator(By.XPATH, "//button[./span[text()='Cancel']]", "Cancel button")
@@ -58,5 +64,9 @@ class ProviderListLocators:
             state = Locator(By.CSS_SELECTOR, "app-state-column", "Provider state in row")
             actions = Locator(By.CSS_SELECTOR, "app-action-list button", "Provider actions in row")
             upgrade = Locator(By.CSS_SELECTOR, "app-upgrade button", "Provider upgrade in row")
-            config = Locator(By.CSS_SELECTOR, "mat-cell:nth-child(6) button", "Provider config in row")
-            delete_btn = Locator(By.CSS_SELECTOR, "mat-cell:nth-child(7) button", "Provider delete button in row")
+            config = Locator(
+                By.CSS_SELECTOR, "mat-cell:nth-child(6) button", "Provider config in row"
+            )
+            delete_btn = Locator(
+                By.CSS_SELECTOR, "mat-cell:nth-child(7) button", "Provider delete button in row"
+            )

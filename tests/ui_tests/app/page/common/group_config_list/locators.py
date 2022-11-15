@@ -34,5 +34,9 @@ class GroupConfigListLocators:
     class CreateGroupPopup:
         block = Locator(By.CSS_SELECTOR, "app-dialog", "Popup block")
         name_input = Locator(By.CSS_SELECTOR, "input[data-placeholder='Name']", "Name input")
-        description_input = Locator(By.CSS_SELECTOR, "input[data-placeholder='Description']", "Description input")
-        create_btn = Locator(By.CSS_SELECTOR, "app-add-controls button[color='accent']", "Create button")
+        description_input = Locator(
+            By.CSS_SELECTOR, "input[data-placeholder='Description']", "Description input"
+        )
+        create_btn = Locator(
+            By.CSS_SELECTOR, "app-add-controls button[color='accent']", "Create button"
+        )

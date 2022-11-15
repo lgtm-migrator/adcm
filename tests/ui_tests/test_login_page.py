@@ -37,7 +37,9 @@ def test_check_login_to_adcm(app_fs, adcm_credentials):
 
 @pytest.mark.ldap()
 @including_https
-@pytest.mark.parametrize("configure_adcm_ldap_ad", [False, True], ids=["ssl-off", "ssl-on"], indirect=True)
+@pytest.mark.parametrize(
+    "configure_adcm_ldap_ad", [False, True], ids=["ssl-off", "ssl-on"], indirect=True
+)
 @pytest.mark.usefixtures("configure_adcm_ldap_ad")
 def test_login_as_ldap_user(app_fs, ldap_user_in_group):
     """Test successful LDAP user authentication"""
@@ -50,7 +52,9 @@ def test_login_as_ldap_user(app_fs, ldap_user_in_group):
         intro_page.header.check_auth_page_elements()
 
 
-@pytest.mark.parametrize(("name", "password"), [("", "admin"), ("admin", "")], ids=("no_name", "no_password"))
+@pytest.mark.parametrize(
+    ("name", "password"), [("", "admin"), ("admin", "")], ids=("no_name", "no_password")
+)
 def test_check_login_button_unavailable(app_fs, name, password):
     """Test that login button is unavailable for given conditions"""
     login_page = LoginPage(app_fs.driver, app_fs.adcm.url).open()

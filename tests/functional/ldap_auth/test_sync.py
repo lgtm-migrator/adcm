@@ -36,7 +36,11 @@ from tests.functional.ldap_auth.utils import (
 )
 from tests.functional.rbac.conftest import BusinessRoles, RbacRoles
 from tests.library.assertions import expect_api_error, expect_no_api_error, sets_are_equal
-from tests.library.ldap_interactions import LDAPTestConfig, configure_adcm_for_ldap, sync_adcm_with_ldap
+from tests.library.ldap_interactions import (
+    LDAPTestConfig,
+    configure_adcm_for_ldap,
+    sync_adcm_with_ldap,
+)
 
 # pylint: disable=redefined-outer-name
 
@@ -48,7 +52,9 @@ def adcm_user_client(sdk_client_fs) -> ADCMClient:
     """Create simple user with ADCM User role"""
     username, password = "SimpleUser", "MegaPassword"
     user = sdk_client_fs.user_create(username, password)
-    sdk_client_fs.policy_create("Simple user", role=sdk_client_fs.role(name=RbacRoles.ADCMUser.value), user=[user])
+    sdk_client_fs.policy_create(
+        "Simple user", role=sdk_client_fs.role(name=RbacRoles.ADCMUser.value), user=[user]
+    )
     return ADCMClient(url=sdk_client_fs.url, user=username, password=password)
 
 
@@ -120,7 +126,13 @@ class TestLDAPSyncAction:
 
     # pylint: disable-next=too-many-arguments
     def test_access_to_tasks(
-        self, adcm_user_client, adcm_admin_client, adcm_superuser_client, sdk_client_fs, ldap_user_in_group, ldap_group
+        self,
+        adcm_user_client,
+        adcm_admin_client,
+        adcm_superuser_client,
+        sdk_client_fs,
+        ldap_user_in_group,
+        ldap_group,
     ):
         """Test that only superusers can see LDAP-related tasks"""
         superuser_name = adcm_superuser_client.me().username
@@ -128,9 +140,16 @@ class TestLDAPSyncAction:
             sdk_client_fs,
             ldap_group,
             ldap_user_in_group,
-            (*DEFAULT_LOCAL_USERS, adcm_user_client.me().username, adcm_admin_client.me().username, superuser_name),
+            (
+                *DEFAULT_LOCAL_USERS,
+                adcm_user_client.me().username,
+                adcm_admin_client.me().username,
+                superuser_name,
+            ),
         )
-        wait_for_task_and_assert_result(sdk_client_fs.adcm().action(name=TEST_CONNECTION_ACTION).run(), "success")
+        wait_for_task_and_assert_result(
+            sdk_client_fs.adcm().action(name=TEST_CONNECTION_ACTION).run(), "success"
+        )
         _check_task_logs_amount(adcm_user_client, 0)
         _check_task_logs_amount(adcm_admin_client, 0)
         _check_task_logs_amount(adcm_superuser_client, 2)
@@ -179,7 +198,9 @@ class TestLDAPSyncAction:
                 u.username for u in group.user_list()
             ], "Local user should still be a part of the group"
         check_existing_users(sdk_client_fs, expected_local=expected_local_users)
-        check_existing_groups(sdk_client_fs, expected_ldap=[ldap_group["name"]], expected_local=[group_name])
+        check_existing_groups(
+            sdk_client_fs, expected_ldap=[ldap_group["name"]], expected_local=[group_name]
+        )
 
     # pylint: disable-next=too-many-arguments
     def test_ldap_group_removed(self, sdk_client_fs, ldap_ad, ldap_group, ldap_user_in_group):
@@ -211,12 +232,18 @@ class TestLDAPSyncAction:
             group.reread()
             assert len(group.user_list()) == 0, "Group from LDAP should be empty"
             another_group.reread()
-            assert len(another_group.user_list()) == 1, 'Local group should still have deactivated users in it'
+            assert (
+                len(another_group.user_list()) == 1
+            ), 'Local group should still have deactivated users in it'
 
     def test_user_deactivated(self, sdk_client_fs, ldap_ad, ldap_user_in_group):
         """Test that user is deactivated in ADCM after it's deactivated in AD"""
         ldap_user = ldap_user_in_group
-        credentials = {"user": ldap_user["name"], "password": ldap_user["password"], "url": sdk_client_fs.url}
+        credentials = {
+            "user": ldap_user["name"],
+            "password": ldap_user["password"],
+            "url": sdk_client_fs.url,
+        }
         with allure.step("Run sync and check that user is active and can log in"):
             sync_adcm_with_ldap(sdk_client_fs)
             user = get_ldap_user_from_adcm(sdk_client_fs, ldap_user["name"])
@@ -253,7 +280,11 @@ class TestLDAPSyncAction:
 
     def test_name_email_sync_from_ldap(self, sdk_client_fs, ldap_ad, ldap_user_in_group):
         """Test that first/last name and email are synced with LDAP"""
-        new_user_info = {"first_name": "Babaika", "last_name": "Labadaika", "email": "doesnt@ex.ist"}
+        new_user_info = {
+            "first_name": "Babaika",
+            "last_name": "Labadaika",
+            "email": "doesnt@ex.ist",
+        }
         sync_adcm_with_ldap(sdk_client_fs)
         user = get_ldap_user_from_adcm(sdk_client_fs, ldap_user_in_group["name"])
         self._check_user_info(user, ldap_user_in_group)
@@ -262,7 +293,9 @@ class TestLDAPSyncAction:
         self._check_user_info(user, new_user_info)
 
     @allure.issue("https://tracker.yandex.ru/ADCM-3019")
-    def test_sync_when_group_itself_is_group_search_base(self, sdk_client_fs, ldap_user_in_group, ldap_group):
+    def test_sync_when_group_itself_is_group_search_base(
+        self, sdk_client_fs, ldap_user_in_group, ldap_group
+    ):
         """Test sync when group_search_base is set directly to LDAP group with one user"""
         ldap_group_name = ldap_group["name"]
         with allure.step(f"Set LDAP group_search_base to {ldap_group['dn']}"):
@@ -287,13 +320,17 @@ class TestLDAPSyncAction:
         for field_name in ("first_name", "last_name", "email"):
             actual = getattr(user, field_name)
             expected = user_ldap_info[field_name]
-            assert actual == expected, f'Field "{field_name}" is incorrect.\nExpected: {expected}\nActual: {actual}'
+            assert (
+                actual == expected
+            ), f'Field "{field_name}" is incorrect.\nExpected: {expected}\nActual: {actual}'
 
     def _simple_sync(self, sdk_client_fs, ldap_group, ldap_user_in_group, expected_local_users):
         check_existing_users(sdk_client_fs, expected_local=expected_local_users)
         check_existing_groups(sdk_client_fs)
         sync_adcm_with_ldap(sdk_client_fs)
-        check_existing_users(sdk_client_fs, {ldap_user_in_group["name"]}, expected_local=expected_local_users)
+        check_existing_users(
+            sdk_client_fs, {ldap_user_in_group["name"]}, expected_local=expected_local_users
+        )
         check_existing_groups(sdk_client_fs, {ldap_group["name"]})
 
 
@@ -305,19 +342,33 @@ class TestPeriodicSync:
         groups_ou, users_ou = ldap_basic_ous
 
         with allure.step("Turn ADCM LDAP config on"):
-            configure_adcm_for_ldap(sdk_client_fs, ad_config, False, None, users_ou, groups_ou, {"sync_interval": 1})
+            configure_adcm_for_ldap(
+                sdk_client_fs, ad_config, False, None, users_ou, groups_ou, {"sync_interval": 1}
+            )
 
-        with allure.step("Check that 1 minute after the config has been saved the sync task was launched"):
-            assert len(sdk_client_fs.job_list()) == 0, "There should not be any jobs right after config is saved"
-            wait_until_step_succeeds(self._check_sync_task_is_presented, timeout=70, period=5, client=sdk_client_fs)
+        with allure.step(
+            "Check that 1 minute after the config has been saved the sync task was launched"
+        ):
+            assert (
+                len(sdk_client_fs.job_list()) == 0
+            ), "There should not be any jobs right after config is saved"
+            wait_until_step_succeeds(
+                self._check_sync_task_is_presented, timeout=70, period=5, client=sdk_client_fs
+            )
 
         with allure.step("Check that after 1 more minute the second sync task was launched"):
             wait_until_step_succeeds(
-                self._check_sync_task_is_presented, timeout=70, period=5, client=sdk_client_fs, expected_amount=2
+                self._check_sync_task_is_presented,
+                timeout=70,
+                period=5,
+                client=sdk_client_fs,
+                expected_amount=2,
             )
 
         with allure.step("Disable sync in settings and check no new task was launched"):
-            configure_adcm_for_ldap(sdk_client_fs, ad_config, False, None, users_ou, groups_ou, {"sync_interval": 0})
+            configure_adcm_for_ldap(
+                sdk_client_fs, ad_config, False, None, users_ou, groups_ou, {"sync_interval": 0}
+            )
             # this won't check for an error like "we didn't take last non-zero value as a wrong interval",
             # so if you'll have some more detailed check in mind, please use it
             time.sleep(65)
@@ -332,7 +383,9 @@ class TestPeriodicSync:
             ]
             assert (
                 actual_amount := len(sync_tasks)
-            ) == expected_amount, f"Not enough sync tasks: {actual_amount}.\nExpected: {expected_amount}"
+            ) == expected_amount, (
+                f"Not enough sync tasks: {actual_amount}.\nExpected: {expected_amount}"
+            )
 
 
 class TestKnownSyncBugs:
@@ -381,9 +434,13 @@ class TestKnownSyncBugs:
 
         with allure.step("Check no LDAP user can login"):
             for user in two_users_wo_group:
-                login_should_fail(f"login as {user['name']}", sdk_client_fs, user["name"], user["password"])
+                login_should_fail(
+                    f"login as {user['name']}", sdk_client_fs, user["name"], user["password"]
+                )
 
-    def test_sync_add_group_search_base(self, set_adcm_ldap_config, two_users_wo_group, ldap_basic_ous, sdk_client_fs):
+    def test_sync_add_group_search_base(
+        self, set_adcm_ldap_config, two_users_wo_group, ldap_basic_ous, sdk_client_fs
+    ):
         """
         Test on bug when users aren't deactivated when no group is found
         when group search base provided during the second sync
@@ -397,7 +454,11 @@ class TestKnownSyncBugs:
 
         with allure.step("Check LDAP users appeared and are active"):
             sets_are_equal(
-                actual={u.username for u in sdk_client_fs.user_list() if u.type == "ldap" and u.is_active},
+                actual={
+                    u.username
+                    for u in sdk_client_fs.user_list()
+                    if u.type == "ldap" and u.is_active
+                },
                 expected=ldap_usernames,
                 message="Incorrect users from LDAP are active",
             )
@@ -408,7 +469,11 @@ class TestKnownSyncBugs:
 
         with allure.step("Check LDAP users stayed, but are inactive"):
             sets_are_equal(
-                actual={u.username for u in sdk_client_fs.user_list() if u.type == "ldap" and not u.is_active},
+                actual={
+                    u.username
+                    for u in sdk_client_fs.user_list()
+                    if u.type == "ldap" and not u.is_active
+                },
                 expected=ldap_usernames,
                 message="Incorrect users from LDAP are inactive",
             )
@@ -421,7 +486,9 @@ def session_should_expire(user: str, password: str, url: str):
         client = ADCMClient(url=url, user=user, password=password)
     with requests.Session() as session:
         with allure.step("Get session cookies"):
-            response = session.post(f"{url}/api/v1/rbac/token/", json={"username": user, "password": password})
+            response = session.post(
+                f"{url}/api/v1/rbac/token/", json={"username": user, "password": password}
+            )
             assert response.status_code == 200, "Clusters page should be available"
         yield
         with allure.step('Check session is "over"'):
@@ -440,11 +507,15 @@ def session_should_expire(user: str, password: str, url: str):
 
 @allure.step("Run successful test connection")
 def _test_connection(client: ADCMClient):
-    wait_for_task_and_assert_result(client.adcm().action(name=TEST_CONNECTION_ACTION).run(), "success")
+    wait_for_task_and_assert_result(
+        client.adcm().action(name=TEST_CONNECTION_ACTION).run(), "success"
+    )
 
 
 def _check_task_logs_amount(client: ADCMClient, amount: int):
     client.reread()
     with allure.step(f"Check that user {client.me().username} can see {amount} tasks"):
         tasks = tuple(j.task() for j in client.job_list())
-        assert len(tasks) == amount, f"Incorrect amount of tasks is available for user {client.me().username}"
+        assert (
+            len(tasks) == amount
+        ), f"Incorrect amount of tasks is available for user {client.me().username}"

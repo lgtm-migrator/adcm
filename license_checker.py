@@ -28,7 +28,7 @@ APACHE_LICENCE_PY = [
     '# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n',
     '# See the License for the specific language governing permissions and\n',
     '# limitations under the License.\n',
-    '\n'
+    '\n',
 ]
 
 APACHE_LICENCE_GO = [
@@ -43,7 +43,7 @@ APACHE_LICENCE_GO = [
     '// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n',
     '// See the License for the specific language governing permissions and\n',
     '// limitations under the License.\n',
-    '\n'
+    '\n',
 ]
 
 
@@ -51,9 +51,8 @@ def check_licence(lines: list, lic: list[str]) -> bool:
     """Return False in case of empty licence"""
     if len(lines) < 10:
         return False
-    if (
-            (lines[0] == lic[0] and lines[10] == lic[10])
-            or (lines[1] == lic[0] and lines[11] == lic[10])
+    if (lines[0] == lic[0] and lines[10] == lic[10]) or (
+        lines[1] == lic[0] and lines[11] == lic[10]
     ):
         return True
     return False
@@ -92,8 +91,13 @@ def update_files(f: TextIO, lines: list, lic: list[str]):
 
 def main():
     parser = argparse.ArgumentParser(description="Checker for licence existing and fix it if need")
-    parser.add_argument("--fix", nargs="?", const=True, default=False,
-                        help="Flag to fix absent license in file (default will only find it)")
+    parser.add_argument(
+        "--fix",
+        nargs="?",
+        const=True,
+        default=False,
+        help="Flag to fix absent license in file (default will only find it)",
+    )
     parser.add_argument("--folders", nargs="+", help="Folders to check")
     args = parser.parse_args()
     number_of_fixed = number_of_skipped = 0

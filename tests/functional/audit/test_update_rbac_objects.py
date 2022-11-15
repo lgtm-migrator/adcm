@@ -42,9 +42,12 @@ def rbac_objects(sdk_client_fs, rbac_create_data) -> Tuple[User, Group, Role, Po
     data_for_objects["policy"]["user"] = [
         sdk_client_fs.user(id=u["id"]) for u in data_for_objects["policy"].pop("user")
     ]
-    data_for_objects["policy"]["role"] = sdk_client_fs.role(id=data_for_objects["policy"].pop("role")["id"])
+    data_for_objects["policy"]["role"] = sdk_client_fs.role(
+        id=data_for_objects["policy"].pop("role")["id"]
+    )
     return tuple(
-        getattr(sdk_client_fs, f"{object_type}_create")(**data) for object_type, data in data_for_objects.items()
+        getattr(sdk_client_fs, f"{object_type}_create")(**data)
+        for object_type, data in data_for_objects.items()
     )
 
 
@@ -134,15 +137,23 @@ def test_update_rbac_objects(
 ):
     """Test update (success, fail, denied) of RBAC objects: user, group, role, policy"""
     admin_creds = make_auth_header(sdk_client_fs)
-    change_as_admin = partial(change_rbac_object, sdk_client_fs, method=http_method, headers=admin_creds)
-    change_as_unauthorized = partial(change_rbac_object, sdk_client_fs, method=http_method, headers=unauthorized_creds)
+    change_as_admin = partial(
+        change_rbac_object, sdk_client_fs, method=http_method, headers=admin_creds
+    )
+    change_as_unauthorized = partial(
+        change_rbac_object, sdk_client_fs, method=http_method, headers=unauthorized_creds
+    )
 
     for obj in rbac_objects:
         new_info = {**new_rbac_objects_info[obj.__class__.__name__.lower()]}
         check_succeed(change_as_admin(rbac_object=obj, data=new_info["correct"]))
         check_failed(change_as_admin(rbac_object=obj, data=new_info["incorrect"]), exact_code=400)
-        check_failed(change_as_unauthorized(rbac_object=obj, data=new_info["incorrect"]), exact_code=403)
-    checker = AuditLogChecker(parse_with_context({**rbac_create_data, "changes": {**prepared_changes}}))
+        check_failed(
+            change_as_unauthorized(rbac_object=obj, data=new_info["incorrect"]), exact_code=403
+        )
+    checker = AuditLogChecker(
+        parse_with_context({**rbac_create_data, "changes": {**prepared_changes}})
+    )
     checker.set_user_map(sdk_client_fs)
     checker.check(sdk_client_fs.audit_operation_list())
     # return after https://tracker.yandex.ru/ADCM-3244
@@ -151,7 +162,9 @@ def test_update_rbac_objects(
 
 @pytest.mark.parametrize("parse_with_context", ["full_update_rbac.yaml"], indirect=True)
 @pytest.mark.parametrize("http_method", ["PATCH", "PUT"])
-def test_full_rbac_objects_update(http_method: str, parse_with_context, generic_provider, sdk_client_fs, rbac_objects):
+def test_full_rbac_objects_update(
+    http_method: str, parse_with_context, generic_provider, sdk_client_fs, rbac_objects
+):
     """
     Test on audit of full RBAC objects' update
     """
@@ -188,18 +201,36 @@ def test_full_rbac_objects_update(http_method: str, parse_with_context, generic_
             "name": "NewPolicyName",
             "description": "Whole new description",
             "role": {"id": new_role.id},
-            "object": [{"id": generic_provider.id, "name": generic_provider.name, "type": "provider"}],
+            "object": [
+                {"id": generic_provider.id, "name": generic_provider.name, "type": "provider"}
+            ],
             "user": [{"id": user.id}],
             "group": [{"id": group.id}],
         },
     }
-    check_succeed(change_rbac_object(sdk_client_fs, user, http_method, new_values["user"], headers=admin_creds))
-    check_succeed(change_rbac_object(sdk_client_fs, group, http_method, new_values["group"], headers=admin_creds))
-    check_succeed(change_rbac_object(sdk_client_fs, role, http_method, new_values["role"], headers=admin_creds))
-    check_succeed(change_rbac_object(sdk_client_fs, policy, http_method, new_values["policy"], headers=admin_creds))
-    AuditLogChecker(parse_with_context({"provider": {"id": generic_provider.id, "name": generic_provider.name}})).check(
-        sdk_client_fs.audit_operation_list()
+    check_succeed(
+        change_rbac_object(
+            sdk_client_fs, user, http_method, new_values["user"], headers=admin_creds
+        )
     )
+    check_succeed(
+        change_rbac_object(
+            sdk_client_fs, group, http_method, new_values["group"], headers=admin_creds
+        )
+    )
+    check_succeed(
+        change_rbac_object(
+            sdk_client_fs, role, http_method, new_values["role"], headers=admin_creds
+        )
+    )
+    check_succeed(
+        change_rbac_object(
+            sdk_client_fs, policy, http_method, new_values["policy"], headers=admin_creds
+        )
+    )
+    AuditLogChecker(
+        parse_with_context({"provider": {"id": generic_provider.id, "name": generic_provider.name}})
+    ).check(sdk_client_fs.audit_operation_list())
 
 
 def change_rbac_object(
@@ -215,5 +246,7 @@ def change_rbac_object(
     if method == "PUT":
         original_body: dict = requests.get(url, headers=make_auth_header(client)).json()
         prepared_body = {**original_body, **data}
-    with allure.step(f"Changing {classname} object via {method} to {url} with data: {prepared_body}"):
+    with allure.step(
+        f"Changing {classname} object via {method} to {url} with data: {prepared_body}"
+    ):
         return getattr(requests, method.lower())(url, json=prepared_body, **call_kwargs)

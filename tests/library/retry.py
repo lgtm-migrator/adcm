@@ -46,7 +46,9 @@ class RetryFromCheckpoint:
         self._execution_steps = tuple(execution_steps)
         self._restoration_steps = tuple(restoration_steps)
 
-    def __call__(self, restore_from: Exception | tuple[Exception], max_retries: int = 3, *, counter: int = 0) -> None:
+    def __call__(
+        self, restore_from: Exception | tuple[Exception], max_retries: int = 3, *, counter: int = 0
+    ) -> None:
         try:
             for step in self._execution_steps:
                 step.exec()

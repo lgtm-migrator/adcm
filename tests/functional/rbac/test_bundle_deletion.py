@@ -91,7 +91,8 @@ def upload_bundle(client: ADCMClient, bundle_name: str) -> Bundle:
 def check_no_action_business_roles(client: ADCMClient):
     """Check there's no action business roles"""
     assert all(
-        ACTION_BUSINESS_ROLE_INFIX not in br.name for br in get_roles_of_type(RoleType.BUSINESS, client)
+        ACTION_BUSINESS_ROLE_INFIX not in br.name
+        for br in get_roles_of_type(RoleType.BUSINESS, client)
     ), f"There shouldn't be any business role that contains '{ACTION_BUSINESS_ROLE_INFIX}'"
 
 
@@ -101,7 +102,10 @@ def check_categories_are_presented(client: ADCMClient, *categories: str):
     roles = tuple(
         map(
             extract_role_short_info,
-            filter(lambda x: ACTION_BUSINESS_ROLE_INFIX in x.name, get_roles_of_type(RoleType.BUSINESS, client)),
+            filter(
+                lambda x: ACTION_BUSINESS_ROLE_INFIX in x.name,
+                get_roles_of_type(RoleType.BUSINESS, client),
+            ),
         )
     )
     for category in categories:
@@ -139,7 +143,9 @@ def check_action_business_roles_have_hidden_roles(client: ADCMClient, bundles: I
             actual_child_names = _get_children_names(role)
             expected_child_names = extraction_function(bundles)
             sets_are_equal(
-                actual_child_names, expected_child_names, "Children of a business action role aren't correct"
+                actual_child_names,
+                expected_child_names,
+                "Children of a business action role aren't correct",
             )
 
 
@@ -150,7 +156,8 @@ def _get_children_names(role: Role) -> Set[str]:
 
 def _generate_cluster_hidden_action_role_names(bundles: Iterable[Bundle]) -> Set[str]:
     return {
-        f'{bundle.name}_{bundle.version}_{bundle.edition}_cluster_' f'{bundle.cluster_prototype().name}_{ACTION_NAME}'
+        f'{bundle.name}_{bundle.version}_{bundle.edition}_cluster_'
+        f'{bundle.cluster_prototype().name}_{ACTION_NAME}'
         for bundle in bundles
     }
 

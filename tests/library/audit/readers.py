@@ -64,7 +64,9 @@ class YAMLReader:
 
     def __init__(self, directory: os.PathLike):
         self._directory = directory
-        self._template_env = Environment(loader=FileSystemLoader(directory), undefined=StrictUndefined, autoescape=True)
+        self._template_env = Environment(
+            loader=FileSystemLoader(directory), undefined=StrictUndefined, autoescape=True
+        )
 
     def prepare_parser_of(self, filename: str) -> Callable[[_TemplateContext], ParsedAuditLog]:
         """
@@ -83,7 +85,9 @@ class YAMLReader:
         return ParsedAuditLog(
             defaults=_ResolveDefaults(**data.get('defaults', {})),
             operations=data.get('operations'),
-            settings=_ProcessorConfig(**{k.replace('-', '_'): v for k, v in data.get('settings', {}).items()}),
+            settings=_ProcessorConfig(
+                **{k.replace('-', '_'): v for k, v in data.get('settings', {}).items()}
+            ),
         )
 
     def _read(self, filename: str, context: Dict[str, Union[str, int]]) -> dict:
@@ -91,6 +95,8 @@ class YAMLReader:
         data = yaml.safe_load(rendered_file_content)
         jsonschema.validate(data, _get_schema())
         allure.attach(
-            json.dumps(data, indent=2), name='Audit Log scenario', attachment_type=allure.attachment_type.JSON
+            json.dumps(data, indent=2),
+            name='Audit Log scenario',
+            attachment_type=allure.attachment_type.JSON,
         )
         return data

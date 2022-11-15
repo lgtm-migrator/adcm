@@ -78,7 +78,9 @@ def test_missing_service_outside_config_group(cluster_with_services, provider):
     """
     action_name = 'check'
     cluster = cluster_with_services
-    first_service, second_service = cluster.service(name='first_service'), cluster.service(name='second_service')
+    first_service, second_service = cluster.service(name='first_service'), cluster.service(
+        name='second_service'
+    )
     component_1, component_2 = first_service.component(), second_service.component()
     host_1, host_2 = [cluster.host_add(provider.host_create(f'test-host-{i}')) for i in range(2)]
 
@@ -92,13 +94,16 @@ def test_missing_service_outside_config_group(cluster_with_services, provider):
 
 def test_launch_action_with_activatable_config_group(sdk_client_fs):
     """Known bug caught when running action with at least one activatable group in action's config"""
-    cluster = sdk_client_fs.upload_from_fs(get_data_dir(__file__, "activatable_group_in_action_config")).cluster_create(
-        "Test Cluster"
-    )
+    cluster = sdk_client_fs.upload_from_fs(
+        get_data_dir(__file__, "activatable_group_in_action_config")
+    ).cluster_create("Test Cluster")
     for param_1, param_2 in ((False, False), (True, False), (False, True)):
         with allure.step(f"Try to set active status of {param_1=} and {param_2=}"):
             with catch_failed(ErrorMessage, "Running cluster action should not raise exception"):
                 cluster.action(name="enable_something").run(
-                    config={"param_1": {"somethingtwo": "jjj"}, "param_2": {"somethingone": ["ololo"]}},
+                    config={
+                        "param_1": {"somethingtwo": "jjj"},
+                        "param_2": {"somethingone": ["ololo"]},
+                    },
                     attr={"param_1": {"active": param_1}, "param_2": {"active": param_2}},
                 ).wait()

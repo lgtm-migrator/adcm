@@ -20,6 +20,10 @@ from tests.ui_tests.app.helpers.locator import Locator
 class GroupConfigLocators:
     """Group Configuration locators"""
 
-    group_row = Locator(By.CSS_SELECTOR, "app-group-fields mat-expansion-panel-header", "Configuration row")
-    config_row = Locator(By.CSS_SELECTOR, "app-config-field-attribute-provider", "Configuration row")
+    group_row = Locator(
+        By.CSS_SELECTOR, "app-group-fields mat-expansion-panel-header", "Configuration row"
+    )
+    config_row = Locator(
+        By.CSS_SELECTOR, "app-config-field-attribute-provider", "Configuration row"
+    )
     customization_chbx = Locator(By.CSS_SELECTOR, "mat-checkbox", "Checkbox customization")

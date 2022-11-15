@@ -31,10 +31,16 @@ from tests.functional.ldap_auth.utils import (
     login_should_succeed,
 )
 
-pytestmark = [only_clean_adcm, pytest.mark.usefixtures("configure_adcm_ldap_ad"), pytest.mark.ldap()]
+pytestmark = [
+    only_clean_adcm,
+    pytest.mark.usefixtures("configure_adcm_ldap_ad"),
+    pytest.mark.ldap(),
+]
 
 
-@pytest.mark.parametrize("configure_adcm_ldap_ad", [False, True], ids=["ssl_off", "ssl_on"], indirect=True)
+@pytest.mark.parametrize(
+    "configure_adcm_ldap_ad", [False, True], ids=["ssl_off", "ssl_on"], indirect=True
+)
 def test_basic_ldap_auth(sdk_client_fs, ldap_user, ldap_user_in_group):
     """
     Test basic scenarios of LDAP auth:
@@ -42,7 +48,10 @@ def test_basic_ldap_auth(sdk_client_fs, ldap_user, ldap_user_in_group):
     2. Login of user not in group is not permitted
     """
     login_should_succeed(
-        "login with LDAP user in group", sdk_client_fs, ldap_user_in_group["name"], ldap_user_in_group["password"]
+        "login with LDAP user in group",
+        sdk_client_fs,
+        ldap_user_in_group["name"],
+        ldap_user_in_group["password"],
     )
     login_should_fail(
         "login with LDAP user not in allowed group",
@@ -53,7 +62,9 @@ def test_basic_ldap_auth(sdk_client_fs, ldap_user, ldap_user_in_group):
 
 
 @including_https
-def test_remove_from_group_leads_to_access_loss(sdk_client_fs, ldap_ad, ldap_user_in_group, ldap_group):
+def test_remove_from_group_leads_to_access_loss(
+    sdk_client_fs, ldap_ad, ldap_user_in_group, ldap_group
+):
     """
     Test that removing LDAP user from "allowed" group leads to lost access to ADCM.
     """
@@ -95,8 +106,12 @@ def test_ldap_user_access_restriction(sdk_client_fs, ldap_ad, ldap_group, ldap_b
     ldap_ad.activate_user(user_dn)
     login_should_succeed("login as activated user in group", sdk_client_fs, username, password)
     ldap_ad.set_user_password(user_dn, new_password)
-    login_should_fail("login as activated user with wrong password", sdk_client_fs, username, password, None)
-    login_should_succeed("login as activated user with new password", sdk_client_fs, username, new_password)
+    login_should_fail(
+        "login as activated user with wrong password", sdk_client_fs, username, password, None
+    )
+    login_should_succeed(
+        "login as activated user with new password", sdk_client_fs, username, new_password
+    )
     ldap_ad.remove_user_from_group(user_dn, ldap_group["dn"])
     login_should_fail("login as user removed from group", sdk_client_fs, username, new_password)
 
@@ -114,7 +129,9 @@ def test_ssl_ldap_fails_with_wrong_path(sdk_client_fs, ldap_user_in_group):
     login_should_succeed("login with LDAP user and OK config", sdk_client_fs, user, password)
     with allure.step("Set incorrect path to a file and check login fails"):
         adcm.config_set_diff({"ldap_integration": {"tls_ca_cert_file": "/does/not/exist"}})
-        login_should_fail("login with LDAP user and wrong file in config", sdk_client_fs, user, password)
+        login_should_fail(
+            "login with LDAP user and wrong file in config", sdk_client_fs, user, password
+        )
 
 
 @including_https
@@ -133,7 +150,9 @@ def test_ssl_ldap_fails_with_wrong_cert_content(adcm_fs, sdk_client_fs, ldap_use
         result = adcm_fs.container.exec_run(["sh", "-c", f'echo "notacert" > {path}'])
         if result.exit_code != 0:
             raise ValueError("Failed to change certificate content")
-        login_should_fail("login with LDAP user and wrong cert content", sdk_client_fs, user, password)
+        login_should_fail(
+            "login with LDAP user and wrong cert content", sdk_client_fs, user, password
+        )
 
 
 def _alter_user_search_base(client: ADCMClient) -> dict:
@@ -147,7 +166,10 @@ _wrong_user_password = (
     ("wrong password", {"ldap_integration": {"ldap_password": random_string(6)}}),
 )
 
-_deactivate_ldap_integration = ("LDAP config turned off", {"attr": {"ldap_integration": {"active": False}}})
+_deactivate_ldap_integration = (
+    "LDAP config turned off",
+    {"attr": {"ldap_integration": {"active": False}}},
+)
 
 
 @pytest.mark.parametrize(
@@ -155,7 +177,9 @@ _deactivate_ldap_integration = ("LDAP config turned off", {"attr": {"ldap_integr
     [_deactivate_ldap_integration, *_wrong_user_password],
     ids=lambda x: x.replace(" ", "_") if isinstance(x, str) else x,
 )
-def test_ldap_config_change(change_name: str, config: Union[dict, Callable], sdk_client_fs, ldap_user_in_group):
+def test_ldap_config_change(
+    change_name: str, config: Union[dict, Callable], sdk_client_fs, ldap_user_in_group
+):
     """Test that changing ldap config to "incorrect" leads to users access loss"""
     login_operation = "login as LDAP user"
     user, password = ldap_user_in_group["name"], ldap_user_in_group["password"]
@@ -179,7 +203,9 @@ def test_wrong_ldap_config_fail_actions(action_name: str, sdk_client_fs):
             task = adcm.action(name=action_name).run()
             wait_for_task_and_assert_result(task, "failed")
             adcm.config_set_diff(original_config)
-    with allure.step(f"Deactivate LDAP integration in settings and check action {action_name} is disabled"):
+    with allure.step(
+        f"Deactivate LDAP integration in settings and check action {action_name} is disabled"
+    ):
         adcm.config_set_diff(_deactivate_ldap_integration[1])
         assert action_name in [
             a.name for a in adcm.action_list() if a.disabling_cause == "no_ldap_settings"
@@ -222,7 +248,10 @@ def test_login_when_group_itself_is_group_search_base(
     check_existing_groups(sdk_client_fs)
     check_existing_users(sdk_client_fs)
     login_should_succeed(
-        "login as user in group", sdk_client_fs, ldap_user_in_group["name"], ldap_user_in_group["password"]
+        "login as user in group",
+        sdk_client_fs,
+        ldap_user_in_group["name"],
+        ldap_user_in_group["password"],
     )
     check_existing_groups(sdk_client_fs, {ldap_group_name})
     check_existing_users(sdk_client_fs, {ldap_user_in_group["name"]})
@@ -234,7 +263,10 @@ def test_login_when_group_itself_is_group_search_base(
         ), f"Incorrect LDAP user name.\nExpected: {expected}\nActual: {actual}"
     for disallowed_user in (ldap_user, another_ldap_user_in_group):
         login_should_fail(
-            f"login as {disallowed_user['name']}", sdk_client_fs, disallowed_user["name"], disallowed_user["password"]
+            f"login as {disallowed_user['name']}",
+            sdk_client_fs,
+            disallowed_user["name"],
+            disallowed_user["password"],
         )
     check_existing_groups(sdk_client_fs, {ldap_group_name})
     check_existing_users(sdk_client_fs, {ldap_user_in_group["name"]})

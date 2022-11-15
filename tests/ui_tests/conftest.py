@@ -137,13 +137,17 @@ def _attach_debug_info_on_ui_test_fail(request, web_driver):
                 name='Current URL',
                 attachment_type=allure.attachment_type.TEXT,
             )
-            allure.attach.file(console_logs, name="console_log", attachment_type=allure.attachment_type.TEXT)
+            allure.attach.file(
+                console_logs, name="console_log", attachment_type=allure.attachment_type.TEXT
+            )
             allure.attach.file(
                 network_console_logs,
                 name="network_log",
                 attachment_type=allure.attachment_type.TEXT,
             )
-            allure.attach.file(events_json, name="all_events_log", attachment_type=allure.attachment_type.TEXT)
+            allure.attach.file(
+                events_json, name="all_events_log", attachment_type=allure.attachment_type.TEXT
+            )
     except AttributeError:
         # rep_setup and rep_call attributes are generated in runtime and can be absent
         pass
@@ -166,7 +170,9 @@ def _cleanup_browser_logs(request, web_driver):
 
 
 @pytest.fixture()
-def app_fs(adcm_fs: ADCM, web_driver: ADCMTest, _attach_debug_info_on_ui_test_fail, _cleanup_browser_logs):
+def app_fs(
+    adcm_fs: ADCM, web_driver: ADCMTest, _attach_debug_info_on_ui_test_fail, _cleanup_browser_logs
+):
     """
     Attach ADCM API to ADCMTest object and open new tab in browser for test
     Collect logs on failure and close browser tab after test is done

@@ -25,7 +25,19 @@ from adcm_pytest_plugin.utils import random_string
 pytestmark = [pytest.mark.full()]
 
 
-TYPES = ['string', 'password', 'integer', 'text', 'boolean', 'float', 'list', 'map', 'json', 'file', 'secrettext']
+TYPES = [
+    'string',
+    'password',
+    'integer',
+    'text',
+    'boolean',
+    'float',
+    'list',
+    'map',
+    'json',
+    'file',
+    'secrettext',
+]
 
 CONFIG_FILE = 'config.yaml'
 DEFAULT_VALUE = {
@@ -159,7 +171,11 @@ def prepare_config(config, *, enforce_file: bool = False):
             file.write("test")
     with open(f"{d_name}/{CONFIG_FILE}", 'w', encoding='utf_8') as yaml_file:
         yaml.dump(config[0], yaml_file)
-    allure.attach.file("/".join([d_name, CONFIG_FILE]), attachment_type=allure.attachment_type.YAML, name=CONFIG_FILE)
+    allure.attach.file(
+        "/".join([d_name, CONFIG_FILE]),
+        attachment_type=allure.attachment_type.YAML,
+        name=CONFIG_FILE,
+    )
     return config[0][0], config[1], d_name
 
 
@@ -183,7 +199,9 @@ def generate_group_expected_result(group_config) -> dict:
     field_invisible = group_config['field_ui_options']['invisible']
     expected_result['field_visible_advanced'] = field_advanced and not field_invisible
     expected_result['field_visible'] = not field_invisible
-    config_valid = not ((group_config['required'] and not group_config['default']) or group_config['read_only'])
+    config_valid = not (
+        (group_config['required'] and not group_config['default']) or group_config['read_only']
+    )
     expected_result['config_valid'] = config_valid
     invisible = group_invisible or field_invisible
     if group_config['activatable']:
@@ -191,7 +209,9 @@ def generate_group_expected_result(group_config) -> dict:
         default = group_config['default']
         group_active = group_config['active']
         expected_result['field_visible'] = group_active and not field_invisible
-        expected_result['field_visible_advanced'] = field_advanced and group_active and not field_invisible
+        expected_result['field_visible_advanced'] = (
+            field_advanced and group_active and not field_invisible
+        )
         expected_result['save'] = not (group_active and (required and not default))
         return expected_result
     expected_result['save'] = not (invisible or not config_valid)
@@ -304,5 +324,9 @@ def prepare_group_config(config, *, enforce_file: bool = False):
             file.write("test")
     with open(f"{d_name}/{CONFIG_FILE}", 'w', encoding='utf_8') as yaml_file:
         yaml.dump(list(config[0]), yaml_file)
-    allure.attach.file("/".join([d_name, CONFIG_FILE]), attachment_type=allure.attachment_type.YAML, name=CONFIG_FILE)
+    allure.attach.file(
+        "/".join([d_name, CONFIG_FILE]),
+        attachment_type=allure.attachment_type.YAML,
+        name=CONFIG_FILE,
+    )
     return config[0][0], config[1], d_name

@@ -290,7 +290,9 @@ class TestClusterServiceConfig:
         with allure.step("Check error"):
             adcm_error.equal(e, expected_msg)
 
-    def test_should_throws_exception_when_havent_previous_config(self, cluster_with_service: Tuple[Cluster, Service]):
+    def test_should_throws_exception_when_havent_previous_config(
+        self, cluster_with_service: Tuple[Cluster, Service]
+    ):
         """Test error when no previous config is present"""
         _, service = cluster_with_service
         with allure.step("Try to get previous version of the service config"):
@@ -303,7 +305,9 @@ class TestClusterServiceConfig:
 class TestClusterServiceConfigHistory:
     """Tests for service config history"""
 
-    def test_get_config_from_nonexistent_cluster_service(self, cluster_with_service: Tuple[Cluster, Service]):
+    def test_get_config_from_nonexistent_cluster_service(
+        self, cluster_with_service: Tuple[Cluster, Service]
+    ):
         """Test get config for nonexistent cluster"""
         _, service = cluster_with_service
         with allure.step(f"Removing service id={service.id}"):

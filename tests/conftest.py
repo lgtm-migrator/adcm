@@ -35,7 +35,11 @@ from docker.utils import parse_repository_tag
 
 from tests.library.adcm_websockets import ADCMWebsocket
 from tests.library.db import QueryExecutioner
-from tests.library.ldap_interactions import LDAPEntityManager, LDAPTestConfig, configure_adcm_for_ldap
+from tests.library.ldap_interactions import (
+    LDAPEntityManager,
+    LDAPTestConfig,
+    configure_adcm_for_ldap,
+)
 from tests.library.utils import ConfigError
 
 pytest_plugins = "adcm_pytest_plugin"
@@ -68,7 +72,9 @@ DUMMY_ACTION = {
 
 CLEAN_ADCM_PARAM = pytest.param({}, id="clean_adcm")
 DUMMY_DATA_PARAM = pytest.param({"fill_dummy_data": True}, id="adcm_with_dummy_data")
-DUMMY_DATA_FULL_PARAM = pytest.param({"fill_dummy_data": True}, id="adcm_with_dummy_data", marks=[pytest.mark.full])
+DUMMY_DATA_FULL_PARAM = pytest.param(
+    {"fill_dummy_data": True}, id="adcm_with_dummy_data", marks=[pytest.mark.full]
+)
 
 CHROME_PARAM = pytest.param("Chrome")
 FIREFOX_PARAM = pytest.param("Firefox", marks=[pytest.mark.full])
@@ -181,7 +187,9 @@ GENERIC_BUNDLES_DIR = pathlib.Path(__file__).parent / 'generic_bundles'
 def generic_bundle(request, sdk_client_fs) -> Bundle:
     """Upload bundle from generic bundles dir"""
     if not hasattr(request, "param") or not isinstance(request.param, str):
-        raise ValueError('You should parametrize "generic_bundle" fixture with bundle dir name as string')
+        raise ValueError(
+            'You should parametrize "generic_bundle" fixture with bundle dir name as string'
+        )
     return sdk_client_fs.upload_from_fs(GENERIC_BUNDLES_DIR / request.param)
 
 
@@ -451,7 +459,9 @@ def ad_ssl_cert(adcm_fs, ad_config) -> Optional[pathlib.Path]:
 
 @allure.title('Configure ADCM for LDAP (AD) integration')
 @pytest.fixture(params=[False], ids=['ssl_off'])
-def configure_adcm_ldap_ad(request, sdk_client_fs: ADCMClient, ldap_basic_ous, ad_config, ad_ssl_cert):
+def configure_adcm_ldap_ad(
+    request, sdk_client_fs: ADCMClient, ldap_basic_ous, ad_config, ad_ssl_cert
+):
     """Configure ADCM to allow AD users"""
     ssl_on = request.param
     groups_ou, users_ou = ldap_basic_ous
@@ -460,4 +470,8 @@ def configure_adcm_ldap_ad(request, sdk_client_fs: ADCMClient, ldap_basic_ous, a
 
 
 def _create_extra_user_modlist(user: dict) -> dict:
-    return {'first_name': user['name'], 'last_name': 'Testovich', 'email': f'{user["name"]}@nexistent.ru'}
+    return {
+        'first_name': user['name'],
+        'last_name': 'Testovich',
+        'email': f'{user["name"]}@nexistent.ru',
+    }

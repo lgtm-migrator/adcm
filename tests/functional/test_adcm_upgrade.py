@@ -158,7 +158,9 @@ def test_pass_in_config_encryption_after_upgrade(
 
 
 @pytest.mark.parametrize("adcm_is_upgradable", [True], indirect=True)
-@pytest.mark.parametrize("image", [["hub.arenadata.io/adcm/adcm", "2021.06.17.06"]], ids=repr, indirect=True)
+@pytest.mark.parametrize(
+    "image", [["hub.arenadata.io/adcm/adcm", "2021.06.17.06"]], ids=repr, indirect=True
+)
 def test_actions_availability_after_upgrade(
     adcm_fs: ADCM,
     sdk_client_fs: ADCMClient,
@@ -183,8 +185,12 @@ class TestConfigGroupAttrFormatUpgrade:
     @pytest.fixture()
     def objects(self, sdk_client_fs):
         """Create one of each object: cluster, service, component, provider"""
-        cluster_bundle = sdk_client_fs.upload_from_fs(get_data_dir(__file__, 'with_config_groups', 'cluster'))
-        provider_bundle = sdk_client_fs.upload_from_fs(get_data_dir(__file__, 'with_config_groups', 'provider'))
+        cluster_bundle = sdk_client_fs.upload_from_fs(
+            get_data_dir(__file__, 'with_config_groups', 'cluster')
+        )
+        provider_bundle = sdk_client_fs.upload_from_fs(
+            get_data_dir(__file__, 'with_config_groups', 'provider')
+        )
         cluster = cluster_bundle.cluster_create('Test Awesome Cluster')
         service = cluster.service_add(name='test_service')
         provider = provider_bundle.provider_create('Test Awesome Provider')
@@ -259,7 +265,9 @@ class TestConfigGroupAttrFormatUpgrade:
             ):
                 dicts_are_not_equal(old_attr, new_attr)
 
-    def _check_config_groups_attr_are_correct_after_upgrade(self, objects, config_groups, expected_attrs):
+    def _check_config_groups_attr_are_correct_after_upgrade(
+        self, objects, config_groups, expected_attrs
+    ):
         for obj, group, expected_attr in zip(objects, config_groups, expected_attrs):
             with allure.step(
                 'Check that "attr" after upgrade became the one that were expected '
@@ -354,12 +362,19 @@ class TestUpgradeFilledADCM:
         :returns: Dictionary with providers, clusters and sometimes bundles.
         """
         dirty_dir = Path(get_data_dir(__file__)) / "dirty_upgrade"
-        simple_provider_bundle, simple_providers, simple_hosts, all_tasks = self.create_simple_providers(
+        (
+            simple_provider_bundle,
+            simple_providers,
+            simple_hosts,
+            all_tasks,
+        ) = self.create_simple_providers(sdk_client_fs, dirty_dir)
+        simple_cluster_bundle, simple_clusters, tasks = self.create_simple_clusters(
             sdk_client_fs, dirty_dir
         )
-        simple_cluster_bundle, simple_clusters, tasks = self.create_simple_clusters(sdk_client_fs, dirty_dir)
         complex_objects = self.create_complex_providers_and_clusters(sdk_client_fs, dirty_dir)
-        upgraded_cluster, not_upgraded_cluster = self.create_upgradable_clusters(sdk_client_fs, dirty_dir)
+        upgraded_cluster, not_upgraded_cluster = self.create_upgradable_clusters(
+            sdk_client_fs, dirty_dir
+        )
         all_tasks.extend(tasks)
         _wait_for_tasks(all_tasks)
         with allure.step('Delete one of simple clusters with jobs'):
@@ -373,7 +388,10 @@ class TestUpgradeFilledADCM:
                 'cluster_bundle': simple_cluster_bundle,
             },
             'complex': {
-                'providers': {'host_supplier': complex_objects[0], 'free_hosts': complex_objects[1]},
+                'providers': {
+                    'host_supplier': complex_objects[0],
+                    'free_hosts': complex_objects[1],
+                },
                 'clusters': {
                     'all_services': complex_objects[2],
                     'config_history': complex_objects[3],
@@ -386,7 +404,9 @@ class TestUpgradeFilledADCM:
     # Test itself
 
     @params.including_https
-    @pytest.mark.skip(reason='https://arenadata.atlassian.net/browse/ADCM-2659')  # remove it after the new release
+    @pytest.mark.skip(
+        reason='https://arenadata.atlassian.net/browse/ADCM-2659'
+    )  # remove it after the new release
     @pytest.mark.full()
     @pytest.mark.parametrize("adcm_is_upgradable", [True], indirect=True)
     @pytest.mark.parametrize("image", [previous_adcm_version_tag()], indirect=True)
@@ -430,7 +450,9 @@ class TestUpgradeFilledADCM:
             }
 
         comparator = build_objects_comparator(
-            get_compare_value=extract_job_info, field_name='Job info', name_composer=lambda obj: f"Job with id {obj.id}"
+            get_compare_value=extract_job_info,
+            field_name='Job info',
+            name_composer=lambda obj: f"Job with id {obj.id}",
         )
         jobs: List[Job] = get_objects_via_pagination(adcm_client.job_list)
         frozen_objects = {job.job_id: extract_job_info(job) for job in jobs}
@@ -453,15 +475,21 @@ class TestUpgradeFilledADCM:
         Run install action on hosts of 2 providers
         """
         provider_bundle = adcm_client.upload_from_fs(bundle_dir / "simple_provider")
-        providers = [provider_bundle.provider_create(f'Provider {random_string(6)}') for _ in range(10)]
+        providers = [
+            provider_bundle.provider_create(f'Provider {random_string(6)}') for _ in range(10)
+        ]
         one_of_providers = providers[-2]
         one_of_providers.config_set_diff({'ssh_key': self.LONG_TEXT})
         hosts = [
-            provider.host_create(f'{random_string(6)}-{random_string(6)}') for _ in range(20) for provider in providers
+            provider.host_create(f'{random_string(6)}-{random_string(6)}')
+            for _ in range(20)
+            for provider in providers
         ]
         one_of_providers.host_list()[-1].config_set_diff({'hosts_file': self.LONG_TEXT})
         tasks = [provider.action(name='validate').run() for provider in providers[:3]] + [
-            host.action(name='install').run() for provider in providers[-2:] for host in provider.host_list()
+            host.action(name='install').run()
+            for provider in providers[-2:]
+            for host in provider.host_list()
         ]
         return provider_bundle, providers, hosts, tasks
 
@@ -480,7 +508,11 @@ class TestUpgradeFilledADCM:
         """
         amount_of_clusters = 34
         params = {
-            'cluster_altered_config': {'number_of_segments': 2, 'auto_reboot': False, 'textarea': self.LONG_TEXT},
+            'cluster_altered_config': {
+                'number_of_segments': 2,
+                'auto_reboot': False,
+                'textarea': self.LONG_TEXT,
+            },
             'service_altered_config': {'simple-is-best': False, 'mode': 'fast'},
             'component_altered_config': {'simpler-is-better': True},
             'cluster_action': 'install',
@@ -493,7 +525,10 @@ class TestUpgradeFilledADCM:
         cluster_bundle = adcm_client.upload_from_fs(bundle_dir / "simple_cluster")
         tasks = []
         with allure.step(f'Create {amount_of_clusters} clusters'):
-            clusters = [cluster_bundle.cluster_create(f'Cluster {random_string(8)}') for _ in range(amount_of_clusters)]
+            clusters = [
+                cluster_bundle.cluster_create(f'Cluster {random_string(8)}')
+                for _ in range(amount_of_clusters)
+            ]
         with allure.step('Add one service to clusters and run action on component'):
             for one_service_cluster in clusters[:4]:
                 service = one_service_cluster.service_add(name=params['service_with_component'])
@@ -502,7 +537,9 @@ class TestUpgradeFilledADCM:
         with allure.step('Change config of clusters'):
             for cluster_to_change_config in clusters[6:10]:
                 cluster_to_change_config.config_set_diff(params['cluster_altered_config'])
-                service = cluster_to_change_config.service_add(name=params['service_with_component'])
+                service = cluster_to_change_config.service_add(
+                    name=params['service_with_component']
+                )
                 service.config_set_diff(params['service_altered_config'])
                 service.component(name=params['component_with_config']).config_set_diff(
                     params['component_altered_config']
@@ -511,10 +548,14 @@ class TestUpgradeFilledADCM:
             for install_cluster_with_two_services in clusters[12:30]:
                 install_cluster_with_two_services.service_add(name=params['service_with_component'])
                 install_cluster_with_two_services.service_add(name=params['lonely_service'])
-                tasks.append(install_cluster_with_two_services.action(name=params['cluster_action']).run())
+                tasks.append(
+                    install_cluster_with_two_services.action(name=params['cluster_action']).run()
+                )
         return cluster_bundle, clusters, tasks
 
-    @allure.step('Create complex provider and {amount_of_hosts} hosts with prefix "{template}" by action')
+    @allure.step(
+        'Create complex provider and {amount_of_hosts} hosts with prefix "{template}" by action'
+    )
     def create_complex_provider(
         self, provider_bundle: Bundle, template: str = 'complex-host', amount_of_hosts: int = 18
     ) -> Tuple[Provider, Task]:
@@ -525,7 +566,9 @@ class TestUpgradeFilledADCM:
         """
         provider = provider_bundle.provider_create(name=f'Complex Provider {random_string(6)}')
         provider.config_set_diff({'very_important_flag': 54.4})
-        task = provider.action(name='create_hosts').run(config={'count': amount_of_hosts, 'template': template})
+        task = provider.action(name='create_hosts').run(
+            config={'count': amount_of_hosts, 'template': template}
+        )
         return provider, task
 
     @allure.step('Create two complex providers and three complex clusters')
@@ -551,7 +594,9 @@ class TestUpgradeFilledADCM:
         provider_bundle = adcm_client.upload_from_fs(bundles_directory / "complex_provider")
         provider_bundle.license_accept()
         provider, host_create_task = self.create_complex_provider(provider_bundle)
-        provider_with_free_hosts, _ = self.create_complex_provider(provider_bundle, template='doomed-host')
+        provider_with_free_hosts, _ = self.create_complex_provider(
+            provider_bundle, template='doomed-host'
+        )
         self._run_actions_on_host_and_delete_with_action(provider)
         cluster_bundle = adcm_client.upload_from_fs(bundles_directory / "complex_cluster")
         cluster_bundle.license_accept()
@@ -561,11 +606,21 @@ class TestUpgradeFilledADCM:
         cluster_with_all_services = self._create_cluster_with_all_services(
             cluster_bundle, tuple(provider.host_list())[:3]
         )
-        cluster_with_hosts = self._create_cluster_with_hosts(cluster_bundle, tuple(provider.host_list())[3:])
-        return provider, provider_with_free_hosts, cluster_with_all_services, cluster_with_history, cluster_with_hosts
+        cluster_with_hosts = self._create_cluster_with_hosts(
+            cluster_bundle, tuple(provider.host_list())[3:]
+        )
+        return (
+            provider,
+            provider_with_free_hosts,
+            cluster_with_all_services,
+            cluster_with_history,
+            cluster_with_hosts,
+        )
 
     @allure.step('Create two upgradable clusters, upgrade one of them')
-    def create_upgradable_clusters(self, adcm_client: ADCMClient, bundles_directory: Path) -> Tuple[Cluster, Cluster]:
+    def create_upgradable_clusters(
+        self, adcm_client: ADCMClient, bundles_directory: Path
+    ) -> Tuple[Cluster, Cluster]:
         """
         1. Upload two bundles with old and new version with possibility of upgrade
         2. Create two clusters of previous version
@@ -578,14 +633,22 @@ class TestUpgradeFilledADCM:
         adcm_client.upload_from_fs(bundles_directory / "cluster_greater_version")
         cluster_to_upgrade = old_version_bundle.cluster_create('I will be upgraded')
         good_old_cluster = old_version_bundle.cluster_create('I am good the way I am')
-        _wait_for_tasks((cluster_to_upgrade.action(name='dummy').run(), good_old_cluster.action(name='dummy').run()))
+        _wait_for_tasks(
+            (
+                cluster_to_upgrade.action(name='dummy').run(),
+                good_old_cluster.action(name='dummy').run(),
+            )
+        )
         upgrade: Upgrade = cluster_to_upgrade.upgrade()
         upgrade.do()
         return cluster_to_upgrade, good_old_cluster
 
     @allure.step('Run some actions in upgraded ADCM')
     def run_actions_after_upgrade(
-        self, cluster_all_services: Cluster, cluster_config_history: Cluster, simple_provider: Provider
+        self,
+        cluster_all_services: Cluster,
+        cluster_config_history: Cluster,
+        simple_provider: Provider,
     ) -> None:
         """
         Run successful actions on: cluster, service, component.
@@ -594,11 +657,15 @@ class TestUpgradeFilledADCM:
         sauce_service = cluster_config_history.service(name=self.SAUCE_SERVICE)
         run_cluster_action_and_assert_result(cluster_all_services, 'eat_sandwich')
         run_service_action_and_assert_result(sauce_service, 'put_on_bread')
-        run_component_action_and_assert_result(sauce_service.component(name=self.SPICE_COMPONENT), 'add_more')
+        run_component_action_and_assert_result(
+            sauce_service.component(name=self.SPICE_COMPONENT), 'add_more'
+        )
         run_provider_action_and_assert_result(simple_provider, 'validate', status='failed')
 
     @allure.step('Create complex cluster with all services')
-    def _create_cluster_with_all_services(self, cluster_bundle: Bundle, hosts: Tuple[Host, Host, Host]) -> Cluster:
+    def _create_cluster_with_all_services(
+        self, cluster_bundle: Bundle, hosts: Tuple[Host, Host, Host]
+    ) -> Cluster:
         """
         Create cluster with three services
         Add three hosts on it
@@ -622,7 +689,9 @@ class TestUpgradeFilledADCM:
                 cluster.host_add(host)
         with allure.step('Run actions on the cluster, all components and services'):
             self._run_actions_on_components(cluster, sauce_service, components, hosts)
-            _wait_for_tasks(service.action().run() for service in (cheese_service, sauce_service, bread_service))
+            _wait_for_tasks(
+                service.action().run() for service in (cheese_service, sauce_service, bread_service)
+            )
             cluster.action(name='make_sandwich').run().wait()
         return cluster
 
@@ -632,7 +701,10 @@ class TestUpgradeFilledADCM:
 
         def get_random_config_map() -> dict:
             return {
-                'a_lot_of_text': {'simple_string': random_string(25), 'file_pass': random_string(16)},
+                'a_lot_of_text': {
+                    'simple_string': random_string(25),
+                    'file_pass': random_string(16),
+                },
                 'from_doc': {
                     'memory_size': random.randint(2, 64),
                     'person': {
@@ -642,7 +714,8 @@ class TestUpgradeFilledADCM:
                     },
                 },
                 'country_codes': [
-                    {'country': random_string(12), 'code': int(random.randint(1, 200))} for _ in range(4)
+                    {'country': random_string(12), 'code': int(random.randint(1, 200))}
+                    for _ in range(4)
                 ],
             }
 
@@ -687,7 +760,9 @@ class TestUpgradeFilledADCM:
         _wait_for_tasks(tuple((host.action(name='dummy_action').run() for host in hosts[::2])))
         _wait_for_tasks(tuple((host.action(name='remove_host').run() for host in hosts[::4])))
 
-    def _run_actions_on_components(self, cluster: Cluster, service: Service, components: dict, hosts: tuple):
+    def _run_actions_on_components(
+        self, cluster: Cluster, service: Service, components: dict, hosts: tuple
+    ):
         """Utility function to run actions on components (host actions too)"""
         cluster.action(name='make_sauce').run(
             hc=tuple(
@@ -718,7 +793,10 @@ class TestUpgradeFilledADCM:
     def _delete_simple_cluster_with_job(self, simple_clusters: List[Cluster]) -> None:
         """Delete one of simple clusters where at least one job was ran"""
         cluster_with_job = next(
-            filter(lambda cluster: any(len(action.task_list()) for action in cluster.action_list()), simple_clusters),
+            filter(
+                lambda cluster: any(len(action.task_list()) for action in cluster.action_list()),
+                simple_clusters,
+            ),
             None,
         )
         if cluster_with_job is None:

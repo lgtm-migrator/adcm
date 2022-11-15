@@ -50,7 +50,9 @@ class ProviderListPage(BasePageObject):
         self.host_popup = HostCreatePopupObj(self.driver, self.base_url)
 
     @allure.step("Create provider")
-    def create_provider(self, bundle: str, name: Optional[str] = None, description: Optional[str] = None):
+    def create_provider(
+        self, bundle: str, name: Optional[str] = None, description: Optional[str] = None
+    ):
         """Create provider"""
         self.find_and_click(ProviderListLocators.Tooltip.add_btn)
         popup = ProviderListLocators.CreateProviderPopup

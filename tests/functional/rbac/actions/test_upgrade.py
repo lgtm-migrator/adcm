@@ -74,7 +74,9 @@ class TestActionRolesOnUpgrade:
         return old_cluster, (service := old_cluster.service()), service.component()
 
     @pytest.fixture()
-    def old_cluster_objects_map(self, old_cluster_objects) -> Dict[ClusterObjectClassName, ClusterRelatedObject]:
+    def old_cluster_objects_map(
+        self, old_cluster_objects
+    ) -> Dict[ClusterObjectClassName, ClusterRelatedObject]:
         """Get old cluster objects as map"""
         return self._get_objects_map(old_cluster_objects)
 
@@ -92,7 +94,9 @@ class TestActionRolesOnUpgrade:
         ]
 
     @pytest.fixture()
-    def old_cluster_actions_policies(self, clients, user, all_business_roles, old_cluster_objects_map) -> List[Policy]:
+    def old_cluster_actions_policies(
+        self, clients, user, all_business_roles, old_cluster_objects_map
+    ) -> List[Policy]:
         """
         Grant permissions to run all actions on cluster, service and component for a user except:
         1. "No Rights" action.
@@ -105,7 +109,9 @@ class TestActionRolesOnUpgrade:
                 role,
                 user=user,
             )
-            for role in self._get_roles_filter_exclude_by_action_name(all_business_roles, self.NOT_ALLOWED_ACTIONS)
+            for role in self._get_roles_filter_exclude_by_action_name(
+                all_business_roles, self.NOT_ALLOWED_ACTIONS
+            )
         ]
 
     @pytest.mark.usefixtures("new_bundle", "old_cluster_actions_policies")
@@ -118,25 +124,41 @@ class TestActionRolesOnUpgrade:
         2. Display name change leads to denying of previously granted permission.
         3. Policy on new action can be created and will be allowed if granted.
         """
-        self.check_permissions_before_upgrade(clients.user, all_business_roles, old_cluster_objects_map)
+        self.check_permissions_before_upgrade(
+            clients.user, all_business_roles, old_cluster_objects_map
+        )
         new_cluster = self.upgrade_cluster(old_cluster)
-        self.check_permissions_after_upgrade(clients.user, all_business_roles, old_cluster_objects_map)
-        self.check_action_with_changed_display_name_not_allowed_by_name(clients.user, old_cluster_objects_map)
+        self.check_permissions_after_upgrade(
+            clients.user, all_business_roles, old_cluster_objects_map
+        )
+        self.check_action_with_changed_display_name_not_allowed_by_name(
+            clients.user, old_cluster_objects_map
+        )
         self.check_new_action_can_be_launched(clients, user, new_cluster)
         self.check_new_action_with_old_display_name(clients.user, old_cluster_objects_map)
 
     @allure.step('Check permissions working as expected before upgrade')
-    def check_permissions_before_upgrade(self, user_client: ADCMClient, all_business_roles, object_map):
+    def check_permissions_before_upgrade(
+        self, user_client: ADCMClient, all_business_roles, object_map
+    ):
         """Check that correct permissions are allowed/denied before cluster upgrade"""
         self.check_roles_are_allowed(
             user_client,
             object_map,
-            tuple(self._get_roles_filter_exclude_by_action_name(all_business_roles, self.NOT_ALLOWED_ACTIONS)),
+            tuple(
+                self._get_roles_filter_exclude_by_action_name(
+                    all_business_roles, self.NOT_ALLOWED_ACTIONS
+                )
+            ),
         )
         self.check_roles_are_denied(
             user_client,
             object_map,
-            tuple(self._get_roles_filter_select_by_action_name(all_business_roles, (NO_RIGHTS_ACTION,))),
+            tuple(
+                self._get_roles_filter_select_by_action_name(
+                    all_business_roles, (NO_RIGHTS_ACTION,)
+                )
+            ),
         )
 
     @allure.step('Upgrade cluster')
@@ -147,14 +169,17 @@ class TestActionRolesOnUpgrade:
         return cluster
 
     @allure.step('Check permissions working as expected after upgrade')
-    def check_permissions_after_upgrade(self, user_client: ADCMClient, all_business_roles, user_object_map):
+    def check_permissions_after_upgrade(
+        self, user_client: ADCMClient, all_business_roles, user_object_map
+    ):
         """Check that correct permissions are allowed/denied after cluster upgrade"""
         self.check_roles_are_allowed(
             user_client,
             user_object_map,
             tuple(
                 self._get_roles_filter_exclude_by_action_name(
-                    all_business_roles, (ACTION_NAME_BEFORE_CHANGE, ACTION_TO_BE_DELETED, *self.NOT_ALLOWED_ACTIONS)
+                    all_business_roles,
+                    (ACTION_NAME_BEFORE_CHANGE, ACTION_TO_BE_DELETED, *self.NOT_ALLOWED_ACTIONS),
                 )
             ),
         )
@@ -162,7 +187,11 @@ class TestActionRolesOnUpgrade:
         self.check_roles_are_denied(
             user_client,
             user_object_map,
-            tuple(self._get_roles_filter_select_by_action_name(all_business_roles, self.NOT_ALLOWED_ACTIONS)),
+            tuple(
+                self._get_roles_filter_select_by_action_name(
+                    all_business_roles, self.NOT_ALLOWED_ACTIONS
+                )
+            ),
         )
 
     @allure.step("Check action with changed display name isn't available for user")
@@ -202,7 +231,8 @@ class TestActionRolesOnUpgrade:
         """Check that given roles are allowed to be launched"""
         for role in business_roles:
             adcm_object, *_ = as_user_objects(
-                user_client, self._get_object_from_map_by_role_name(role.role_name, cluster_object_map)
+                user_client,
+                self._get_object_from_map_by_role_name(role.role_name, cluster_object_map),
             )
             is_allowed(adcm_object, role).wait()
 
@@ -215,11 +245,15 @@ class TestActionRolesOnUpgrade:
         """Check that given roles aren't allowed to be launched"""
         for role in business_roles:
             adcm_object = self._get_object_from_map_by_role_name(role.role_name, cluster_object_map)
-            action_id = adcm_object.action(display_name=get_action_display_name_from_role_name(role.role_name)).id
+            action_id = adcm_object.action(
+                display_name=get_action_display_name_from_role_name(role.role_name)
+            ).id
             rule_with_denied = BusinessRole(
                 role.role_name,
                 role.method_call,
-                ForbiddenCallChecker(adcm_object.__class__, f'action/{action_id}/run', HTTPMethod.POST),
+                ForbiddenCallChecker(
+                    adcm_object.__class__, f'action/{action_id}/run', HTTPMethod.POST
+                ),
             )
             is_denied(adcm_object, rule_with_denied, client=user_client)
 
@@ -233,7 +267,9 @@ class TestActionRolesOnUpgrade:
         try:
             return objects_map[object_type]
         except KeyError as e:
-            raise KeyError(f'Object of type {object_type} was not found in objects map: {objects_map}') from e
+            raise KeyError(
+                f'Object of type {object_type} was not found in objects map: {objects_map}'
+            ) from e
 
     def _objects_map_as_user_objects(self, client, objects_map):
         """Convert objects in map to user's objects"""
@@ -242,9 +278,13 @@ class TestActionRolesOnUpgrade:
     @staticmethod
     def _get_roles_filter_exclude_by_action_name(business_roles, exclude_actions: Iterable[str]):
         """Filter roles by excluding the ones that have names listed in exclude_actions"""
-        return filter(lambda r: all(name not in r.role_name for name in exclude_actions), business_roles)
+        return filter(
+            lambda r: all(name not in r.role_name for name in exclude_actions), business_roles
+        )
 
     @staticmethod
     def _get_roles_filter_select_by_action_name(business_roles, include_actions: Iterable[str]):
         """Filter roles by including the ones that have names listed in include_actions"""
-        return filter(lambda r: all(name in r.role_name for name in include_actions), business_roles)
+        return filter(
+            lambda r: all(name in r.role_name for name in include_actions), business_roles
+        )

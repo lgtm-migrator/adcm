@@ -77,7 +77,9 @@ class TestProviderListPage:
     @pytest.mark.smoke()
     @pytest.mark.include_firefox()
     @pytest.mark.parametrize(
-        "bundle_archive", [pytest.param(utils.get_data_dir(__file__, "provider"), id="provider")], indirect=True
+        "bundle_archive",
+        [pytest.param(utils.get_data_dir(__file__, "provider"), id="provider")],
+        indirect=True,
     )
     def test_create_provider_on_provider_list_page(self, app_fs, bundle_archive):
         """Tests create provider from provider list page"""
@@ -87,7 +89,9 @@ class TestProviderListPage:
         }
         provider_page = ProviderListPage(app_fs.driver, app_fs.adcm.url).open()
         with allure.step("Check no provider rows"):
-            assert len(provider_page.table.get_all_rows()) == 0, "There should be no row with providers"
+            assert (
+                len(provider_page.table.get_all_rows()) == 0
+            ), "There should be no row with providers"
         provider_page.create_provider(bundle=bundle_archive)
         with allure.step("Check uploaded provider"):
             rows = provider_page.table.get_all_rows()
@@ -103,7 +107,9 @@ class TestProviderListPage:
     @pytest.mark.smoke()
     @pytest.mark.include_firefox()
     @pytest.mark.parametrize(
-        "bundle_archive", [pytest.param(utils.get_data_dir(__file__, "provider"), id="provider")], indirect=True
+        "bundle_archive",
+        [pytest.param(utils.get_data_dir(__file__, "provider"), id="provider")],
+        indirect=True,
     )
     def test_create_custom_provider_on_provider_list_page(self, app_fs, bundle_archive):
         """Tests create provider from provider list page with custom params"""
@@ -116,7 +122,9 @@ class TestProviderListPage:
         provider_page = ProviderListPage(app_fs.driver, app_fs.adcm.url).open()
         with provider_page.table.wait_rows_change():
             provider_page.create_provider(
-                bundle=bundle_archive, name=provider_params['name'], description=provider_params['description']
+                bundle=bundle_archive,
+                name=provider_params['name'],
+                description=provider_params['description'],
             )
         with allure.step("Check uploaded provider"):
             rows = provider_page.table.get_all_rows()
@@ -163,7 +171,9 @@ class TestProviderListPage:
         provider_page = ProviderListPage(app_fs.driver, app_fs.adcm.url).open()
         row = provider_page.table.get_all_rows()[0]
         provider_page.click_config_btn_in_row(row)
-        ProviderConfigPage(app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id).wait_page_is_opened()
+        ProviderConfigPage(
+            app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id
+        ).wait_page_is_opened()
 
     @pytest.mark.smoke()
     @pytest.mark.include_firefox()
@@ -172,7 +182,9 @@ class TestProviderListPage:
         provider_page = ProviderListPage(app_fs.driver, app_fs.adcm.url).open()
         row = provider_page.table.get_all_rows()[0]
         provider_page.click_name_in_row(row)
-        ProviderMainPage(app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id).wait_page_is_opened()
+        ProviderMainPage(
+            app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id
+        ).wait_page_is_opened()
 
     @pytest.mark.smoke()
     @pytest.mark.include_firefox()
@@ -188,12 +200,12 @@ class TestProviderListPage:
 
     @pytest.mark.smoke()
     @pytest.mark.include_firefox()
-    def test_get_error_from_delete_provider_from_provider_list_page(self, app_fs, upload_and_create_test_provider):
+    def test_get_error_from_delete_provider_from_provider_list_page(
+        self, app_fs, upload_and_create_test_provider
+    ):
         """Tests delete provider error from provider list page"""
         host = upload_and_create_test_provider.host_create("test-host")
-        message = (
-            f'[ CONFLICT ] PROVIDER_CONFLICT -- There is host #1 "{host.fqdn}" of host provider #1 "test_provider"'
-        )
+        message = f'[ CONFLICT ] PROVIDER_CONFLICT -- There is host #1 "{host.fqdn}" of host provider #1 "test_provider"'
         provider_page = ProviderListPage(app_fs.driver, app_fs.adcm.url).open()
         row = provider_page.table.get_all_rows()[0]
         provider_page.delete_provider_in_row(row)
@@ -224,7 +236,9 @@ class TestProviderMainPage:
 
     @pytest.mark.smoke()
     @pytest.mark.include_firefox()
-    def test_run_upgrade_on_provider_page_by_toolbar(self, app_fs, sdk_client_fs, upload_and_create_test_provider):
+    def test_run_upgrade_on_provider_page_by_toolbar(
+        self, app_fs, sdk_client_fs, upload_and_create_test_provider
+    ):
         """Test provider upgrade from toolbar"""
         params = {"state": "upgradated"}
         with allure.step("Create provider to export"):
@@ -232,7 +246,9 @@ class TestProviderMainPage:
                 os.path.join(utils.get_data_dir(__file__), "upgradable_provider")
             )
             provider_export.provider_create("upgradable_provider")
-        main_page = ProviderMainPage(app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id).open()
+        main_page = ProviderMainPage(
+            app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id
+        ).open()
         main_page.toolbar.run_upgrade(PROVIDER_NAME, PROVIDER_NAME)
         with allure.step("Check that provider has been upgraded"):
             provider_page = ProviderListPage(app_fs.driver, app_fs.adcm.url).open()
@@ -242,7 +258,9 @@ class TestProviderMainPage:
             ), f"Provider state should be {params['state']}"
 
     @pytest.mark.parametrize("bundle", ["provider_with_host_with_issue"], indirect=True)
-    def test_provider_with_host_with_issues(self, app_fs, bundle, upload_and_create_test_provider, cluster):
+    def test_provider_with_host_with_issues(
+        self, app_fs, bundle, upload_and_create_test_provider, cluster
+    ):
         """Test that if host has issue then provider is not"""
 
         host = upload_and_create_test_provider.host_create(fqdn="first")
@@ -250,8 +268,12 @@ class TestProviderMainPage:
         cluster.host_add(host)
         cluster.hostcomponent_set((host, service.component()))
         host_page = HostMainPage(app_fs.driver, app_fs.adcm.url, host.host_id).open()
-        host_page.toolbar.check_warn_button(tab_name="first", expected_warn_text=['first has an issue with its config'])
-        provider_page = ProviderMainPage(app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id).open()
+        host_page.toolbar.check_warn_button(
+            tab_name="first", expected_warn_text=['first has an issue with its config']
+        )
+        provider_page = ProviderMainPage(
+            app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id
+        ).open()
         provider_page.toolbar.check_no_warn_button(tab_name=upload_and_create_test_provider.name)
 
 
@@ -262,7 +284,9 @@ class TestProviderConfigPage:
     @pytest.mark.include_firefox()
     def test_open_by_tab_provider_config_page(self, app_fs, upload_and_create_test_provider):
         """Test provider config page from left menu"""
-        provider_main_page = ProviderMainPage(app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id).open()
+        provider_main_page = ProviderMainPage(
+            app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id
+        ).open()
         provider_config_page = provider_main_page.open_config_tab()
         provider_config_page.wait_page_is_opened()
         provider_config_page.check_all_elements()
@@ -280,7 +304,8 @@ class TestProviderConfigPage:
         with allure.step(f"Check that rows are filtered by {params['search_param']}"):
             config_rows = provider_config_page.config.get_all_config_rows()
             assert (
-                provider_config_page.config.get_config_row_info(config_rows[0]).name == f"{params['search_param']}:"
+                provider_config_page.config.get_config_row_info(config_rows[0]).name
+                == f"{params['search_param']}:"
             ), f"Name should be {params['search_param']}"
         with provider_config_page.config.wait_rows_change():
             provider_config_page.config.clear_search_input()
@@ -296,7 +321,9 @@ class TestProviderConfigPage:
     @pytest.mark.skip(
         "Config filling method has flaky problem with filling password values, fix it and remove this skip"
     )
-    def test_save_custom_config_on_provider_config_page(self, app_fs, upload_and_create_test_provider):
+    def test_save_custom_config_on_provider_config_page(
+        self, app_fs, upload_and_create_test_provider
+    ):
         """Test save config on provider config page"""
 
         params = {
@@ -312,7 +339,9 @@ class TestProviderConfigPage:
         provider_config_page.config.compare_versions(params["config_name_old"])
         provider_config_page.config.check_config_fields_history_with_test_values()
 
-    def test_reset_config_in_row_on_provider_config_page(self, app_fs, upload_and_create_test_provider):
+    def test_reset_config_in_row_on_provider_config_page(
+        self, app_fs, upload_and_create_test_provider
+    ):
         """Test config reset on provider config page"""
         params = {
             "row_name": "str_param",
@@ -336,7 +365,9 @@ class TestProviderConfigPage:
         )
 
     @pytest.mark.parametrize("bundle", ["provider_required_fields"], indirect=True)
-    def test_field_validation_on_provider_config_page(self, app_fs, bundle, upload_and_create_test_provider):
+    def test_field_validation_on_provider_config_page(
+        self, app_fs, bundle, upload_and_create_test_provider
+    ):
         """Test config field validation on provider config page"""
         params = {
             'pass_name': 'Test password',
@@ -350,11 +381,14 @@ class TestProviderConfigPage:
         provider_config_page.config.check_password_confirm_required(params['pass_name'])
         provider_config_page.config.check_field_is_required(params['req_name'])
         config_row = provider_config_page.config.get_all_config_rows()[0]
-        provider_config_page.config.type_in_field_with_few_inputs(row=config_row, values=[params['wrong_value']])
+        provider_config_page.config.type_in_field_with_few_inputs(
+            row=config_row, values=[params['wrong_value']]
+        )
         provider_config_page.config.check_field_is_invalid(params['not_req_name'])
         provider_config_page.config.check_config_warn_icon_on_left_menu()
         provider_config_page.toolbar.check_warn_button(
-            tab_name="test_provider", expected_warn_text=['test_provider has an issue with its config']
+            tab_name="test_provider",
+            expected_warn_text=['test_provider has an issue with its config'],
         )
 
     @pytest.mark.parametrize("bundle", ["provider_default_fields"], indirect=True)
@@ -379,7 +413,9 @@ class TestProviderConfigPage:
         )
 
     @pytest.mark.parametrize("bundle", ["provider_with_all_config_params"], indirect=True)
-    def test_field_tooltips_on_provider_config_page(self, app_fs, bundle, upload_and_create_test_provider):
+    def test_field_tooltips_on_provider_config_page(
+        self, app_fs, bundle, upload_and_create_test_provider
+    ):
         """Test config fields tooltips on provider config page"""
 
         provider_config_page = ProviderConfigPage(
@@ -395,7 +431,9 @@ class TestProviderGroupConfigPage:
     def test_open_by_tab_group_config_provider_page(self, app_fs, upload_and_create_test_provider):
         """Test open provider group_config from left menu"""
 
-        provider_main_page = ProviderMainPage(app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id).open()
+        provider_main_page = ProviderMainPage(
+            app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id
+        ).open()
         group_conf_page = provider_main_page.open_group_config_tab()
         group_conf_page.check_all_elements()
 
@@ -411,7 +449,9 @@ class TestProviderGroupConfigPage:
             app_fs.driver, app_fs.adcm.url, upload_and_create_test_provider.id
         ).open()
         with provider_group_conf_page.group_config.wait_rows_change(expected_rows_amount=1):
-            provider_group_conf_page.group_config.create_group(name=params['name'], description=params['description'])
+            provider_group_conf_page.group_config.create_group(
+                name=params['name'], description=params['description']
+            )
         group_row = provider_group_conf_page.group_config.get_all_config_rows()[0]
         with allure.step("Check created row in provider"):
             group_info = provider_group_conf_page.group_config.get_config_row_info(group_row)
@@ -421,7 +461,9 @@ class TestProviderGroupConfigPage:
         with provider_group_conf_page.group_config.wait_rows_change(expected_rows_amount=0):
             provider_group_conf_page.group_config.delete_row(group_row)
 
-    def test_check_pagination_on_group_config_provider_page(self, app_fs, upload_and_create_test_provider):
+    def test_check_pagination_on_group_config_provider_page(
+        self, app_fs, upload_and_create_test_provider
+    ):
         """Test pagination on /cluster/{}/service/{}/component/{}/group_config page"""
 
         group_conf_page = ProviderGroupConfigPage(

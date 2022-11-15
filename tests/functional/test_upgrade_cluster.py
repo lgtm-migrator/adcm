@@ -147,21 +147,35 @@ def test_upgrade_cluster_with_config_groups(sdk_client_fs):
     with allure.step('Assert that configs save success after upgrade'):
         cluster.config_set(
             {
-                "attr": {"activatable_group_with_ro": {"active": True}, "activatable_group": {"active": True}},
+                "attr": {
+                    "activatable_group_with_ro": {"active": True},
+                    "activatable_group": {"active": True},
+                },
                 "config": {
                     **cluster.config(),
                     "activatable_group_with_ro": {"readonly-key": "value"},
-                    "activatable_group": {"required": 10, "writable-key": "value", "readonly-key": "value"},
+                    "activatable_group": {
+                        "required": 10,
+                        "writable-key": "value",
+                        "readonly-key": "value",
+                    },
                 },
             }
         )
         service.config_set(
             {
-                "attr": {"activatable_group_with_ro": {"active": True}, "activatable_group": {"active": True}},
+                "attr": {
+                    "activatable_group_with_ro": {"active": True},
+                    "activatable_group": {"active": True},
+                },
                 "config": {
                     **service.config(),
                     "activatable_group_with_ro": {"readonly-key": "value"},
-                    "activatable_group": {"required": 10, "writable-key": "value", "readonly-key": "value"},
+                    "activatable_group": {
+                        "required": 10,
+                        "writable-key": "value",
+                        "readonly-key": "value",
+                    },
                 },
             }
         )
@@ -186,18 +200,14 @@ def test_before_upgrade_state(old_bundle):
         cluster = old_bundle.cluster_create(name='Test Cluster')
         assert (
             actual_state := cluster.before_upgrade['state']
-        ) == BEFORE_UPGRADE_DEFAULT_STATE, (
-            f'Expected before_upgrade state was {BEFORE_UPGRADE_DEFAULT_STATE}, but {actual_state} was found'
-        )
+        ) == BEFORE_UPGRADE_DEFAULT_STATE, f'Expected before_upgrade state was {BEFORE_UPGRADE_DEFAULT_STATE}, but {actual_state} was found'
     with allure.step('Check `before_upgrade` field is correct after upgrade'):
         state_before_upgrade = cluster.state
         cluster.upgrade().do()
         cluster.reread()
         assert (
             actual_state := cluster.before_upgrade['state']
-        ) == state_before_upgrade, (
-            f'Expected before_upgrade state was {state_before_upgrade}, but {actual_state} was found'
-        )
+        ) == state_before_upgrade, f'Expected before_upgrade state was {state_before_upgrade}, but {actual_state} was found'
 
 
 class TestUpgradeWithComponent:
@@ -220,7 +230,10 @@ class TestUpgradeWithComponent:
         """Upload new cluster bundle"""
         return sdk_client_fs.upload_from_fs(get_data_dir(__file__, self._DIR, 'new'))
 
-    @allure.issue(name='Component miss config after upgrade', url='https://arenadata.atlassian.net/browse/ADCM-2376')
+    @allure.issue(
+        name='Component miss config after upgrade',
+        url='https://arenadata.atlassian.net/browse/ADCM-2376',
+    )
     @pytest.mark.usefixtures('new_bundle')
     def test_upgrade_with_components(self, adcm_fs, sdk_client_fs, old_cluster):
         """
@@ -238,7 +251,9 @@ class TestUpgradeWithComponent:
     def check_new_component_config_exists(self, service: Service):
         """Check that component appeared in new version has config"""
         component = service.component(name='new_component')
-        with catch_failed(ErrorMessage, f'Config of {get_object_represent(component)} should be available'):
+        with catch_failed(
+            ErrorMessage, f'Config of {get_object_represent(component)} should be available'
+        ):
             config = component.config()
         self._check_config(config, self._GEN_CONFIG)
 
@@ -249,7 +264,9 @@ class TestUpgradeWithComponent:
 
         with allure.step('Check that config was created for component that has no config before'):
             component = service.component(name=no_config_in_old_version)
-            with catch_failed(ErrorMessage, f'Config of {get_object_represent(component)} should be available'):
+            with catch_failed(
+                ErrorMessage, f'Config of {get_object_represent(component)} should be available'
+            ):
                 config = component.config()
             self._check_config(config, self._GEN_CONFIG)
 

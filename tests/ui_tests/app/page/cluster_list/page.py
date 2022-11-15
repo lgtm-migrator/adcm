@@ -27,7 +27,10 @@ from tests.ui_tests.app.page.common.configuration.page import CommonConfigMenuOb
 from tests.ui_tests.app.page.common.dialogs.locators import ActionDialog, DeleteDialog
 from tests.ui_tests.app.page.common.dialogs.rename import RenameDialog
 from tests.ui_tests.app.page.common.host_components.page import HostComponentsPage
-from tests.ui_tests.app.page.common.popups.locator import HostCreationLocators, ListConcernPopupLocators
+from tests.ui_tests.app.page.common.popups.locator import (
+    HostCreationLocators,
+    ListConcernPopupLocators,
+)
 from tests.ui_tests.app.page.common.popups.page import HostCreatePopupObj
 from tests.ui_tests.app.page.common.table.page import CommonTableObj
 
@@ -107,7 +110,10 @@ class ClusterListPage(BasePageObject):  # pylint: disable=too-many-public-method
         self.wait_element_visible(self.table.locators.ActionPopup.block)
         try:
             actions_names = [
-                name.text for name in self.find_elements(self.table.locators.ActionPopup.action_buttons, timeout=2)
+                name.text
+                for name in self.find_elements(
+                    self.table.locators.ActionPopup.action_buttons, timeout=2
+                )
             ]
         except TimeoutException:
             actions_names = []
@@ -168,7 +174,9 @@ class ClusterListPage(BasePageObject):  # pylint: disable=too-many-public-method
         dialog.wait_opened()
         return dialog
 
-    @allure.step("Run upgrade {upgrade_name} for cluster from row")  # pylint: disable-next=too-many-arguments
+    @allure.step(
+        "Run upgrade {upgrade_name} for cluster from row"
+    )  # pylint: disable-next=too-many-arguments
     def run_upgrade_in_cluster_row(
         self,
         row: WebElement,
@@ -195,7 +203,9 @@ class ClusterListPage(BasePageObject):  # pylint: disable=too-many-public-method
         self.find_and_click(self.table.locators.UpgradePopup.button(upgrade_name))
         self.wait_element_visible(ActionDialog.body)
         if disclaimer_text:
-            assert self.find_element(ActionDialog.text).text == disclaimer_text, "Different text in disclaimer dialog"
+            assert (
+                self.find_element(ActionDialog.text).text == disclaimer_text
+            ), "Different text in disclaimer dialog"
             self.find_and_click(ActionDialog.run)
             self.wait_element_visible(ActionDialog.body)
         if config:
@@ -217,7 +227,8 @@ class ClusterListPage(BasePageObject):  # pylint: disable=too-many-public-method
                 self.wait_element_visible(comp_row_name)
                 comp_row_name.click()
             self.find_child(
-                self.find_elements(ClusterComponentsLocators.host_row)[0], ClusterComponentsLocators.Row.name
+                self.find_elements(ClusterComponentsLocators.host_row)[0],
+                ClusterComponentsLocators.Row.name,
             ).click()
         self.find_and_click(ActionDialog.run)
         self.wait_element_hide(ActionDialog.body)

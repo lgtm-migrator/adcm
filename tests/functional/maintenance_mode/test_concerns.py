@@ -48,7 +48,9 @@ def _set_host_config(provider_host_with_concerns) -> None:
 
 
 @pytest.mark.usefixtures('_set_provider_config')
-def test_mm_host_with_concern_not_raising_issue_on_cluster_objects(cluster_with_mm, provider_host_with_concerns):
+def test_mm_host_with_concern_not_raising_issue_on_cluster_objects(
+    cluster_with_mm, provider_host_with_concerns
+):
     """
     Test that when there's a concern on host that is in MM and mapped to a cluster,
     cluster objects don't have issues, but host does
@@ -61,7 +63,9 @@ def test_mm_host_with_concern_not_raising_issue_on_cluster_objects(cluster_with_
     _check_concern_is_presented_on_object(host, f'host {host.fqdn}')
     _check_no_concerns_on_cluster_objects(cluster_with_mm)
 
-    with allure.step('Map component to host with a concern and check concern appeared on cluster objects'):
+    with allure.step(
+        'Map component to host with a concern and check concern appeared on cluster objects'
+    ):
         cluster_with_mm.hostcomponent_set((host, component))
         _check_concerns_are_presented_on_cluster_objects(cluster_with_mm)
 
@@ -125,13 +129,17 @@ def _check_no_concerns_on_cluster_objects(cluster: Cluster):
         for service in cluster.service_list():
             _check_no_concerns_on_object(service, f'service {service.name}')
             for component in service.component_list():
-                _check_no_concerns_on_object(service, f'component {component.name} of {service.name}')
+                _check_no_concerns_on_object(
+                    service, f'component {component.name} of {service.name}'
+                )
 
 
 def _check_no_concerns_on_object(obj: AnyADCMObject, verbose_name: str):
     obj.reread()
     concerns = obj.concerns()
-    assert len(concerns) == 0, f'There should not be any concerns on {verbose_name}.\nActual are: {concerns}'
+    assert (
+        len(concerns) == 0
+    ), f'There should not be any concerns on {verbose_name}.\nActual are: {concerns}'
 
 
 def _check_concerns_are_presented_on_cluster_objects(cluster: Cluster):
@@ -140,10 +148,14 @@ def _check_concerns_are_presented_on_cluster_objects(cluster: Cluster):
         for service in cluster.service_list():
             _check_concern_is_presented_on_object(service, f'service {service.name}')
             for component in service.component_list():
-                _check_concern_is_presented_on_object(service, f'component {component.name} of {service.name}')
+                _check_concern_is_presented_on_object(
+                    service, f'component {component.name} of {service.name}'
+                )
 
 
 def _check_concern_is_presented_on_object(obj: AnyADCMObject, verbose_name: str):
     obj.reread()
     concerns = obj.concerns()
-    assert len(concerns) != 0, f'There should be at least one concern on {verbose_name}.\nActual are: {concerns}'
+    assert (
+        len(concerns) != 0
+    ), f'There should be at least one concern on {verbose_name}.\nActual are: {concerns}'
