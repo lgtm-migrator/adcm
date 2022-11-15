@@ -6,7 +6,7 @@ include:
 
 Linters:
   script:
-    - apt install python3-pip
+    - apk add py3-pip
     - pip install -r requirements.txt
     - pip install -r requirements-test.txt
     - black license_checker.py python tests
