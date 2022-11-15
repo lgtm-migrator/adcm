@@ -200,7 +200,7 @@ class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors
         bundle = check_obj(Bundle, kwargs["bundle_pk"], "BUNDLE_NOT_FOUND")
         proto = Prototype.objects.filter(bundle=bundle, name=bundle.name).first()
         body = get_license(proto)
-        url = reverse(path="accept-license", kwargs={"prototype_pk": proto.pk}, request=request)
+        url = reverse(viewname="accept-license", kwargs={"prototype_pk": proto.pk}, request=request)
         return Response({"license": proto.license, "accept": url, "text": body})
 
     @audit
@@ -302,7 +302,7 @@ class ServicePrototypeViewSet(ListModelMixin, RetrieveModelMixin, GenericUIViewS
     def actions(self, request: Request, prototype_pk: int) -> Response:
         return Response(
             StackActionSerializer(
-                Action.objects.filter(prototype__type="service", prototype_pk=prototype_pk),
+                Action.objects.filter(prototype__type="service", prototype_id=prototype_pk),
                 many=True,
             ).data,
         )
