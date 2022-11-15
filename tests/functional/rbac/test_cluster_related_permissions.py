@@ -18,20 +18,21 @@ import itertools
 import allure
 import pytest
 from adcm_client.objects import ADCMClient, Policy
-
 from tests.functional.rbac.conftest import (
-    BusinessRoles as BR,
-    use_role,
+    CLUSTER_EDIT_CONFIG_ROLES,
+    CLUSTER_VIEW_CONFIG_ROLES,
+    PROVIDER_EDIT_CONFIG_ROLES,
+    PROVIDER_VIEW_CONFIG_ROLES,
+)
+from tests.functional.rbac.conftest import BusinessRoles as BR
+from tests.functional.rbac.conftest import (
+    RbacRoles,
     as_user_objects,
+    create_policy,
+    delete_policy,
     is_allowed,
     is_denied,
-    delete_policy,
-    create_policy,
-    RbacRoles,
-    CLUSTER_VIEW_CONFIG_ROLES,
-    PROVIDER_VIEW_CONFIG_ROLES,
-    CLUSTER_EDIT_CONFIG_ROLES,
-    PROVIDER_EDIT_CONFIG_ROLES,
+    use_role,
 )
 
 pytestmark = [pytest.mark.extra_rbac]

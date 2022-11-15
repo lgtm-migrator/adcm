@@ -15,23 +15,22 @@ Test statuses aggregation when hosts are in MM
 """
 
 from operator import not_, truth
-from typing import Tuple, Collection
+from typing import Collection, Tuple
 
 import allure
 import pytest
 import requests
-from adcm_client.objects import Cluster, Component, ADCMClient
-
-from tests.library.assertions import dicts_are_equal
-from tests.library.status import ADCMObjectStatusChanger
+from adcm_client.objects import ADCMClient, Cluster, Component
 from tests.functional.maintenance_mode.conftest import (
-    add_hosts_to_cluster,
-    FIRST_COMPONENT,
-    SECOND_COMPONENT,
     ANOTHER_SERVICE_NAME,
     DEFAULT_SERVICE_NAME,
+    FIRST_COMPONENT,
+    SECOND_COMPONENT,
+    add_hosts_to_cluster,
     turn_mm_on,
 )
+from tests.library.assertions import dicts_are_equal
+from tests.library.status import ADCMObjectStatusChanger
 
 # pylint: disable=redefined-outer-name
 

@@ -22,7 +22,6 @@ import pytest
 from adcm_client.objects import Action, Cluster, Component, GroupConfig, Host
 from adcm_pytest_plugin.docker_utils import ADCM
 from adcm_pytest_plugin.utils import get_or_add_service
-
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.maintenance_mode.conftest import (
     DEFAULT_SERVICE_NAME,

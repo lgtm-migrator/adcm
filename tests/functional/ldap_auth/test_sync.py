@@ -22,7 +22,6 @@ from adcm_client.objects import ADCM, ADCMClient, Group, User
 from adcm_pytest_plugin.steps.actions import wait_for_task_and_assert_result
 from adcm_pytest_plugin.utils import random_string, wait_until_step_succeeds
 from coreapi.exceptions import ErrorMessage
-
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.ldap_auth.utils import (
     DEFAULT_LOCAL_USERS,
@@ -35,7 +34,11 @@ from tests.functional.ldap_auth.utils import (
     login_should_fail,
 )
 from tests.functional.rbac.conftest import BusinessRoles, RbacRoles
-from tests.library.assertions import expect_api_error, expect_no_api_error, sets_are_equal
+from tests.library.assertions import (
+    expect_api_error,
+    expect_no_api_error,
+    sets_are_equal,
+)
 from tests.library.ldap_interactions import (
     LDAPTestConfig,
     configure_adcm_for_ldap,

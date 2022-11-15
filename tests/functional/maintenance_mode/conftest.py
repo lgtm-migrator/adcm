@@ -18,12 +18,11 @@ conftest.py for maintenance mode related tests
 
 import os
 from pathlib import Path
-from typing import Tuple, Literal, Iterable, Set
+from typing import Iterable, Literal, Set, Tuple
 
 import allure
 import pytest
-from adcm_client.objects import ADCMClient, Cluster, Provider, Host
-
+from adcm_client.objects import ADCMClient, Cluster, Host, Provider
 from tests.functional.tools import AnyADCMObject
 from tests.library.utils import get_hosts_fqdn_representation
 

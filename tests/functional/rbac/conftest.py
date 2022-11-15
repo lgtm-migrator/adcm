@@ -15,31 +15,33 @@ import os
 from enum import Enum
 from functools import partial
 from operator import methodcaller
-from typing import Callable, NamedTuple, Union, List, Tuple, Collection, Optional
+from typing import Callable, Collection, List, NamedTuple, Optional, Tuple, Union
 
 import allure
 import pytest
-from adcm_client.base import NoSuchEndpointOrAccessIsDenied, BaseAPIObject, ObjectNotFound
+from adcm_client.base import (
+    BaseAPIObject,
+    NoSuchEndpointOrAccessIsDenied,
+    ObjectNotFound,
+)
 from adcm_client.objects import (
-    ADCMClient,
-    User,
-    Group,
-    Cluster,
-    Service,
-    Component,
-    Provider,
-    Host,
-    Bundle,
-    Role,
     ADCM,
+    ADCMClient,
+    Bundle,
+    Cluster,
+    Component,
+    Group,
+    Host,
     Policy,
+    Provider,
+    Role,
+    Service,
+    User,
 )
 from adcm_client.wrappers.api import AccessIsDenied, ADCMApiWrapper
 from adcm_pytest_plugin.utils import catch_failed, random_string
-
 from tests.functional.rbac.checkers import Deny
-from tests.functional.tools import get_object_represent, AnyADCMObject, ADCMObjects
-
+from tests.functional.tools import ADCMObjects, AnyADCMObject, get_object_represent
 
 # pylint: disable=redefined-outer-name,unused-argument
 

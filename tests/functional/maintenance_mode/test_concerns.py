@@ -16,10 +16,13 @@ from typing import Tuple
 
 import allure
 import pytest
-from adcm_client.objects import Host, Provider, Cluster
-
+from adcm_client.objects import Cluster, Host, Provider
 from tests.functional.conftest import only_clean_adcm
-from tests.functional.maintenance_mode.conftest import BUNDLES_DIR, turn_mm_on, turn_mm_off
+from tests.functional.maintenance_mode.conftest import (
+    BUNDLES_DIR,
+    turn_mm_off,
+    turn_mm_on,
+)
 from tests.functional.tools import AnyADCMObject
 
 # pylint: disable=redefined-outer-name

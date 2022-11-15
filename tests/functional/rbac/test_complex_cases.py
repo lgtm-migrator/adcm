@@ -19,15 +19,14 @@ from typing import Iterable, Union
 import allure
 import pytest
 from adcm_client.objects import ADCMClient, Host
-
 from tests.functional.rbac.checkers import Deny
+from tests.functional.rbac.conftest import BusinessRole
+from tests.functional.rbac.conftest import BusinessRoles as BR
 from tests.functional.rbac.conftest import (
-    create_policy,
-    BusinessRoles as BR,
     as_user_objects,
+    create_policy,
     is_allowed,
     is_denied,
-    BusinessRole,
 )
 from tests.functional.tools import AnyADCMObject
 

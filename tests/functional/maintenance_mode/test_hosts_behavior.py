@@ -14,31 +14,44 @@
 Test hosts maintenance mode behaviour
 """
 
-from typing import Iterable, Tuple, Set
+from typing import Iterable, Set, Tuple
 
 import allure
 import pytest
-from adcm_client.objects import Host, Cluster, Component
-
-from tests.library.assertions import sets_are_equal, is_empty, expect_api_error, expect_no_api_error
-from tests.library.errorcodes import MAINTENANCE_MODE_NOT_AVAILABLE, ACTION_ERROR, ADCMError, INVALID_HC_HOST_IN_MM
-from tests.functional.tools import AnyADCMObject, get_object_represent, build_hc_for_hc_acl_action
+from adcm_client.objects import Cluster, Component, Host
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.maintenance_mode.conftest import (
-    MM_IS_ON,
-    MM_IS_OFF,
-    MM_IS_DISABLED,
-    BUNDLES_DIR,
-    DISABLING_CAUSE,
-    DEFAULT_SERVICE_NAME,
     ANOTHER_SERVICE_NAME,
-    turn_mm_on,
-    turn_mm_off,
+    BUNDLES_DIR,
+    DEFAULT_SERVICE_NAME,
+    DISABLING_CAUSE,
+    MM_IS_DISABLED,
+    MM_IS_OFF,
+    MM_IS_ON,
     add_hosts_to_cluster,
-    remove_hosts_from_cluster,
     check_hosts_mm_is,
     get_disabled_actions_names,
     get_enabled_actions_names,
+    remove_hosts_from_cluster,
+    turn_mm_off,
+    turn_mm_on,
+)
+from tests.functional.tools import (
+    AnyADCMObject,
+    build_hc_for_hc_acl_action,
+    get_object_represent,
+)
+from tests.library.assertions import (
+    expect_api_error,
+    expect_no_api_error,
+    is_empty,
+    sets_are_equal,
+)
+from tests.library.errorcodes import (
+    ACTION_ERROR,
+    INVALID_HC_HOST_IN_MM,
+    MAINTENANCE_MODE_NOT_AVAILABLE,
+    ADCMError,
 )
 
 # pylint: disable=redefined-outer-name

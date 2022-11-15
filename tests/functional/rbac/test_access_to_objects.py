@@ -18,26 +18,37 @@ Test that granting any permission on object allows user to:
 
 import os.path
 from contextlib import contextmanager
-from typing import Callable, Set, List, Iterable, Union, Dict
+from typing import Callable, Dict, Iterable, List, Set, Union
 
 import allure
 import pytest
 from adcm_client.base import ObjectNotFound
-from adcm_client.objects import ADCMClient, Task, Cluster, Service, Component, Provider, User, Group
+from adcm_client.objects import (
+    ADCMClient,
+    Cluster,
+    Component,
+    Group,
+    Provider,
+    Service,
+    Task,
+    User,
+)
 from adcm_pytest_plugin.utils import catch_failed
-
-from tests.library.utils import lower_class_name
-from tests.functional.tools import get_object_represent
+from tests.functional.rbac.action_role_utils import (
+    action_business_role,
+    create_action_policy,
+)
+from tests.functional.rbac.conftest import DATA_DIR
+from tests.functional.rbac.conftest import BusinessRoles as BR
 from tests.functional.rbac.conftest import (
-    DATA_DIR,
-    BusinessRoles as BR,
-    get_as_client_object,
-    delete_policy,
-    create_policy,
     RbacRoles,
     SDKClients,
+    create_policy,
+    delete_policy,
+    get_as_client_object,
 )
-from tests.functional.rbac.action_role_utils import create_action_policy, action_business_role
+from tests.functional.tools import get_object_represent
+from tests.library.utils import lower_class_name
 
 
 @contextmanager

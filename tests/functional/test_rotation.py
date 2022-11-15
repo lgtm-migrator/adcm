@@ -20,11 +20,19 @@ from typing import Collection, List, Optional, Set, Tuple
 
 import allure
 import pytest
-from adcm_client.objects import ADCM, ADCMClient, Cluster, Component, Host, Provider, Service, Task
+from adcm_client.objects import (
+    ADCM,
+    ADCMClient,
+    Cluster,
+    Component,
+    Host,
+    Provider,
+    Service,
+    Task,
+)
 from adcm_pytest_plugin.steps.commands import logrotate
 from adcm_pytest_plugin.utils import get_data_dir, random_string
 from docker.models.containers import Container
-
 from tests.functional.conftest import only_clean_adcm
 from tests.library.assertions import does_not_intersect, is_superset_of
 from tests.library.db import (
