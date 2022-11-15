@@ -5,8 +5,8 @@ include:
 
 
 Linters:
-  image: python:3.10-alpine
   script:
+    - apt install python3-pip
     - pip install -r requirements.txt
     - pip install -r requirements-test.txt
     - black license_checker.py python tests
