@@ -40,6 +40,7 @@ from cm.api import (
     check_maintenance_mode,
     check_sub_key,
     get_hc,
+    load_mm_objects,
     make_host_comp_list,
     save_hc,
 )
@@ -848,9 +849,9 @@ def finish_task(task: TaskLog, job: Optional[JobLog], status: str):
         operation_result=operation_result,
         object_changes={},
     )
-
     cef_logger(audit_instance=audit_log, signature_id="Action completion")
 
+    load_mm_objects()
     ctx.event.send_state()
 
 
