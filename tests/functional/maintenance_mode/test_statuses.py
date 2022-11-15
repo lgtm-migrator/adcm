@@ -253,7 +253,7 @@ class TestStatusAggregationWithMM:
             set_maintenance_mode(api_client, component_2, MM_IS_ON)
             check_statuses(
                 retrieve_status(sdk_client_fs, cluster),
-                cluster.name,
+                cluster=None,
                 services=(),
                 components=(),
                 components_on_hosts={host_on_component_name, host_on_component_2_name},
