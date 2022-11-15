@@ -23,30 +23,14 @@ from typing import Callable, Dict, Iterable, List, Set, Union
 import allure
 import pytest
 from adcm_client.base import ObjectNotFound
-from adcm_client.objects import (
-    ADCMClient,
-    Cluster,
-    Component,
-    Group,
-    Provider,
-    Service,
-    Task,
-    User,
-)
+from adcm_client.objects import ADCMClient, Cluster, Component, Group, Provider, Service, Task, User
 from adcm_pytest_plugin.utils import catch_failed
-from tests.functional.rbac.action_role_utils import (
-    action_business_role,
-    create_action_policy,
-)
+from coreapi.exceptions import ErrorMessage
+
+from tests.functional.rbac.action_role_utils import action_business_role, create_action_policy
 from tests.functional.rbac.conftest import DATA_DIR
 from tests.functional.rbac.conftest import BusinessRoles as BR
-from tests.functional.rbac.conftest import (
-    RbacRoles,
-    SDKClients,
-    create_policy,
-    delete_policy,
-    get_as_client_object,
-)
+from tests.functional.rbac.conftest import RbacRoles, SDKClients, create_policy, delete_policy, get_as_client_object
 from tests.functional.tools import get_object_represent
 from tests.library.utils import lower_class_name
 
@@ -75,11 +59,7 @@ class TestAccessToBasicObjects:
         not_viewable_objects = (component, provider, host) + second_objects
         cluster_and_service = (cluster, service)
 
-        for business_role in (
-            BR.ViewServiceConfigurations,
-            BR.EditServiceConfigurations,
-            BR.ViewImports,
-        ):
+        for business_role in (BR.ViewServiceConfigurations, BR.EditServiceConfigurations, BR.ViewImports):
             objects_to_check = ', '.join(map(lower_class_name, cluster_and_service))
             with allure.step(
                 f'Check that granting "{business_role.value.role_name}" role to service '
@@ -195,8 +175,7 @@ class TestActionBasedAccess:
                 )
                 check_objects_are_viewable(clients.user, [adcm_object])
                 check_objects_are_not_viewable(
-                    clients.user,
-                    all_objects - self._get_object_and_parents_from_objects(adcm_object, all_objects),
+                    clients.user, all_objects - self._get_object_and_parents_from_objects(adcm_object, all_objects)
                 )
                 delete_policy(policy)
                 check_objects_are_not_viewable(clients.user, all_objects)
@@ -450,10 +429,7 @@ class TestAccessForJobsAndLogs:
         """
         cluster = cluster_for_upgrade
         with granted_policy(
-            clients.admin,
-            clients.admin.role(name=RbacRoles.ClusterAdministrator.value),
-            cluster,
-            user,
+            clients.admin, clients.admin.role(name=RbacRoles.ClusterAdministrator.value), cluster, user
         ):
             with allure.step('Run actions and check task objects are available'):
                 tasks = [_run_and_wait(cluster, action.display_name) for action in cluster.action_list()]
@@ -545,10 +521,7 @@ class TestAccessForJobsAndLogs:
                 with catch_failed(ObjectNotFound, 'Task object should be available directly via client'):
                     get_as_client_object(api, task)
                 for job in task.job_list():
-                    with catch_failed(
-                        ObjectNotFound,
-                        'Job and log objects should be available directly via client',
-                    ):
+                    with catch_failed(ObjectNotFound, 'Job and log objects should be available directly via client'):
                         get_as_client_object(api, job)
                         get_as_client_object(api, job.log(), path_args={'job_pk': job.id})
 
@@ -563,10 +536,7 @@ class TestAccessForJobsAndLogs:
                     _expect_not_found(api, job, 'Job object should be available directly via client')
                     log = job.log()
                     _expect_not_found(
-                        api,
-                        log,
-                        'Log object should be available directly via client',
-                        path_args={'job_pk': job.id},
+                        api, log, 'Log object should be available directly via client', path_args={'job_pk': job.id}
                     )
 
 
@@ -577,8 +547,9 @@ def _get_objects_id(get_objects_list: Callable) -> Set[int]:
 def _expect_not_found(api, obj, message, **kwargs):
     try:
         get_as_client_object(api, obj, **kwargs)
-    except ObjectNotFound:
-        pass
+    except ErrorMessage as e:
+        if not hasattr(e.error, "title") or e.error.title != "404 Not Found":
+            raise AssertionError(message) from e
     else:
         raise AssertionError(message)
 
@@ -598,8 +569,7 @@ def check_objects_are_viewable(user_client: ADCMClient, objects):
                     adcm_object.id in available_objects_ids
                 ), f'Object "{object_represent}" should be listed in the list of {object_type_name}s'
                 with catch_failed(
-                    ObjectNotFound,
-                    f'Object "{object_represent}" should be available directly via client',
+                    ObjectNotFound, f'Object "{object_represent}" should be available directly via client'
                 ):
                     get_as_client_object(api, adcm_object)
 
@@ -619,9 +589,7 @@ def check_objects_are_not_viewable(user_client: ADCMClient, objects):
                     adcm_object.id not in available_objects_ids
                 ), f'Object "{object_represent}" should not be listed in the list of {object_type_name}s'
                 _expect_not_found(
-                    api,
-                    adcm_object,
-                    f'Object "{object_represent}" should not be available directly via client',
+                    api, adcm_object, f'Object "{object_represent}" should not be available directly via client'
                 )
 
 

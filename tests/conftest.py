@@ -32,6 +32,7 @@ from allure_commons.model2 import Parameter, TestResult
 from allure_pytest.listener import AllureListener
 from docker.utils import parse_repository_tag
 from tests.library.adcm_websockets import ADCMWebsocket
+from tests.library.api.client import APIClient
 from tests.library.db import QueryExecutioner
 from tests.library.ldap_interactions import (
     LDAPEntityManager,
@@ -172,6 +173,16 @@ def _get_listener_by_item_if_present(item: Function) -> Optional[AllureListener]
         )
         return listener
     return None
+
+
+# API Client
+
+
+@pytest.fixture()
+def api_client(adcm_fs, adcm_api_credentials) -> APIClient:
+    return APIClient(
+        adcm_fs.url, {"username": adcm_api_credentials["user"], "password": adcm_api_credentials["password"]}
+    )
 
 
 # Generic bundles

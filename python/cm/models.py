@@ -53,6 +53,12 @@ class ObjectType(models.TextChoices):
     Host = "host", "host"
 
 
+class MaintenanceMode(models.TextChoices):
+    ON = "ON", "ON"
+    OFF = "OFF", "OFF"
+    CHANGING = "CHANGING", "CHANGING"
+
+
 LICENSE_STATE = (
     ("absent", "absent"),
     ("accepted", "accepted"),
@@ -97,14 +103,14 @@ class ADCMManager(models.Manager):
     """
     Custom model manager catch ObjectDoesNotExist error and re-raise it as custom
     AdcmEx exception. AdcmEx is derived from DRF APIException, so it handled gracefully
-    by DRF and is reported out as nicely formated error instead of ugly exception.
+    by DRF and is reported out as nicely formatted error instead of ugly exception.
 
-    Using ADCMManager can shorten you code significaly. Insted of
+    Using ADCMManager can shorten you code significantly. Instead of
 
     try:
         cluster = Cluster.objects.get(id=id)
     except Cluster.DoesNotExist:
-        raise AdcmEx(f'Cluster {id} is not found')
+        raise AdcmEx(Cluster {id} is not found)
 
     You can just write
 
@@ -112,8 +118,8 @@ class ADCMManager(models.Manager):
 
     and DRF magic do the rest.
 
-    Please pay attention, to use ADCMManager you need reffer to "obj" model attribute,
-    not "objects". "objects" attribute is reffered to standard Django model manager,
+    Please pay attention, to use ADCMManager you need refer to "obj" model attribute,
+    not "objects". "objects" attribute is referred to standard Django model manager,
     so if you need familiar behavior you can use it as usual.
     """
 
@@ -173,9 +179,6 @@ class Bundle(ADCMModel):
     version = models.CharField(max_length=80)
     version_order = models.PositiveIntegerField(default=0)
     edition = models.CharField(max_length=80, default="community")
-    license = models.CharField(max_length=16, choices=LICENSE_STATE, default="absent")
-    license_path = models.CharField(max_length=160, default=None, null=True)
-    license_hash = models.CharField(max_length=64, default=None, null=True)
     hash = models.CharField(max_length=64)
     description = models.TextField(blank=True)
     date = models.DateTimeField(auto_now=True)
@@ -189,7 +192,7 @@ class Bundle(ADCMModel):
 
 class ProductCategory(ADCMModel):
     """
-    Categories are used for some models categorization.
+    Categories are used for some model's categorization.
     It's same as Bundle.name but unlinked from it due to simplicity reasons.
     """
 
@@ -219,6 +222,10 @@ MONITORING_TYPE = (
     ("passive", "passive"),
 )
 
+NO_LDAP_SETTINGS = "The Action is not available. You need to fill in the LDAP integration settings."
+HOST_IN_MM = "The Action is not available. Host in 'Maintenance mode'"
+MANY_HOSTS_IN_MM = "The Action is not available. One or more hosts in 'Maintenance mode'"
+
 
 def get_default_constraint():
     return [0, "+"]
@@ -230,6 +237,9 @@ class Prototype(ADCMModel):
     parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, default=None)
     path = models.CharField(max_length=160, default="")
     name = models.CharField(max_length=256)
+    license = models.CharField(max_length=16, choices=LICENSE_STATE, default="absent")
+    license_path = models.CharField(max_length=160, default=None, null=True)
+    license_hash = models.CharField(max_length=64, default=None, null=True)
     display_name = models.CharField(max_length=256, blank=True)
     version = models.CharField(max_length=80)
     version_order = models.PositiveIntegerField(default=0)
@@ -585,7 +595,7 @@ class Cluster(ADCMEntity):
 
     @property
     def license(self):
-        return self.prototype.bundle.license
+        return self.prototype.license
 
     @property
     def display_name(self):
@@ -624,7 +634,7 @@ class HostProvider(ADCMEntity):
 
     @property
     def license(self):
-        return self.prototype.bundle.license
+        return self.prototype.license
 
     @property
     def display_name(self):
@@ -640,21 +650,15 @@ class HostProvider(ADCMEntity):
         return result if result["issue"] else {}
 
 
-class MaintenanceModeType(models.TextChoices):
-    Disabled = "disabled", "disabled"
-    On = "on", "on"
-    Off = "off", "off"
-
-
 class Host(ADCMEntity):
     fqdn = models.CharField(max_length=253, unique=True)
     description = models.TextField(blank=True)
     provider = models.ForeignKey(HostProvider, on_delete=models.CASCADE, null=True, default=None)
     cluster = models.ForeignKey(Cluster, on_delete=models.SET_NULL, null=True, default=None)
     maintenance_mode = models.CharField(
-        max_length=16,
-        choices=MaintenanceModeType.choices,
-        default=MaintenanceModeType.Disabled.value,
+        max_length=64,
+        choices=MaintenanceMode.choices,
+        default=MaintenanceMode.OFF,
     )
 
     __error_code__ = "HOST_NOT_FOUND"
@@ -683,6 +687,14 @@ class Host(ADCMEntity):
             result["issue"]["provider"] = provider_issue
         return result if result["issue"] else {}
 
+    @property
+    def is_maintenance_mode_available(self) -> bool:
+        cluster: Cluster | None = self.cluster
+        if not cluster:
+            return False
+
+        return cluster.prototype.allow_maintenance_mode
+
 
 class ClusterObject(ADCMEntity):
     cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE)
@@ -692,6 +704,11 @@ class ClusterObject(ADCMEntity):
         object_id_field="object_id",
         content_type_field="object_type",
         on_delete=models.CASCADE,
+    )
+    _maintenance_mode = models.CharField(
+        max_length=64,
+        choices=MaintenanceMode.choices,
+        default=MaintenanceMode.OFF,
     )
 
     __error_code__ = "CLUSTER_SERVICE_NOT_FOUND"
@@ -729,6 +746,63 @@ class ClusterObject(ADCMEntity):
         }
         return result if result["issue"] else {}
 
+    @property
+    def maintenance_mode_attr(self) -> MaintenanceMode.choices:
+        return self._maintenance_mode
+
+    @property
+    def maintenance_mode(self) -> MaintenanceMode.choices:
+        if self._maintenance_mode != MaintenanceMode.OFF:
+            return self._maintenance_mode
+
+        service_components = ServiceComponent.objects.filter(service=self)
+        if service_components:
+            if all(
+                service_component.maintenance_mode_attr == MaintenanceMode.ON
+                for service_component in service_components
+            ):
+                return MaintenanceMode.ON
+
+            hosts_maintenance_modes = []
+            for service_component in service_components:
+                host_ids = HostComponent.objects.filter(
+                    component=service_component,
+                ).values_list("host_id", flat=True)
+                hosts_maintenance_modes.extend(Host.objects.get(pk=host_id).maintenance_mode for host_id in host_ids)
+
+            if hosts_maintenance_modes:
+                return (
+                    MaintenanceMode.ON
+                    if all(
+                        host_maintenance_mode == MaintenanceMode.ON for host_maintenance_mode in hosts_maintenance_modes
+                    )
+                    else MaintenanceMode.OFF
+                )
+
+        return self._maintenance_mode
+
+    @maintenance_mode.setter
+    def maintenance_mode(self, value: MaintenanceMode.choices) -> None:
+        self._maintenance_mode = value
+
+    @property
+    def is_maintenance_mode_available(self) -> bool:
+        return self.cluster.prototype.allow_maintenance_mode
+
+    @property
+    def has_another_service_requires(self) -> bool:
+        components = ServiceComponent.objects.filter(service=self)
+        for component in components:
+            for require in component.requires:
+                if (
+                    require.get("service")
+                    and require["service"] != self.name
+                    and HostComponent.objects.filter(component=component)
+                ):
+                    return True
+
+        return False
+
     class Meta:
         unique_together = (("cluster", "prototype"),)
 
@@ -742,6 +816,11 @@ class ServiceComponent(ADCMEntity):
         object_id_field="object_id",
         content_type_field="object_type",
         on_delete=models.CASCADE,
+    )
+    _maintenance_mode = models.CharField(
+        max_length=64,
+        choices=MaintenanceMode.choices,
+        default=MaintenanceMode.OFF,
     )
 
     __error_code__ = "COMPONENT_NOT_FOUND"
@@ -782,6 +861,36 @@ class ServiceComponent(ADCMEntity):
             "issue": self.issue,
         }
         return result if result["issue"] else {}
+
+    @property
+    def maintenance_mode_attr(self) -> MaintenanceMode.choices:
+        return self._maintenance_mode
+
+    @property
+    def maintenance_mode(self) -> MaintenanceMode.choices:
+        if self._maintenance_mode != MaintenanceMode.OFF:
+            return self._maintenance_mode
+
+        if self.service.maintenance_mode_attr == MaintenanceMode.ON:
+            return self.service.maintenance_mode_attr
+
+        host_ids = HostComponent.objects.filter(component=self).values_list("host_id", flat=True)
+        if host_ids:
+            return (
+                MaintenanceMode.ON
+                if all(Host.objects.get(pk=host_id).maintenance_mode == MaintenanceMode.ON for host_id in host_ids)
+                else MaintenanceMode.OFF
+            )
+
+        return self._maintenance_mode
+
+    @maintenance_mode.setter
+    def maintenance_mode(self, value: MaintenanceMode.choices) -> None:
+        self._maintenance_mode = value
+
+    @property
+    def is_maintenance_mode_available(self) -> bool:
+        return self.cluster.prototype.allow_maintenance_mode
 
     class Meta:
         unique_together = (("cluster", "service", "prototype"),)
@@ -1059,8 +1168,6 @@ class AbstractAction(ADCMModel):
     ui_options = models.JSONField(default=dict)
 
     type = models.CharField(max_length=16, choices=ActionType.choices)
-    button = models.CharField(max_length=64, default=None, null=True)
-
     script = models.CharField(max_length=160)
     script_type = models.CharField(max_length=16, choices=SCRIPT_TYPE)
 
@@ -1166,6 +1273,54 @@ class Action(AbstractAction):
             multi_state_allowed = True
 
         return state_allowed and multi_state_allowed
+
+    def get_start_impossible_reason(self, obj: ADCMEntity) -> None:
+        start_impossible_reason = None
+        if obj.prototype.type == "adcm":
+            current_configlog = ConfigLog.objects.get(obj_ref=obj.config, id=obj.config.current)
+            if not current_configlog.attr["ldap_integration"]["active"]:
+                start_impossible_reason = NO_LDAP_SETTINGS
+
+        if obj.prototype.type == "cluster":
+            if (
+                not self.allow_in_maintenance_mode
+                and Host.objects.filter(cluster=obj, maintenance_mode=MaintenanceMode.ON).exists()
+            ):
+                start_impossible_reason = MANY_HOSTS_IN_MM
+        elif obj.prototype.type == "service":
+            if (
+                not self.allow_in_maintenance_mode
+                and HostComponent.objects.filter(
+                    service=obj, cluster=obj.cluster, host__maintenance_mode=MaintenanceMode.ON
+                ).exists()
+            ):
+                start_impossible_reason = MANY_HOSTS_IN_MM
+        elif obj.prototype.type == "component":
+            if (
+                not self.allow_in_maintenance_mode
+                and HostComponent.objects.filter(
+                    component=obj,
+                    cluster=obj.cluster,
+                    service=obj.service,
+                    host__maintenance_mode=MaintenanceMode.ON,
+                ).exists()
+            ):
+                start_impossible_reason = MANY_HOSTS_IN_MM
+        elif obj.prototype.type == "host":
+            if not self.allow_in_maintenance_mode and obj.maintenance_mode == MaintenanceMode.ON:
+                start_impossible_reason = HOST_IN_MM
+            else:
+                if (
+                    self.host_action
+                    and not self.allow_in_maintenance_mode
+                    and HostComponent.objects.filter(
+                        component_id__in=HostComponent.objects.filter(host=obj).values_list("component_id"),
+                        host__maintenance_mode=MaintenanceMode.ON,
+                    ).exists()
+                ):
+                    start_impossible_reason = MANY_HOSTS_IN_MM
+
+        return start_impossible_reason
 
 
 class AbstractSubAction(ADCMModel):
@@ -1445,6 +1600,7 @@ class StagePrototype(ADCMModel):
     display_name = models.CharField(max_length=1000, blank=True)
     version = models.CharField(max_length=80)
     edition = models.CharField(max_length=80, default="community")
+    license = models.CharField(max_length=16, choices=LICENSE_STATE, default="absent")
     license_path = models.CharField(max_length=160, default=None, null=True)
     license_hash = models.CharField(max_length=64, default=None, null=True)
     required = models.BooleanField(default=False)
@@ -1683,7 +1839,7 @@ class ConcernItem(ADCMModel):
     `blocking` blocks actions from running
     `owner` is object-origin of concern
     `cause` is owner's parameter causing concern
-    `related_objects` are back-refs from affected ADCMEntities.concerns
+    `related_objects` are back-refs from affected `ADCMEntities.concerns`
     """
 
     type = models.CharField(max_length=8, choices=ConcernType.choices, default=ConcernType.Lock)

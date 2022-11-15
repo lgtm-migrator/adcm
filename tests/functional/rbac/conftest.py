@@ -19,11 +19,7 @@ from typing import Callable, Collection, List, NamedTuple, Optional, Tuple, Unio
 
 import allure
 import pytest
-from adcm_client.base import (
-    BaseAPIObject,
-    NoSuchEndpointOrAccessIsDenied,
-    ObjectNotFound,
-)
+from adcm_client.base import BaseAPIObject, NoSuchEndpointOrAccessIsDenied, ObjectNotFound
 from adcm_client.objects import (
     ADCM,
     ADCMClient,
@@ -40,6 +36,8 @@ from adcm_client.objects import (
 )
 from adcm_client.wrappers.api import AccessIsDenied, ADCMApiWrapper
 from adcm_pytest_plugin.utils import catch_failed, random_string
+
+from tests.functional.maintenance_mode.conftest import MM_IS_OFF, MM_IS_ON
 from tests.functional.rbac.checkers import Deny
 from tests.functional.tools import ADCMObjects, AnyADCMObject, get_object_represent
 
@@ -140,8 +138,7 @@ class BusinessRoles(Enum):
     )
     ViewPolicies = BusinessRole("View policy", methodcaller("policy_list"))
     CreatePolicy = BusinessRole(
-        "Create policy",
-        lambda x, **kwargs: x.policy_create(name="Test policy", objects=[], **kwargs),
+        "Create policy", lambda x, **kwargs: x.policy_create(name="Test policy", objects=[], **kwargs)
     )
 
     # ADCM client objects roles (should be checked directly by endpoint)
@@ -150,9 +147,7 @@ class BusinessRoles(Enum):
         "View any object configuration", methodcaller("config"), Deny.ViewConfigOf(ADCMObjects)
     )
     ViewAnyObjectHostComponents = BusinessRole(
-        "View any object host-components",
-        methodcaller("hostcomponent"),
-        Deny.ViewHostComponentOf((Cluster, Service)),
+        "View any object host-components", methodcaller("hostcomponent"), Deny.ViewHostComponentOf((Cluster, Service))
     )
     ViewAnyObjectImport = BusinessRole(
         "View any object import", methodcaller("imports"), Deny.ViewImportsOf((Cluster, Service))
@@ -173,43 +168,34 @@ class BusinessRoles(Enum):
     ViewHostConfigurations = BusinessRole("View host configurations", methodcaller("config"), Deny.ViewConfigOf(Host))
 
     CreateHostProvider = BusinessRole(
-        "Create provider",
-        lambda x: x.provider_create(name=f"new_provider {random_string(5)}"),
-        Deny.CreateProvider,
+        "Create provider", lambda x: x.provider_create(name=f"new_provider {random_string(5)}"), Deny.CreateProvider
     )
     CreateCluster = BusinessRole(
-        "Create cluster",
-        lambda x: x.cluster_create(name=f"new cluster {random_string(5)}"),
-        Deny.CreateCluster,
+        "Create cluster", lambda x: x.cluster_create(name=f"new cluster {random_string(5)}"), Deny.CreateCluster
     )
     EditClusterConfigurations = BusinessRole(
-        "Edit cluster configurations",
-        methodcaller("config_set_diff", {}),
-        Deny.ChangeConfigOf(Cluster),
+        "Edit cluster configurations", methodcaller("config_set_diff", {}), Deny.ChangeConfigOf(Cluster)
     )
     EditServiceConfigurations = BusinessRole(
-        "Edit service configurations",
-        methodcaller("config_set_diff", {}),
-        Deny.ChangeConfigOf(Service),
+        "Edit service configurations", methodcaller("config_set_diff", {}), Deny.ChangeConfigOf(Service)
     )
     EditComponentConfigurations = BusinessRole(
-        "Edit component configurations",
-        methodcaller("config_set_diff", {}),
-        Deny.ChangeConfigOf(Component),
+        "Edit component configurations", methodcaller("config_set_diff", {}), Deny.ChangeConfigOf(Component)
     )
     EditProviderConfigurations = BusinessRole(
-        "Edit provider configurations",
-        methodcaller("config_set_diff", {}),
-        Deny.ChangeConfigOf(Provider),
+        "Edit provider configurations", methodcaller("config_set_diff", {}), Deny.ChangeConfigOf(Provider)
     )
     EditHostConfigurations = BusinessRole(
         "Edit host configurations", methodcaller("config_set_diff", {}), Deny.ChangeConfigOf(Host)
     )
+    # checks for this role won't work, check fixture that creates changing MM Business roles
     ManageMaintenanceMode = BusinessRole(
         # to change specific values, pass kwargs to call to denial checker
-        "Manage Maintenance mode",
-        lambda host, mm_flag: host.maintenance_mode_set(mm_flag),
-        Deny.Change(Host),
+        "Manage cluster Maintenance mode",
+        lambda host, mm_flag: host.maintenance_mode_set(
+            mm_flag
+        ),  # it won't work with new MM, check corresponding tests
+        Deny.Change(Host),  # it won't work with new MM, check corresponding tests
     )
 
     ViewImports = BusinessRole("View imports", methodcaller("imports"), Deny.ViewImportsOf((Cluster, Service)))
@@ -227,9 +213,7 @@ class BusinessRoles(Enum):
         "View host-components", methodcaller("hostcomponent"), Deny.ViewHostComponentOf(Cluster)
     )
     EditHostComponents = BusinessRole(
-        "Edit host-components",
-        lambda x, *args: x.hostcomponent_set(*args),
-        Deny.EditHostComponentOf(Cluster),
+        "Edit host-components", lambda x, *args: x.hostcomponent_set(*args), Deny.EditHostComponentOf(Cluster)
     )
 
     AddService = BusinessRole("Add service", methodcaller("service_add", name="new_service"), Deny.AddServiceToCluster)
@@ -288,14 +272,8 @@ CLUSTER_EDIT_CONFIG_ROLES = (
     BusinessRoles.EditServiceConfigurations,
     BusinessRoles.EditComponentConfigurations,
 )
-PROVIDER_VIEW_CONFIG_ROLES = (
-    BusinessRoles.ViewProviderConfigurations,
-    BusinessRoles.ViewHostConfigurations,
-)
-PROVIDER_EDIT_CONFIG_ROLES = (
-    BusinessRoles.EditProviderConfigurations,
-    BusinessRoles.EditHostConfigurations,
-)
+PROVIDER_VIEW_CONFIG_ROLES = (BusinessRoles.ViewProviderConfigurations, BusinessRoles.ViewHostConfigurations)
+PROVIDER_EDIT_CONFIG_ROLES = (BusinessRoles.EditProviderConfigurations, BusinessRoles.EditHostConfigurations)
 
 
 @pytest.fixture()
@@ -382,6 +360,31 @@ def second_objects(sdk_client_fs):
     return cluster, service, component, provider, host
 
 
+@pytest.fixture()
+def mm_changing_roles(api_client) -> tuple[BusinessRole, BusinessRole, BusinessRole]:
+    """
+    Prepare utility roles for checking changing MM on various objects: service, component, host
+    """
+
+    def change_service_mm(*_, object_id: int, value: str, user_token: str) -> None:
+        with api_client.logged_as_another_user(token=user_token):
+            api_client.service.change_maintenance_mode(object_id, value)
+
+    def change_component_mm(*_, object_id: int, value: str, user_token: str) -> None:
+        with api_client.logged_as_another_user(token=user_token):
+            api_client.component.change_maintenance_mode(object_id, value)
+
+    def change_host_mm(*_, object_id: int, value: str, user_token: str) -> None:
+        with api_client.logged_as_another_user(token=user_token):
+            api_client.host.change_maintenance_mode(object_id, value)
+
+    return (
+        BusinessRole("Manage service MM", change_service_mm, change_service_mm),
+        BusinessRole("Manage component MM", change_component_mm, change_component_mm),
+        BusinessRole("Manage host MM", change_host_mm, change_host_mm),
+    )
+
+
 def get_as_client_object(api: ADCMApiWrapper, obj: AnyADCMObject, **kwargs):
     """Get representation of an object from perspective of given user (client)"""
     return obj.__class__(api, id=obj.id, **kwargs)
@@ -444,11 +447,7 @@ def create_policy(
     else:
         suitable_objects = []
     policy = sdk_client.policy_create(
-        name=f"Policy with role {role_name}",
-        role=role,
-        objects=suitable_objects,
-        user=users,
-        group=groups,
+        name=f"Policy with role {role_name}", role=role, objects=suitable_objects, user=users, group=groups
     )
     return policy
 
@@ -533,6 +532,46 @@ def is_denied(
                     raise AssertionError(f"{role.role_name} on {object_represent} should not be allowed")
         else:
             role.check_denied(client, base_object, **kwargs)
+
+
+def check_mm_change_is_denied(
+    obj: Service | Component | Host,
+    denial_method: Union[BusinessRoles, BusinessRole],
+    user_client: ADCMClient,
+    new_mm_value: str = MM_IS_ON,
+    old_mm_value: str = MM_IS_OFF,
+):
+    """
+    Check that change maintenance mode is disallowed to the user
+    and the value is the same
+    """
+    is_denied(
+        obj,
+        denial_method,
+        client=user_client,
+        object_id=obj.id,
+        value=new_mm_value,
+        user_token=user_client.api_token(),
+    )
+    obj.reread()
+    assert (
+        obj.maintenance_mode == old_mm_value
+    ), f'{obj.__class__.__name__} maintenance mode should be intact and be equal to "{old_mm_value}"'
+
+
+def check_mm_change_is_allowed(
+    obj: Service | Component | Host,
+    allow_method: Union[BusinessRoles, BusinessRole],
+    user_client: ADCMClient,
+    new_mm_value: str = MM_IS_ON,
+):
+    """
+    Check that change maintenance mode is allowed to the user
+    and the value changed
+    """
+    is_allowed(obj, allow_method, object_id=obj.id, value=new_mm_value, user_token=user_client.api_token())
+    obj.reread()
+    assert obj.maintenance_mode == new_mm_value, f'{obj.__class__.__name__} maintenance mode should be "{new_mm_value}"'
 
 
 def extract_role_short_info(role: Role) -> RoleShortInfo:

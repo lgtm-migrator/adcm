@@ -834,9 +834,6 @@ class TestAPI2(BaseTestCase):
                 "version": "2.5",
                 "version_order": 4,
                 "edition": "community",
-                "license": "absent",
-                "license_path": None,
-                "license_hash": None,
                 "hash": "2232f33c6259d44c23046fce4382f16c450f8ba5",
                 "description": "",
                 "date": timezone.now(),
@@ -850,6 +847,9 @@ class TestAPI2(BaseTestCase):
                 "name": "ADB",
                 "display_name": "ADB",
                 "version": "2.5",
+                "license": "absent",
+                "license_path": None,
+                "license_hash": None,
                 "version_order": 11,
                 "required": False,
                 "shared": False,
@@ -871,8 +871,8 @@ class TestAPI2(BaseTestCase):
         )
 
     @patch("cm.api.load_service_map")
-    @patch("cm.issue.update_hierarchy_issues")
-    @patch("cm.status_api.post_event")
+    @patch("cm.api.update_hierarchy_issues")
+    @patch("cm.api.post_event")
     def test_save_hc(self, mock_post_event, mock_update_issues, mock_load_service_map):
         cluster_object = ClusterObject.objects.create(prototype=self.prototype, cluster=self.cluster)
         host = Host.objects.create(prototype=self.prototype, cluster=self.cluster)
@@ -898,7 +898,7 @@ class TestAPI2(BaseTestCase):
 
     @patch("cm.api.ctx")
     @patch("cm.api.load_service_map")
-    @patch("cm.issue.update_hierarchy_issues")
+    @patch("cm.api.update_hierarchy_issues")
     def test_save_hc__big_update__locked_hierarchy(self, mock_issue, mock_load, ctx):
         """
         Update bigger HC map - move `component_2` from `host_2` to `host_3`
@@ -950,7 +950,7 @@ class TestAPI2(BaseTestCase):
         self.assertTrue(host_3.locked)
 
     @patch("cm.api.load_service_map")
-    @patch("cm.issue.update_hierarchy_issues")
+    @patch("cm.api.update_hierarchy_issues")
     def test_save_hc__big_update__unlocked_hierarchy(self, mock_update, mock_load):
         """
         Update bigger HC map - move `component_2` from `host_2` to `host_3`

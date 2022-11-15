@@ -25,6 +25,7 @@ from tests.library.assertions import (
 
 SYNC_ACTION_NAME = 'run_ldap_sync'
 TEST_CONNECTION_ACTION = 'test_ldap_connection'
+LDAP_ACTION_CAN_NOT_START_REASON = "You need to fill in the LDAP integration settings"
 DEFAULT_LOCAL_USERS = ('admin', 'status', 'system')
 
 

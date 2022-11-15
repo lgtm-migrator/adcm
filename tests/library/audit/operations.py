@@ -114,6 +114,8 @@ _NAMED_OPERATIONS: Dict[Union[str, Tuple[OperationResult, str]], NamedOperation]
                 ObjectType.ROLE,
                 ObjectType.POLICY,
                 ObjectType.CLUSTER,
+                ObjectType.SERVICE,
+                ObjectType.COMPONENT,
                 ObjectType.HOST,
             ),
         ),
