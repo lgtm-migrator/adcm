@@ -23,12 +23,12 @@ from adcm_pytest_plugin.utils import random_string
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.ldap_auth.utils import (
     DEFAULT_LOCAL_USERS,
+    LDAP_ACTION_CAN_NOT_START_REASON,
     check_existing_groups,
     check_existing_users,
     get_ldap_group_from_adcm,
     login_should_fail,
     login_should_succeed,
-    LDAP_ACTION_CAN_NOT_START_REASON,
 )
 
 pytestmark = [

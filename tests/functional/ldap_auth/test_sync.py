@@ -25,6 +25,7 @@ from coreapi.exceptions import ErrorMessage
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.ldap_auth.utils import (
     DEFAULT_LOCAL_USERS,
+    LDAP_ACTION_CAN_NOT_START_REASON,
     SYNC_ACTION_NAME,
     TEST_CONNECTION_ACTION,
     check_existing_groups,
@@ -32,7 +33,6 @@ from tests.functional.ldap_auth.utils import (
     get_ldap_group_from_adcm,
     get_ldap_user_from_adcm,
     login_should_fail,
-    LDAP_ACTION_CAN_NOT_START_REASON,
 )
 from tests.functional.rbac.conftest import BusinessRoles, RbacRoles
 from tests.library.assertions import (
