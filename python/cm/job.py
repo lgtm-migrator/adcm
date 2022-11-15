@@ -851,8 +851,12 @@ def finish_task(task: TaskLog, job: Optional[JobLog], status: str):
     )
     cef_logger(audit_instance=audit_log, signature_id="Action completion")
 
-    load_mm_objects()
     ctx.event.send_state()
+    try:
+        load_mm_objects()
+    except Exception as e:  # pylint: disable=broad-except
+        logger.warning("Error loading mm objects on task finish")
+        logger.exception(e)
 
 
 def cook_log_name(tag, level, ext="txt"):
