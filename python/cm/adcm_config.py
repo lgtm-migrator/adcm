@@ -417,13 +417,17 @@ def process_file_type(obj: Any, spec: dict, conf: dict):
             if spec[key]["type"] == "file":
                 save_file_type(obj, key, "", conf[key])
             elif spec[key]["type"] == "secretfile":
-                save_file_type(obj, key, "", ansible_encrypt_and_format(conf[key]))
+                value = ansible_encrypt_and_format(conf[key])
+                save_file_type(obj, key, "", value)
+                conf[key] = value
         elif conf[key]:
             for subkey in conf[key]:
                 if spec[key][subkey]["type"] == "file":
                     save_file_type(obj, key, subkey, conf[key][subkey])
                 elif spec[key][subkey]["type"] == "secretfile":
-                    save_file_type(obj, key, subkey, ansible_encrypt_and_format(conf[key][subkey]))
+                    value = ansible_encrypt_and_format(conf[key][subkey])
+                    save_file_type(obj, key, subkey, value)
+                    conf[key][subkey] = value
 
 
 def ansible_decrypt(msg):
@@ -461,6 +465,17 @@ def process_password(spec, conf):
             for subkey in conf[key]:
                 if spec[key][subkey]["type"] in SECURE_PARAM_TYPES and conf[key][subkey]:
                     conf[key][subkey] = update_password(conf[key][subkey])
+
+    return conf
+
+
+def process_secretmap(spec: dict, conf: dict) -> dict:
+    for key in conf:
+        if spec[key].get("type") != "secretmap" or settings.ANSIBLE_VAULT_HEADER in conf[key]:
+            continue
+
+        for k, v in conf[key].items():
+            conf[key][k] = ansible_encrypt_and_format(v)
 
     return conf
 
@@ -930,6 +945,7 @@ def check_config_spec(
     # for process_file_type() function not need `if old_conf:`
     process_file_type(group or obj, spec, conf)
     process_password(spec, conf)
+    conf = process_secretmap(spec=spec, conf=conf)
 
     return conf
 

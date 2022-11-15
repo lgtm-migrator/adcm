@@ -9,10 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# Since this module is beyond QA responsibility we will not fix docstrings here
-# pylint: disable=missing-function-docstring, missing-class-docstring
-
+import json
 import os
 from contextlib import contextmanager
 from pathlib import Path
@@ -23,9 +20,14 @@ from django.db import transaction
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.status import HTTP_201_CREATED
 
 from adcm.tests.base import BaseTestCase
+from cm.adcm_config import ansible_decrypt
 from cm.models import Bundle, Cluster, ConfigLog, Prototype
+
+# Since this module is beyond QA responsibility we will not fix docstrings here
+# pylint: disable=missing-function-docstring, missing-class-docstring
 
 
 class TestBundle(BaseTestCase):
@@ -129,7 +131,7 @@ class TestBundle(BaseTestCase):
         bundle = self.upload_and_load_bundle(
             path=Path(
                 settings.BASE_DIR,
-                "python/cm/tests/files/config_cluster_secretfile.tar",
+                "python/cm/tests/files/config_cluster_secretfile_secretmap.tar",
             ),
         )
 
@@ -213,10 +215,41 @@ class TestBundle(BaseTestCase):
             secret_file_content = f.read()
 
         self.assertIn(settings.ANSIBLE_VAULT_HEADER, secret_file_content)
-
         self.assertIn(settings.ANSIBLE_VAULT_HEADER, config_log.config["secretfile"])
+        self.assertEqual(secret_file_bundle_content, ansible_decrypt(config_log.config["secretfile"]))
+
+        new_content = "new content"
+        config_log.config["secretfile"] = "new content"
+
+        response: Response = self.client.post(
+            path=reverse("config-log-list"),
+            data={"obj_ref": cluster.pk, "config": json.dumps(config_log.config)},
+        )
+
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+
+        new_config_log = ConfigLog.objects.filter(obj_ref=cluster.config).order_by("pk").last()
+
+        self.assertIn(settings.ANSIBLE_VAULT_HEADER, new_config_log.config["secretfile"])
+        self.assertEqual(new_content, ansible_decrypt(new_config_log.config["secretfile"]))
 
     def test_secretmap(self):
-        _, _, config_log = self.upload_bundle_create_cluster_config_log()
+        _, cluster, config_log = self.upload_bundle_create_cluster_config_log()
 
         self.assertIn(settings.ANSIBLE_VAULT_HEADER, config_log.config["secretmap"]["key"])
+        self.assertEqual("value", ansible_decrypt(config_log.config["secretmap"]["key"]))
+
+        new_value = "new value"
+        config_log.config["secretmap"]["key"] = "new value"
+
+        response: Response = self.client.post(
+            path=reverse("config-log-list"),
+            data={"obj_ref": cluster.pk, "config": json.dumps(config_log.config)},
+        )
+
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+
+        new_config_log = ConfigLog.objects.filter(obj_ref=cluster.config).order_by("pk").last()
+
+        self.assertIn(settings.ANSIBLE_VAULT_HEADER, new_config_log.config["secretmap"]["key"])
+        self.assertEqual(new_value, ansible_decrypt(new_config_log.config["secretmap"]["key"]))
