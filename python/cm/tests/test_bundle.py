@@ -201,9 +201,7 @@ class TestBundle(BaseTestCase):
     def test_secretfile(self):
         bundle, cluster, config_log = self.upload_bundle_create_cluster_config_log()
 
-        with open(
-            Path(settings.BUNDLE_DIR, bundle.hash, "secretfile"), encoding=settings.ENCODING_UTF_8
-        ) as f:
+        with open(Path(settings.BUNDLE_DIR, bundle.hash, "secretfile"), encoding=settings.ENCODING_UTF_8) as f:
             secret_file_bundle_content = f.read()
 
         self.assertNotIn(settings.ANSIBLE_VAULT_HEADER, secret_file_bundle_content)

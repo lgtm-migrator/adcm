@@ -744,9 +744,7 @@ def check_value_unselected_field(current_config, new_config, current_attr, new_a
             )
         else:
             if spec[k]["type"] in {"list", "map", "secretmap", "string", "structure"}:
-                if config_is_ro(obj, k, spec[k]["limits"]) or check_empty_values(
-                    k, current_config, new_config
-                ):
+                if config_is_ro(obj, k, spec[k]["limits"]) or check_empty_values(k, current_config, new_config):
                     continue
 
             if not v and k in current_config and k in new_config and current_config[k] != new_config[k]:

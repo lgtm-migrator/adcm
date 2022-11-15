@@ -52,17 +52,13 @@ def check_licence(lines: list, lic: list[str]) -> bool:
     if len(lines) < 10:
         return False
 
-    if (lines[0] == lic[0] and lines[10] == lic[10]) or (
-        lines[1] == lic[0] and lines[11] == lic[10]
-    ):
+    if (lines[0] == lic[0] and lines[10] == lic[10]) or (lines[1] == lic[0] and lines[11] == lic[10]):
         return True
 
     return False
 
 
-def check_and_fix_files(
-    fixed: int, skipped: int, fix: bool, root: Path | None = None
-) -> tuple[int, int]:
+def check_and_fix_files(fixed: int, skipped: int, fix: bool, root: Path | None = None) -> tuple[int, int]:
     for path in root.iterdir():
         lic = None
 
@@ -125,8 +121,7 @@ def main():
         sys.exit(0)
 
     sys.stdout.write(
-        f"Updating licence skipped in {number_of_skipped} files."
-        f" Licence was updated in {number_of_fixed} files \n"
+        f"Updating licence skipped in {number_of_skipped} files." f" Licence was updated in {number_of_fixed} files \n"
     )
 
     if args.fix:
