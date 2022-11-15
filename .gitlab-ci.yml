@@ -1,4 +1,18 @@
 include:
-  - project: 'arenadata/infrastructure/code/ci/gitlab_ci_files'
+  - project: "arenadata/infrastructure/code/ci/gitlab_ci_files"
     ref: master
-    file: '/development/adcm.yml'
+    file: "/development/adcm.yml"
+
+
+Linters:
+  script:
+    - pip install -r /adcm/requirements.txt
+    - pip install -r /adcm/requirements-test.txt
+    - black license_checker.py python tests
+    - autoflake -r -i --remove-all-unused-imports --exclude apps.py,python/ansible/plugins,python/init_db.py,python/task_runner.py,python/backupdb.py,python/job_runner.py,python/drf_docs.py license_checker.py python
+    - isort license_checker.py python
+    - python license_checker.py --fix --folders python go
+    - flake8 --max-line-length=120 tests/functional tests/ui_tests
+    - pylint --rcfile pyproject.toml --recursive y python
+    - pylint --rcfile tests/pyproject.toml --recursive y tests
+
