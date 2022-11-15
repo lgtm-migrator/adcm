@@ -23,8 +23,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddConstraint(
             model_name='group',
-            constraint=models.UniqueConstraint(
-                fields=('display_name', 'type'), name='unique_display_name_type'
-            ),
+            constraint=models.UniqueConstraint(fields=('display_name', 'type'), name='unique_display_name_type'),
         ),
     ]

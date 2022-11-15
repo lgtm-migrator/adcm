@@ -207,10 +207,7 @@ class AdminUsersPage(GeneralAdminPage):
     def get_all_user_names(self) -> List[WebElement]:
         """Get all users names"""
         try:
-            return [
-                self.find_child(user, AdminUsersLocators.Row.username).text
-                for user in self.get_all_user_rows()
-            ]
+            return [self.find_child(user, AdminUsersLocators.Row.username).text for user in self.get_all_user_rows()]
         except TimeoutException:
             return []
 
@@ -299,15 +296,11 @@ class AdminUsersPage(GeneralAdminPage):
         self.get_user_row_by_username(username).click()
         self.wait_element_visible(AdminUsersLocators.AddUserPopup.block)
         locators = AdminUsersLocators.AddUserPopup
-        assert not self.is_element_displayed(
-            locators.save_update_btn, timeout=1
-        ), "Update button should not be visible"
+        assert not self.is_element_displayed(locators.save_update_btn, timeout=1), "Update button should not be visible"
         # we don't check is_superuser and groups here because of their complex structure
         # and minor effect of such check
         for field in (locators.username, locators.first_name, locators.last_name, locators.email):
-            assert not self.find_element(
-                field
-            ).is_enabled(), f"Field '{field.name}' should not be editable"
+            assert not self.find_element(field).is_enabled(), f"Field '{field.name}' should not be editable"
         self.find_and_click(locators.cancel_btn)
         self.wait_element_hide(locators.block)
 
@@ -335,9 +328,7 @@ class AdminUsersPage(GeneralAdminPage):
         available_groups = self.find_elements(AdminUsersLocators.AddUserPopup.group_item)
         for available_group in available_groups:
             if available_group.text == group_name:
-                assert "disabled" in available_group.get_attribute(
-                    "class"
-                ), f"Group {group_name} should be disabled"
+                assert "disabled" in available_group.get_attribute("class"), f"Group {group_name} should be disabled"
                 break
         else:
             raise AssertionError(f"There are no group {group_name} in select group popup")
@@ -348,9 +339,7 @@ class AdminUsersPage(GeneralAdminPage):
 
         def is_disabled(locators: [Locator]):
             for loc in locators:
-                assert (
-                    self.find_element(loc).get_attribute("disabled") == 'true'
-                ), "Ldap user fields should be disabled"
+                assert self.find_element(loc).get_attribute("disabled") == 'true', "Ldap user fields should be disabled"
 
         user_row = self.get_user_row_by_username(username)
         self.find_child(user_row, AdminUsersLocators.Row.username).click()
@@ -367,10 +356,7 @@ class AdminUsersPage(GeneralAdminPage):
             ]
         )
         assert (
-            self.find_element(AdminUsersLocators.AddUserPopup.select_groups).get_attribute(
-                "disabled"
-            )
-            is None
+            self.find_element(AdminUsersLocators.AddUserPopup.select_groups).get_attribute("disabled") is None
         ), "Ldap user group should not be disabled"
 
     @allure.step('Delete user {username}')
@@ -443,18 +429,14 @@ class AdminGroupsPage(GeneralAdminPage):
         self.click_create_group_btn()
         self.send_text_to_element(AdminGroupsLocators.AddGroupPopup.name_input, name)
         if description:
-            self.send_text_to_element(
-                AdminGroupsLocators.AddGroupPopup.description_input, description
-            )
+            self.send_text_to_element(AdminGroupsLocators.AddGroupPopup.description_input, description)
         if users:
             self.find_and_click(AdminGroupsLocators.AddGroupPopup.users_select)
             self.wait_element_visible(AdminGroupsLocators.item)
             for user in users.split(", "):
                 for user_item in self.find_elements(AdminGroupsLocators.item):
                     if user_item.text == user:
-                        user_chbx = self.find_child(
-                            user_item, AdminGroupsLocators.AddGroupPopup.UserRow.checkbox
-                        )
+                        user_chbx = self.find_child(user_item, AdminGroupsLocators.AddGroupPopup.UserRow.checkbox)
                         self.hover_element(user_chbx)
                         user_chbx.click()
             self.find_and_click(AdminGroupsLocators.AddGroupPopup.users_select)
@@ -471,9 +453,7 @@ class AdminGroupsPage(GeneralAdminPage):
     ):
         self.get_group_by_name(name).click()
         if new_name:
-            self.send_text_to_element(
-                AdminGroupsLocators.AddGroupPopup.name_input, description, clean_input=True
-            )
+            self.send_text_to_element(AdminGroupsLocators.AddGroupPopup.name_input, description, clean_input=True)
         if description:
             self.send_text_to_element(
                 AdminGroupsLocators.AddGroupPopup.description_input, description, clean_input=True
@@ -484,9 +464,7 @@ class AdminGroupsPage(GeneralAdminPage):
             for user in users.split(", "):
                 for user_item in self.find_elements(AdminGroupsLocators.item):
                     if user_item.text == user:
-                        user_chbx = self.find_child(
-                            user_item, AdminGroupsLocators.AddGroupPopup.UserRow.checkbox
-                        )
+                        user_chbx = self.find_child(user_item, AdminGroupsLocators.AddGroupPopup.UserRow.checkbox)
                         self.hover_element(user_chbx)
                         user_chbx.click()
             self.find_and_click(AdminGroupsLocators.AddGroupPopup.users_select)
@@ -544,12 +522,10 @@ class AdminGroupsPage(GeneralAdminPage):
                 AdminGroupsLocators.save_update_btn,
             ]
         )
-        assert "disabled" in self.find_element(
-            AdminGroupsLocators.AddGroupPopup.users_select
-        ).get_attribute("class"), "Select users should be disabled"
-        assert (
-            self.find_element(AdminGroupsLocators.AddGroupPopup.title).text == "Group Info"
-        ), "Wrong title in popup"
+        assert "disabled" in self.find_element(AdminGroupsLocators.AddGroupPopup.users_select).get_attribute(
+            "class"
+        ), "Select users should be disabled"
+        assert self.find_element(AdminGroupsLocators.AddGroupPopup.title).text == "Group Info", "Wrong title in popup"
 
 
 class AdminRolesPage(GeneralAdminPage):
@@ -612,9 +588,7 @@ class AdminRolesPage(GeneralAdminPage):
 
         roles = self.get_all_roles_info()
         for role in default_roles:
-            assert (
-                role in roles
-            ), f"Default role {role.name} is wrong or missing. Expected to find: {role} in {roles}"
+            assert role in roles, f"Default role {role.name} is wrong or missing. Expected to find: {role} in {roles}"
 
     @allure.step('Check custom roles')
     def check_custom_role(self, role: AdminRoleInfo):
@@ -632,9 +606,7 @@ class AdminRolesPage(GeneralAdminPage):
 
     @allure.step('Fill description {description}')
     def fill_description_in_role_popup(self, description: str):
-        self.send_text_to_element(
-            AdminRolesLocators.AddRolePopup.description_name_input, description
-        )
+        self.send_text_to_element(AdminRolesLocators.AddRolePopup.description_name_input, description)
         self.find_and_click(AdminRolesLocators.AddRolePopup.role_name_input)
 
     @allure.step('Create new role')
@@ -656,9 +628,7 @@ class AdminRolesPage(GeneralAdminPage):
         for perm in available_permissions:
             if perm.text == permission:
                 perm.click()
-                self.find_and_click(
-                    AdminRolesLocators.AddRolePopup.SelectPermissionsBlock.select_btn
-                )
+                self.find_and_click(AdminRolesLocators.AddRolePopup.SelectPermissionsBlock.select_btn)
                 return
         raise ValueError(f"Permission {permission} has not found")
 
@@ -681,9 +651,7 @@ class AdminRolesPage(GeneralAdminPage):
             self.find_and_click(AdminRolesLocators.AddRolePopup.PermissionItemsBlock.clear_all_btn)
         else:
             for permission_to_remove in permissions_to_remove:
-                selected_permission = self.find_elements(
-                    AdminRolesLocators.AddRolePopup.PermissionItemsBlock.item
-                )
+                selected_permission = self.find_elements(AdminRolesLocators.AddRolePopup.PermissionItemsBlock.item)
                 for permission in selected_permission:
                     if permission_to_remove in permission.text:
                         self.find_child(
@@ -698,8 +666,7 @@ class AdminRolesPage(GeneralAdminPage):
     @allure.step('Check that save button is disabled')
     def check_save_button_disabled(self):
         assert (
-            self.find_element(AdminRolesLocators.save_update_btn).get_attribute("disabled")
-            == 'true'
+            self.find_element(AdminRolesLocators.save_update_btn).get_attribute("disabled") == 'true'
         ), "Save role button should be disabled"
 
     @allure.step("Check {error_message} error is presented")
@@ -745,19 +712,13 @@ class AdminPoliciesPage(GeneralAdminPage):
     ):
         if not (users or groups):
             raise ValueError("There are should be users or groups in the policy")
-        self.send_text_to_element(
-            AdminPoliciesLocators.AddPolicyPopup.FirstStep.name_input, policy_name
-        )
+        self.send_text_to_element(AdminPoliciesLocators.AddPolicyPopup.FirstStep.name_input, policy_name)
         if description:
-            self.send_text_to_element(
-                AdminPoliciesLocators.AddPolicyPopup.FirstStep.description_input, description
-            )
+            self.send_text_to_element(AdminPoliciesLocators.AddPolicyPopup.FirstStep.description_input, description)
         with allure.step(f"Select role {role} in popup"):
             self.find_and_click(AdminPoliciesLocators.AddPolicyPopup.FirstStep.role_select)
             self.wait_element_visible(AdminPoliciesLocators.AddPolicyPopup.FirstStep.role_item)
-            available_roles = self.find_elements(
-                AdminPoliciesLocators.AddPolicyPopup.FirstStep.role_item
-            )
+            available_roles = self.find_elements(AdminPoliciesLocators.AddPolicyPopup.FirstStep.role_item)
             for available_role in available_roles:
                 if available_role.text == role:
                     self.scroll_to(available_role)
@@ -887,9 +848,7 @@ class AdminPoliciesPage(GeneralAdminPage):
             policy_objects = self.find_child(policy, AdminPoliciesLocators.PolicyRow.objects).text
             policy_item = AdminPolicyInfo(
                 name=self.find_child(policy, AdminPoliciesLocators.PolicyRow.name).text,
-                description=self.find_child(
-                    policy, AdminPoliciesLocators.PolicyRow.description
-                ).text,
+                description=self.find_child(policy, AdminPoliciesLocators.PolicyRow.description).text,
                 role=self.find_child(policy, AdminPoliciesLocators.PolicyRow.role).text,
                 users=self.find_child(policy, AdminPoliciesLocators.PolicyRow.users).text,
                 groups=policy_groups if policy_groups else None,
@@ -913,9 +872,7 @@ class AdminPoliciesPage(GeneralAdminPage):
     def delete_all_policies(self):
         def delete_all():
             self.select_all_policies()
-            if "disabled" not in self.find_element(AdminPoliciesLocators.delete_btn).get_attribute(
-                "class"
-            ):
+            if "disabled" not in self.find_element(AdminPoliciesLocators.delete_btn).get_attribute("class"):
                 self.click_delete_button()
             assert len(self.table.get_all_rows()) == 0, "There should be 0 policies on the page"
 

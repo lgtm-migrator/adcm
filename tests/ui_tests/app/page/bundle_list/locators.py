@@ -25,9 +25,7 @@ class BundleListLocators:
         """Bundle List page toolbar elements locators"""
 
         apps_btn = Locator(By.XPATH, "//a[.//mat-icon[text()='apps']]", "Apps button")
-        upload_btn = Locator(
-            By.CSS_SELECTOR, "input[value='upload_bundle_file']", "Bundle upload button"
-        )
+        upload_btn = Locator(By.CSS_SELECTOR, "input[value='upload_bundle_file']", "Bundle upload button")
 
     class Table(CommonTable):
         """Bundle List page table elements locators"""
@@ -38,12 +36,8 @@ class BundleListLocators:
             name = Locator(By.CSS_SELECTOR, "mat-cell:first-child", "Bundle name in row")
             version = Locator(By.CSS_SELECTOR, "mat-cell:nth-child(2)", "Bundle version in row")
             edition = Locator(By.CSS_SELECTOR, "mat-cell:nth-child(3)", "Bundle edition in row")
-            description = Locator(
-                By.CSS_SELECTOR, "mat-cell:nth-child(4)", "Bundle description in row"
-            )
-            delete_btn = Locator(
-                By.CSS_SELECTOR, "mat-cell:nth-child(5) button", "Bundle delete button in row"
-            )
+            description = Locator(By.CSS_SELECTOR, "mat-cell:nth-child(4)", "Bundle description in row")
+            delete_btn = Locator(By.CSS_SELECTOR, "mat-cell:nth-child(5) button", "Bundle delete button in row")
             license_btn = Locator(
                 By.CSS_SELECTOR,
                 "button[mattooltip='Accept license agreement']",

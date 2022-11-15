@@ -65,9 +65,7 @@ def created_ldap_user(ldap_ad, ldap_basic_ous) -> Tuple[DN, Username]:
 def ldap_user(sdk_client_fs, created_ldap_user, configure_adcm_ldap_ad) -> User:
     """Login as LDAP user and return it as ADCM user"""
     _ = configure_adcm_ldap_ad
-    sdk_client_fs.adcm().config_set_diff(
-        {"ldap_integration": {"group_search_base": None, "sync_interval": 0}}
-    )
+    sdk_client_fs.adcm().config_set_diff({"ldap_integration": {"group_search_base": None, "sync_interval": 0}})
     _, username = created_ldap_user
     login_should_succeed("login as newly created ldap user", sdk_client_fs, username, username)
     return get_ldap_user_from_adcm(sdk_client_fs, username)
@@ -121,8 +119,7 @@ def _check_user_appeared_in_audit(client: ADCMClient, user: User) -> None:
     with allure.step(f"Check that there's a record in audit log about user {user.username}"):
         user_audit_record = next(
             filter(
-                lambda operation: operation.object_type == ObjectType.USER
-                and operation.object_name == user.username,
+                lambda operation: operation.object_type == ObjectType.USER and operation.object_name == user.username,
                 client.audit_operation_list(),
             ),
             None,

@@ -56,16 +56,11 @@ class StatusPage(BasePageObject):
         components_items = []
 
         def get_child_text(row: WebElement, locator: Locator) -> str:
-            return (
-                self.find_child(row, locator).text
-                if self.is_child_displayed(row, locator, timeout=1)
-                else None
-            )
+            return self.find_child(row, locator).text if self.is_child_displayed(row, locator, timeout=1) else None
 
         for row in page_rows:
             row_item = StatusRowInfo(
-                icon_status="mat-accent"
-                in self.find_child(row, row_elements.icon).get_attribute("class")
+                icon_status="mat-accent" in self.find_child(row, row_elements.icon).get_attribute("class")
                 if self.is_child_displayed(row, row_elements.icon, timeout=1)
                 else None,
                 group_name=get_child_text(row, row_elements.group_name),
@@ -98,6 +93,4 @@ class StatusPage(BasePageObject):
         current_status = self.get_page_info()
         expected = "\n".join(map(str, expected_state))
         actual = "\n".join(map(str, current_status))
-        assert (
-            current_status == expected_state
-        ), f'Status expected to be:\n {expected}, \nbut was \n"{actual}"'
+        assert current_status == expected_state, f'Status expected to be:\n {expected}, \nbut was \n"{actual}"'

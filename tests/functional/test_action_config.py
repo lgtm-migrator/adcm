@@ -71,9 +71,7 @@ def test_config_not_presented(cluster: Cluster, provider: Provider, sdk_client_f
         with allure.step(f'Check no config with action on {obj.__class__.__name__}'):
             with allure.step('Run action without config and expect it to fail with ansible error'):
                 try:
-                    ACTION_MAP[obj.__class__](
-                        obj, 'no_config', 'failed', config={'some_param': "1"}
-                    )
+                    ACTION_MAP[obj.__class__](obj, 'no_config', 'failed', config={'some_param': "1"})
                 except ErrorMessage as e:
                     CONFIG_VALUE_ERROR.equal(e)
                 else:
@@ -92,13 +90,9 @@ def test_incorrect_config(cluster: Cluster, provider: Provider, sdk_client_fs: A
     host = provider.host()
     for obj in (cluster, service, component, provider, host):
         with allure.step(f'Check "incorrect" config with action on {obj.__class__.__name__}'):
-            with allure.step(
-                'Run action with "incorrect" config and expect ADCM response with non 500 status code'
-            ):
+            with allure.step('Run action with "incorrect" config and expect ADCM response with non 500 status code'):
                 try:
-                    ACTION_MAP[obj.__class__](
-                        obj, 'with_config', 'failed', config={'no_such_param': "1"}
-                    )
+                    ACTION_MAP[obj.__class__](obj, 'with_config', 'failed', config={'no_such_param': "1"})
                 except ErrorMessage as e:
                     CONFIG_KEY_ERROR.equal(e)
                 else:

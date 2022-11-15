@@ -124,12 +124,8 @@ class QueryExecutioner:
     def exec(self, query: Query):
         """Execute given query via script inside the ADCM container"""
         statement = query.build()
-        script_text = self._template.format(statement=statement.replace('\n', '  ')).replace(
-            '"', '\\"'
-        )
-        self._should_be_success(
-            self.adcm.exec_run(['sh', '-c', f'echo "{script_text}" > {self._script_name}'])
-        )
+        script_text = self._template.format(statement=statement.replace('\n', '  ')).replace('"', '\\"')
+        self._should_be_success(self.adcm.exec_run(['sh', '-c', f'echo "{script_text}" > {self._script_name}']))
         self._should_be_success(self.adcm.exec_run(['python3', self._script_name]))
 
     def _should_be_success(self, exec_result: Tuple[int, bytes]):
@@ -137,8 +133,7 @@ class QueryExecutioner:
         if exit_code == 0:
             return
         raise ValueError(
-            f'Command execution on ADCM container {self.adcm.name} failed:\n'
-            f'Output: {output.decode("utf-8")}'
+            f'Command execution on ADCM container {self.adcm.name} failed:\n' f'Output: {output.decode("utf-8")}'
         )
 
 

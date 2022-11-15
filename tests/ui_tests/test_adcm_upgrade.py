@@ -40,9 +40,7 @@ def old_adcm_image() -> Tuple[str, str]:
 def wait_info_popup_contains(page: BasePageObject, text: str):
     """Wait for popup to be the one that's expected"""
     try:
-        assert (
-            popup_text := page.get_info_popup_text()
-        ) == text, f'Text in popup should be {text}, not {popup_text}'
+        assert (popup_text := page.get_info_popup_text()) == text, f'Text in popup should be {text}, not {popup_text}'
     except StaleElementReferenceException:
         # popups changes fast, so `get_info_popup_text` can get error during text extraction
         pass

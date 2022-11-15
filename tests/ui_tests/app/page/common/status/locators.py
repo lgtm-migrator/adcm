@@ -22,9 +22,7 @@ from tests.ui_tests.app.helpers.locator import (
 class StatusLocators:
     """Status page elements locators"""
 
-    expand_collapse_btn = Locator(
-        By.CSS_SELECTOR, "mat-card-content .mat-raised-button", "Expand/Collapse All button"
-    )
+    expand_collapse_btn = Locator(By.CSS_SELECTOR, "mat-card-content .mat-raised-button", "Expand/Collapse All button")
     group_row = Locator(By.CSS_SELECTOR, "mat-card-content mat-tree-node", "Status row")
 
     class StatusRow:

@@ -84,9 +84,7 @@ class ClusterPageMixin(BasePageObject):  # pylint: disable=too-many-instance-att
     def __init__(self, driver, base_url, cluster_id: int):
         if self.MENU_SUFFIX is None:
             raise AttributeError('You should explicitly set MENU_SUFFIX in class definition')
-        super().__init__(
-            driver, base_url, "/cluster/{cluster_id}/" + self.MENU_SUFFIX, cluster_id=cluster_id
-        )
+        super().__init__(driver, base_url, "/cluster/{cluster_id}/" + self.MENU_SUFFIX, cluster_id=cluster_id)
         self.header = PageHeader(self.driver, self.base_url)
         self.footer = PageFooter(self.driver, self.base_url)
         self.config = CommonConfigMenuObj(self.driver, self.base_url)
@@ -204,9 +202,7 @@ class ClusterServicesPage(ClusterPageMixin):
         self.find_and_click(ClusterServicesLocators.add_services_btn)
         self.wait_element_visible(ClusterServicesLocators.AddServicePopup.block)
         for service in self.find_elements(ClusterServicesLocators.AddServicePopup.service_row):
-            service_text = self.find_child(
-                service, ClusterServicesLocators.AddServicePopup.ServiceRow.text
-            )
+            service_text = self.find_child(service, ClusterServicesLocators.AddServicePopup.ServiceRow.text)
             if service_text.text == service_name:
                 service_text.click()
         self.find_and_click(ClusterServicesLocators.AddServicePopup.create_btn)
@@ -299,9 +295,7 @@ class ClusterConfigPage(ClusterPageMixin):
         CommonConfigMenu.history_btn,
     ]
 
-    @allure.step(
-        'Check that group field is visible = {is_group_visible} if group is active = {is_group_active}'
-    )
+    @allure.step('Check that group field is visible = {is_group_visible} if group is active = {is_group_active}')
     def check_groups(
         self,
         group_names: List[str],
@@ -315,14 +309,10 @@ class ClusterConfigPage(ClusterPageMixin):
             for group_name in group_names:
                 self.config.expand_or_close_group(group_name, expand=is_group_active)
                 self.config.check_subs_visibility(group_name, is_subs_visible)
-                assert (
-                    group_name in group_names_on_page
-                ), f"There is no {group_name} group on the page"
+                assert group_name in group_names_on_page, f"There is no {group_name} group on the page"
         else:
             for group_name in group_names:
-                assert (
-                    group_name not in group_names_on_page
-                ), f"There is visible '{group_name}' group on the page"
+                assert group_name not in group_names_on_page, f"There is visible '{group_name}' group on the page"
 
 
 class ClusterGroupConfigPage(ClusterPageMixin):
@@ -372,9 +362,7 @@ class ClusterHostPage(ClusterPageMixin):
             self.wait_element_visible(HostAddPopupLocators.add_new_host_btn).click()
 
     @allure.step("Get info about host row")
-    def get_host_info_from_row(
-        self, row_num: int = 0, table_has_cluster_column: bool = True
-    ) -> HostRowInfo:
+    def get_host_info_from_row(self, row_num: int = 0, table_has_cluster_column: bool = True) -> HostRowInfo:
         """
         Compile the values of the fields describing the host.
         :param table_has_cluster_column: flag to define if there is a cluster column in the table
@@ -484,8 +472,7 @@ class ClusterHostPage(ClusterPageMixin):
                 row, ClusterHostLocators.HostTable.HostRow.maintenance_mode_btn
             ).get_attribute("class")
             tooltips_info = [
-                t.get_property("innerHTML")
-                for t in page.find_elements(ClusterHostLocators.HostTable.tooltip_text)
+                t.get_property("innerHTML") for t in page.find_elements(ClusterHostLocators.HostTable.tooltip_text)
             ]
             if is_mm_state_on:
                 assert "mat-primary" in button_state, "Button should be gray"
@@ -534,9 +521,7 @@ class ClusterStatusPage(ClusterPageMixin, StatusPage):
     ]
 
 
-class ClusterGroupConfigPageMixin(
-    BasePageObject
-):  # pylint: disable-next=too-many-instance-attributes
+class ClusterGroupConfigPageMixin(BasePageObject):  # pylint: disable-next=too-many-instance-attributes
     """Helpers for working with cluster group config page"""
 
     MENU_SUFFIX: str
@@ -578,9 +563,7 @@ class ClusterGroupConfigPageMixin(
         """Open Hosts tab by menu click"""
 
         self.find_and_click(ObjectPageMenuLocators.hosts_tab)
-        page = ClusterGroupConfigHosts(
-            self.driver, self.base_url, self.cluster_id, self.group_config_id
-        )
+        page = ClusterGroupConfigHosts(self.driver, self.base_url, self.cluster_id, self.group_config_id)
         page.wait_page_is_opened()
         return page
 
@@ -588,9 +571,7 @@ class ClusterGroupConfigPageMixin(
         """Open Hosts tab by menu click"""
 
         self.find_and_click(ObjectPageMenuLocators.config_tab)
-        page = ClusterGroupConfigConfig(
-            self.driver, self.base_url, self.cluster_id, self.group_config_id
-        )
+        page = ClusterGroupConfigConfig(self.driver, self.base_url, self.cluster_id, self.group_config_id)
         page.wait_page_is_opened()
         return page
 

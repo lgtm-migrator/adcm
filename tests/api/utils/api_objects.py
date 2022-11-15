@@ -62,9 +62,7 @@ class ADCMTestApiWrapper:
         Execute HTTP request based on "request" argument.
         Assert response params amd values based on "expected_response" argument.
         """
-        url = self.get_url_for_endpoint(
-            endpoint=request.endpoint, method=request.method, object_id=request.object_id
-        )
+        url = self.get_url_for_endpoint(endpoint=request.endpoint, method=request.method, object_id=request.object_id)
         url_params = request.url_params.copy()
         if request.method == Methods.LIST:
             url_params.update({"limit": 200})
@@ -92,9 +90,7 @@ class ADCMTestApiWrapper:
 
         return response
 
-    def get_url_for_endpoint(
-        self, endpoint: Endpoints, method: Methods, object_id: Union[int, dict]
-    ):
+    def get_url_for_endpoint(self, endpoint: Endpoints, method: Methods, object_id: Union[int, dict]):
         """
         Return direct link for endpoint object.
         object_id can be dict if it's complex "object" id like `{'id': 4, 'url': 'blahblah.com'}`

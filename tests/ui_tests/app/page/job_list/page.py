@@ -80,9 +80,7 @@ class JobListPage(BasePageObject):
         self.footer = PageFooter(self.driver, self.base_url)
         self.table = CommonTableObj(self.driver, self.base_url, TaskListLocators.Table)
 
-    def get_task_info_from_table(
-        self, row_num: int = 0, *, full_invoker_objects_link: bool = False
-    ) -> TableTaskInfo:
+    def get_task_info_from_table(self, row_num: int = 0, *, full_invoker_objects_link: bool = False) -> TableTaskInfo:
         """
         Get job information from row
 
@@ -130,9 +128,7 @@ class JobListPage(BasePageObject):
         popup_locators = AuthorizedHeaderLocators.JobPopup
         return PopupTaskInfo(
             action_name=self.find_child(job, popup_locators.JobRow.job_name).text,
-            status=self._get_status_from_class_string(
-                self.find_child(job, popup_locators.JobRow.job_status)
-            ),
+            status=self._get_status_from_class_string(self.find_child(job, popup_locators.JobRow.job_status)),
         )
 
     def get_all_jobs_info(self) -> List[SubTaskJobInfo]:
@@ -145,9 +141,7 @@ class JobListPage(BasePageObject):
         return [
             SubTaskJobInfo(
                 name=self.find_child(job, expand_task_locators.Row.job_name).text,
-                status=self._get_status_from_class_string(
-                    self.find_child(job, expand_task_locators.Row.job_status)
-                ),
+                status=self._get_status_from_class_string(self.find_child(job, expand_task_locators.Row.job_status)),
             )
             for job in job_rows
         ]
@@ -208,8 +202,7 @@ class JobListPage(BasePageObject):
             if status.value in class_string:
                 return status
         raise KeyError(
-            'Job status not found in class string: %s'
-            % str(class_string)  # pylint: disable=consider-using-f-string
+            'Job status not found in class string: %s' % str(class_string)  # pylint: disable=consider-using-f-string
         )
 
     def get_selected_filter(self):

@@ -50,9 +50,7 @@ def cluster_and_states_checker(sdk_client_fs: ADCMClient, request) -> Tuple[Clus
 
 
 @fixture_parametrized_by_data_subdirs(__file__, 'cluster_and_service_multistate')
-def cluster_and_multi_states_checker(
-    sdk_client_fs: ADCMClient, request
-) -> Tuple[Cluster, Callable]:
+def cluster_and_multi_states_checker(sdk_client_fs: ADCMClient, request) -> Tuple[Cluster, Callable]:
     """Create cluster and multi states checker"""
     bundle = sdk_client_fs.upload_from_fs(request.param)
     name = bundle.name.replace('_', ' ')
@@ -68,9 +66,7 @@ def cluster_and_multi_states_checker(
 
 
 @fixture_parametrized_by_data_subdirs(__file__, 'cluster_and_service_state_and_multistate')
-def cluster_and_multi_states_plus_states_checker(
-    sdk_client_fs: ADCMClient, request
-) -> Tuple[Cluster, Callable]:
+def cluster_and_multi_states_plus_states_checker(sdk_client_fs: ADCMClient, request) -> Tuple[Cluster, Callable]:
     """Create cluster and multi states + states checker"""
     bundle = sdk_client_fs.upload_from_fs(request.param)
     name = bundle.name.replace('_', ' ')
@@ -88,9 +84,7 @@ def cluster_and_multi_states_plus_states_checker(
 class TestClusterRelatedObjects:
     """Tests for cluster-related objects states"""
 
-    def test_cluster_state_after_action(
-        self, sdk_client_fs: ADCMClient, cluster_and_states_checker
-    ):
+    def test_cluster_state_after_action(self, sdk_client_fs: ADCMClient, cluster_and_states_checker):
         """Test cluster state after action"""
         cluster_obj, check_objects_state_changed = cluster_and_states_checker
         object_to_be_changed = cluster_obj
@@ -103,9 +97,7 @@ class TestClusterRelatedObjects:
                 status="success" if "fail" not in cluster_obj.name else "failed",
             )
 
-    def test_service_state_after_action(
-        self, sdk_client_fs: ADCMClient, cluster_and_states_checker
-    ):
+    def test_service_state_after_action(self, sdk_client_fs: ADCMClient, cluster_and_states_checker):
         """Test service state after action"""
         cluster_obj, check_objects_state_changed = cluster_and_states_checker
         object_to_be_changed = cluster_obj.service_add(name='first_srv')
@@ -119,9 +111,7 @@ class TestClusterRelatedObjects:
                 status="success" if "fail" not in cluster_obj.name else "failed",
             )
 
-    def test_component_state_after_action(
-        self, sdk_client_fs: ADCMClient, cluster_and_states_checker
-    ):
+    def test_component_state_after_action(self, sdk_client_fs: ADCMClient, cluster_and_states_checker):
         """Test component state after action"""
         cluster_obj, check_objects_state_changed = cluster_and_states_checker
         cluster_obj.service_add(name='first_srv')
@@ -135,9 +125,7 @@ class TestClusterRelatedObjects:
                 status="success" if "fail" not in cluster_obj.name else "failed",
             )
 
-    def test_cluster_multi_state_after_action(
-        self, sdk_client_fs: ADCMClient, cluster_and_multi_states_checker
-    ):
+    def test_cluster_multi_state_after_action(self, sdk_client_fs: ADCMClient, cluster_and_multi_states_checker):
         """
         Test cluster and multi states after action
         Before action add multi state that should be unset via action
@@ -153,9 +141,7 @@ class TestClusterRelatedObjects:
                 status="success" if "fail" not in object_to_be_changed.name else "failed",
             )
 
-    def test_service_multi_state_after_action(
-        self, sdk_client_fs: ADCMClient, cluster_and_multi_states_checker
-    ):
+    def test_service_multi_state_after_action(self, sdk_client_fs: ADCMClient, cluster_and_multi_states_checker):
         """
         Test service and multi states after action
         Before action add multi state that should be unset via action
@@ -173,9 +159,7 @@ class TestClusterRelatedObjects:
                 status="success" if "fail" not in cluster_obj.name else "failed",
             )
 
-    def test_component_multi_state_after_action(
-        self, sdk_client_fs: ADCMClient, cluster_and_multi_states_checker
-    ):
+    def test_component_multi_state_after_action(self, sdk_client_fs: ADCMClient, cluster_and_multi_states_checker):
         """
         Test components and multi states after action
         Before action add multi state that should be unset via action
@@ -276,9 +260,7 @@ def provider_and_states_checker(sdk_client_fs: ADCMClient, request) -> Tuple[Pro
 
 
 @fixture_parametrized_by_data_subdirs(__file__, 'provider_and_host_state_and_multistate')
-def provider_and_multi_states_plus_states_checker(
-    sdk_client_fs: ADCMClient, request
-) -> Tuple[Provider, Callable]:
+def provider_and_multi_states_plus_states_checker(sdk_client_fs: ADCMClient, request) -> Tuple[Provider, Callable]:
     """Create provider and multi state plus state checker"""
     bundle = sdk_client_fs.upload_from_fs(request.param)
     cleaned_name = bundle.name.replace("_", "-")
@@ -295,9 +277,7 @@ def provider_and_multi_states_plus_states_checker(
 
 
 @fixture_parametrized_by_data_subdirs(__file__, 'provider_and_host_multistate')
-def provider_and_multi_states_checker(
-    sdk_client_fs: ADCMClient, request
-) -> Tuple[Provider, Callable]:
+def provider_and_multi_states_checker(sdk_client_fs: ADCMClient, request) -> Tuple[Provider, Callable]:
     """Create provider and multi state checker"""
     bundle = sdk_client_fs.upload_from_fs(request.param)
     clean_name = bundle.name.replace("_", "-")
@@ -316,9 +296,7 @@ def provider_and_multi_states_checker(
 class TestProviderRelatedObjects:
     """Tests for provider-related objects states"""
 
-    def test_provider_state_after_action(
-        self, sdk_client_fs: ADCMClient, provider_and_states_checker
-    ):
+    def test_provider_state_after_action(self, sdk_client_fs: ADCMClient, provider_and_states_checker):
         """Test provider state after action"""
         provider_obj, check_objects_state_changed = provider_and_states_checker
         object_to_be_changed = provider_obj
@@ -344,9 +322,7 @@ class TestProviderRelatedObjects:
                 status="success" if "fail" not in provider_obj.name else "failed",
             )
 
-    def test_provider_multi_state_after_action(
-        self, sdk_client_fs: ADCMClient, provider_and_multi_states_checker
-    ):
+    def test_provider_multi_state_after_action(self, sdk_client_fs: ADCMClient, provider_and_multi_states_checker):
         """
         Test provider and multi states after action
         Before action add multi state that should be unset via action
@@ -363,9 +339,7 @@ class TestProviderRelatedObjects:
                 status="success" if "fail" not in provider_obj.name else "failed",
             )
 
-    def test_host_multi_state_after_action(
-        self, sdk_client_fs: ADCMClient, provider_and_multi_states_checker
-    ):
+    def test_host_multi_state_after_action(self, sdk_client_fs: ADCMClient, provider_and_multi_states_checker):
         """
         Test host and multi states after action
         Before action add multi state that should be unset via action

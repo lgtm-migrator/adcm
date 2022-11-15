@@ -75,9 +75,7 @@ def new_user_client(sdk_client_fs) -> ADCMClient:
     indirect=True,
 )
 @parametrize_audit_scenario_parsing("create_load_upload.yaml", NEW_USER)
-def test_bundle_upload_load(
-    audit_log_checker, post, bundle_archives, sdk_client_fs, new_user_client
-):
+def test_bundle_upload_load(audit_log_checker, post, bundle_archives, sdk_client_fs, new_user_client):
     """Test audit logs for CREATE operations: stack/upload and stack/load"""
     incorrect_cluster_bundle, incorrect_provider_bundle, cluster_bundle, provider_bundle = tuple(
         map(Path, bundle_archives)
@@ -87,9 +85,7 @@ def test_bundle_upload_load(
         for bundle_path in (incorrect_cluster_bundle, incorrect_provider_bundle):
             with bundle_path.open("rb") as f:
                 check_failed(
-                    post(
-                        CreateOperation.UPLOAD, files={"file": f}, headers=unauthorized_user_creds
-                    ),
+                    post(CreateOperation.UPLOAD, files={"file": f}, headers=unauthorized_user_creds),
                     403,
                 )
             with bundle_path.open("rb") as f:
@@ -107,9 +103,7 @@ def test_bundle_upload_load(
         for bundle_path in (cluster_bundle, provider_bundle):
             with bundle_path.open("rb") as f:
                 check_failed(
-                    post(
-                        CreateOperation.UPLOAD, files={"file": f}, headers=unauthorized_user_creds
-                    ),
+                    post(CreateOperation.UPLOAD, files={"file": f}, headers=unauthorized_user_creds),
                     403,
                 )
             with bundle_path.open("rb") as f:
@@ -123,13 +117,9 @@ def test_bundle_upload_load(
                 403,
             )
             check_succeed(post(CreateOperation.LOAD, {"bundle_file": bundle_path.name}))
-    with allure.step(
-        "Load/Upload with incorrect data in request (as unauthorized and authorized user)"
-    ):
+    with allure.step("Load/Upload with incorrect data in request (as unauthorized and authorized user)"):
         check_failed(
-            post(
-                CreateOperation.UPLOAD, files={"wrongkey": "sldkj"}, headers=unauthorized_user_creds
-            ),
+            post(CreateOperation.UPLOAD, files={"wrongkey": "sldkj"}, headers=unauthorized_user_creds),
             403,
         )
         check_failed(
@@ -146,23 +136,17 @@ def test_bundle_upload_load(
 def test_rbac_create_operations(parse_with_context, rbac_create_data, post, sdk_client_fs):
     """Test audit logs for CREATE of RBAC objects"""
     audit_checker = AuditLogChecker(parse_with_context(rbac_create_data))
-    with allure.step(
-        "Create user, try to create its duplicate and make it as an unauthorized user"
-    ):
+    with allure.step("Create user, try to create its duplicate and make it as an unauthorized user"):
         user_info = rbac_create_data.pop("user")
         check_succeed(post(CreateOperation.USER, user_info))
         new_user_auth_header = make_auth_header(
-            ADCMClient(
-                url=sdk_client_fs.url, user=user_info["username"], password=user_info["password"]
-            )
+            ADCMClient(url=sdk_client_fs.url, user=user_info["username"], password=user_info["password"])
         )
         check_failed(post(CreateOperation.USER, user_info))
         check_failed(post(CreateOperation.USER, user_info, headers=new_user_auth_header), 403)
 
     for object_type, create_data in rbac_create_data.items():
-        with allure.step(
-            f"Create {object_type}, try to create its duplicate and make it as an unauthorized user"
-        ):
+        with allure.step(f"Create {object_type}, try to create its duplicate and make it as an unauthorized user"):
             check_succeed(post(getattr(CreateOperation, object_type.upper()), create_data))
             check_failed(post(getattr(CreateOperation, object_type.upper()), create_data))
             check_failed(
@@ -177,9 +161,7 @@ def test_rbac_create_operations(parse_with_context, rbac_create_data, post, sdk_
     audit_checker.check(sdk_client_fs.audit_operation_list())
 
 
-@parametrize_audit_scenario_parsing(
-    "create_adcm_entities.yaml", NEW_USER
-)  # pylint: disable-next=too-many-locals
+@parametrize_audit_scenario_parsing("create_adcm_entities.yaml", NEW_USER)  # pylint: disable-next=too-many-locals
 def test_create_adcm_objects(audit_log_checker, post, new_user_client, sdk_client_fs):
     """
     Test audit logs for CREATE of ADCM objects:
@@ -192,9 +174,7 @@ def test_create_adcm_objects(audit_log_checker, post, new_user_client, sdk_clien
     new_user_creds = make_auth_header(new_user_client)
     cluster_bundle = sdk_client_fs.upload_from_fs(BUNDLES_DIR / "create" / "cluster")
     provider_bundle = sdk_client_fs.upload_from_fs(BUNDLES_DIR / "create" / "provider")
-    with allure.step(
-        "Create cluster, try to create cluster from incorrect prototype and without permissions"
-    ):
+    with allure.step("Create cluster, try to create cluster from incorrect prototype and without permissions"):
         cluster_proto_id = cluster_bundle.cluster_prototype().id
         cluster_create_args = (
             CreateOperation.CLUSTER,
@@ -203,18 +183,14 @@ def test_create_adcm_objects(audit_log_checker, post, new_user_client, sdk_clien
         check_succeed(post(*cluster_create_args))
         check_failed(post(CreateOperation.CLUSTER, {"prototype_id": 1000, "name": "cluster"}), 404)
         check_failed(post(*cluster_create_args, headers=new_user_creds), 403)
-    with allure.step(
-        "Create provider, try to create provider from incorrect prototype and without permissions"
-    ):
+    with allure.step("Create provider, try to create provider from incorrect prototype and without permissions"):
         provider_proto_id = provider_bundle.provider_prototype().id
         provider_create_args = (
             CreateOperation.PROVIDER,
             {"prototype_id": provider_proto_id, "name": "provider"},
         )
         check_succeed(post(*provider_create_args))
-        check_failed(
-            post(CreateOperation.PROVIDER, {"prototype_id": 1000, "name": "provider"}), 404
-        )
+        check_failed(post(CreateOperation.PROVIDER, {"prototype_id": 1000, "name": "provider"}), 404)
         check_failed(post(*provider_create_args, headers=new_user_creds), 403)
 
         provider = sdk_client_fs.provider()
@@ -253,9 +229,7 @@ def test_create_adcm_objects(audit_log_checker, post, new_user_client, sdk_clien
         "Create group config for cluster, service and component, "
         "try to make their duplicates and create with wrong user"
     ):
-        component = (
-            service := (cluster := sdk_client_fs.cluster()).service_add(name="service")
-        ).component()
+        component = (service := (cluster := sdk_client_fs.cluster()).service_add(name="service")).component()
         for obj in (cluster, service, component):
             obj_type = obj.__class__.__name__.lower()
             group_name = f"{obj_type}-group"

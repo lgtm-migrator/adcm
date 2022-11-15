@@ -27,9 +27,7 @@ class CommonTable:
     header = Locator(By.CSS_SELECTOR, "mat-header-cell>div", "Table header")
     row = Locator(By.CSS_SELECTOR, "mat-row[adwphover]", "Table row")
     backdrop = Locator(By.CSS_SELECTOR, ".cdk-overlay-backdrop", "backdrop")
-    tooltip_text = Locator(
-        By.CSS_SELECTOR, "#cdk-describedby-message-container div", "Tooltip text"
-    )
+    tooltip_text = Locator(By.CSS_SELECTOR, "#cdk-describedby-message-container div", "Tooltip text")
 
     class ActionPopup:
         """Common popup for action in tables."""
@@ -40,24 +38,18 @@ class CommonTable:
             "//button[@adcm_test='action_btn' and ./span[text()='{}']]",
             "Button with action {}",
         )
-        action_buttons = Locator(
-            By.CSS_SELECTOR, "button[adcm_test='action_btn']", "Button with action"
-        )
+        action_buttons = Locator(By.CSS_SELECTOR, "button[adcm_test='action_btn']", "Button with action")
 
     class UpgradePopup:
         """Common popup for upgrade in tables."""
 
         block = Locator(By.CSS_SELECTOR, "div[role='menu']", "Upgrade popup block")
-        button = TemplateLocator(
-            By.XPATH, "//button[./span[text()='{}']]", "Button with upgrade {}"
-        )
+        button = TemplateLocator(By.XPATH, "//button[./span[text()='{}']]", "Button with upgrade {}")
 
     class Pagination:
         """Common table pagination locators."""
 
-        previous_page = Locator(
-            By.CSS_SELECTOR, "button[aria-label='Previous page']", "Previous page button"
-        )
+        previous_page = Locator(By.CSS_SELECTOR, "button[aria-label='Previous page']", "Previous page button")
         page_btn = Locator(By.CSS_SELECTOR, "a[class*='page-button']", "Page button")
         page_to_choose_btn = TemplateLocator(
             By.XPATH, "//a[contains(@class, 'page-button') and text()='{}']", "Page button"

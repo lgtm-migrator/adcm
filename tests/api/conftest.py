@@ -45,9 +45,7 @@ def adcm_api_fs(sdk_client_fs) -> ADCMTestApiWrapper:  # pylint: disable=redefin
     """Runs ADCM container with previously initialized image.
     Returns authorized instance of ADCMTestApiWrapper object
     """
-    return ADCMTestApiWrapper(
-        adcm_api_wrapper=sdk_client_fs._api
-    )  # pylint: disable=protected-access
+    return ADCMTestApiWrapper(adcm_api_wrapper=sdk_client_fs._api)  # pylint: disable=protected-access
 
 
 @pytest.fixture()

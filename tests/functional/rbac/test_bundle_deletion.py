@@ -91,8 +91,7 @@ def upload_bundle(client: ADCMClient, bundle_name: str) -> Bundle:
 def check_no_action_business_roles(client: ADCMClient):
     """Check there's no action business roles"""
     assert all(
-        ACTION_BUSINESS_ROLE_INFIX not in br.name
-        for br in get_roles_of_type(RoleType.BUSINESS, client)
+        ACTION_BUSINESS_ROLE_INFIX not in br.name for br in get_roles_of_type(RoleType.BUSINESS, client)
     ), f"There shouldn't be any business role that contains '{ACTION_BUSINESS_ROLE_INFIX}'"
 
 
@@ -156,8 +155,7 @@ def _get_children_names(role: Role) -> Set[str]:
 
 def _generate_cluster_hidden_action_role_names(bundles: Iterable[Bundle]) -> Set[str]:
     return {
-        f'{bundle.name}_{bundle.version}_{bundle.edition}_cluster_'
-        f'{bundle.cluster_prototype().name}_{ACTION_NAME}'
+        f'{bundle.name}_{bundle.version}_{bundle.edition}_cluster_' f'{bundle.cluster_prototype().name}_{ACTION_NAME}'
         for bundle in bundles
     }
 

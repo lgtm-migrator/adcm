@@ -76,14 +76,10 @@ def _upload_bundle_to_both_adcm(bundle_archives, sdk_client_fs, second_adcm_sdk)
 
     sdk_client_fs.upload_from_fs(provider_tar).provider_create(PROVIDER_NAME)
 
-    cluster_from_second_adcm = second_adcm_sdk.upload_from_fs(cluster_tar).cluster_create(
-        'Whoops Cluster'
-    )
+    cluster_from_second_adcm = second_adcm_sdk.upload_from_fs(cluster_tar).cluster_create('Whoops Cluster')
     cluster_from_second_adcm.service_add(name=DEFAULT_CONFIG_SERVICE)
     cluster_from_second_adcm.service_add(name=CHANGED_CONFIG_SERVICE)
-    provider_from_second_adcm = second_adcm_sdk.upload_from_fs(provider_tar).provider_create(
-        'Whoops Provider'
-    )
+    provider_from_second_adcm = second_adcm_sdk.upload_from_fs(provider_tar).provider_create('Whoops Provider')
     for i in range(7):
         provider_from_second_adcm.host_create(f'second-adcm-host-{i}')
 
@@ -105,9 +101,7 @@ def test_export_cluster_from_another_adcm(adcm_fs, extra_adcm_fs, sdk_client_fs,
     hc_map = set_hc_map(cluster_to_export, provider)
     default_config = change_configurations(cluster_to_export)
 
-    imported_cluster, _ = import_cluster_to_second_adcm(
-        cluster_to_export.id, adcm_fs, extra_adcm_fs, second_adcm_sdk
-    )
+    imported_cluster, _ = import_cluster_to_second_adcm(cluster_to_export.id, adcm_fs, extra_adcm_fs, second_adcm_sdk)
 
     check_configurations(imported_cluster, default_config)
     check_hc_map(hc_map, imported_cluster)
@@ -122,17 +116,13 @@ def import_cluster_to_second_adcm(
     path_to_dump = '/adcm/data/cluster_dump'
     dump_cluster(export_from_adcm, cluster_id, path_to_dump, password)
     with allure.step('Copy file with cluster dump to "target" ADCM'):
-        copy_file_to_container(
-            export_from_adcm.container, import_to_adcm.container, path_to_dump, path_to_dump
-        )
+        copy_file_to_container(export_from_adcm.container, import_to_adcm.container, path_to_dump, path_to_dump)
     load_cluster(import_to_adcm, path_to_dump, password)
     with catch_failed(
         ObjectNotFound,
         f'Either cluster "{CLUSTER_NAME}" or provider "{PROVIDER_NAME}" were not found after the import',
     ):
-        return second_adcm_sdk.cluster(name=CLUSTER_NAME), second_adcm_sdk.provider(
-            name=PROVIDER_NAME
-        )
+        return second_adcm_sdk.cluster(name=CLUSTER_NAME), second_adcm_sdk.provider(name=PROVIDER_NAME)
 
 
 @allure.step('Create hosts and set HC to 1 host to 1 component, left 1 host in cluster unbind')
@@ -179,9 +169,7 @@ def check_configurations(cluster: Cluster, default_config: dict):
     """Check config of cluster objects and then check secrets"""
     default_config_wo_secrets = _get_config_wo_secret_fields(default_config)
     changed_config_wo_secrets = _get_config_wo_secret_fields(CHANGED_CONFIG)
-    objects_with_default_config = (
-        service := cluster.service(name=DEFAULT_CONFIG_SERVICE)
-    ), service.component()
+    objects_with_default_config = (service := cluster.service(name=DEFAULT_CONFIG_SERVICE)), service.component()
     objects_with_changed_config = (
         cluster,
         (service := cluster.service(name=CHANGED_CONFIG_SERVICE)),

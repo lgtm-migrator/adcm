@@ -78,17 +78,13 @@ def check_audit_cef_logs(client: ADCMClient, adcm_container: Container):
     with allure.step("Check that of audit logs (operations + logins) should be same as CEF logs"):
         if (audit_amount := len(logs)) != (cef_amount := len(cef_records)):
             _attach_api_logs(logs)
-            raise AssertionError(
-                f"Lengths are not the same.\nAudit logs: {audit_amount}.\nCEF logs: {cef_amount}"
-            )
+            raise AssertionError(f"Lengths are not the same.\nAudit logs: {audit_amount}.\nCEF logs: {cef_amount}")
     with allure.step(
         "Check that all audit logs (operations and logins) have corresponding CEF record in container logs"
     ):
         for i, log in enumerate(logs):
             result, name, extension = _extract_basic_info(client, log)
-            with allure.step(
-                f"Check CEF log #{i} is corresponding to {log.id} '{name}' with result '{result}'"
-            ):
+            with allure.step(f"Check CEF log #{i} is corresponding to {log.id} '{name}' with result '{result}'"):
                 corresponding_cef_log: CEFRecord = cef_records[i]
                 expected_severity = "3" if result == OperationResult.DENIED.value else "1"
                 for param, expected in (
@@ -106,9 +102,7 @@ def check_audit_cef_logs(client: ADCMClient, adcm_container: Container):
                         )
 
 
-def _extract_basic_info(
-    client: ADCMClient, log: Union[AuditOperation, AuditLogin]
-) -> Tuple[str, str, str]:
+def _extract_basic_info(client: ADCMClient, log: Union[AuditOperation, AuditLogin]) -> Tuple[str, str, str]:
     """Return result, name and extension"""
     username = client.user(id=log.user_id).username if log.user_id else None
     if isinstance(log, AuditOperation):
@@ -167,10 +161,6 @@ def _attach_api_logs(api_logs: Collection[Union[AuditOperation, AuditLogin]]) ->
 
 
 def _prepare_log_for_attachment(api_log: Union[AuditOperation, AuditLogin]) -> str:
-    fields = [
-        f
-        for f in dir(api_log)
-        if not (not f.islower() or f.startswith("_") or callable(getattr(api_log, f)))
-    ]
+    fields = [f for f in dir(api_log) if not (not f.islower() or f.startswith("_") or callable(getattr(api_log, f)))]
     fields.pop(fields.index("adcm_version"))
     return pformat({k: getattr(api_log, k) for k in fields})

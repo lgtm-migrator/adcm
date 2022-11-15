@@ -90,9 +90,7 @@ def test_delete_built_in_user(sdk_client_fs: ADCMClient):
             except MethodNotAllowed:
                 ...
             else:
-                raise AssertionError(
-                    f'Built-in user {built_in_user.username} should not be allowed to be deleted'
-                )
+                raise AssertionError(f'Built-in user {built_in_user.username} should not be allowed to be deleted')
 
 
 # !===== STEPS =====!
@@ -132,9 +130,7 @@ def check_user_exists(client: ADCMClient, username: str):
 def check_user_is_deactivated(client: ADCMClient, username: str):
     """Check that username isn't presented in list of user"""
     presented_usernames = {user.username for user in client.user_list()}
-    assert (
-        username in presented_usernames
-    ), f"User with username {username} should be in list of users"
+    assert username in presented_usernames, f"User with username {username} should be in list of users"
     user: User = client.user(username=username)
     assert not user.is_active, "User should be inactive"
 
@@ -146,9 +142,7 @@ def _get_user_by_username(client: ADCMClient, username: str) -> User:
     """Get user by username"""
     user = client.user(username=username)
     if user is None:
-        raise ValueError(
-            "User with name %s not found" % username
-        )  # pylint: disable=consider-using-f-string
+        raise ValueError("User with name %s not found" % username)  # pylint: disable=consider-using-f-string
     return user
 
 

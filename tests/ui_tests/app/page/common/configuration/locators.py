@@ -20,16 +20,10 @@ from tests.ui_tests.app.helpers.locator import Locator, TemplateLocator
 class CommonConfigMenu:
     """Configuration menu locators"""
 
-    group_btn = TemplateLocator(
-        By.XPATH, "//mat-expansion-panel-header[.//span[text()='{}']]", 'Group "{}" button'
-    )
-    group_row = TemplateLocator(
-        By.XPATH, "//mat-expansion-panel[.//span[text()='{}']]", 'Group "{}" row'
-    )
+    group_btn = TemplateLocator(By.XPATH, "//mat-expansion-panel-header[.//span[text()='{}']]", 'Group "{}" button')
+    group_row = TemplateLocator(By.XPATH, "//mat-expansion-panel[.//span[text()='{}']]", 'Group "{}" row')
 
-    advanced_label = Locator(
-        By.XPATH, "//mat-checkbox[.//span[text()='Advanced']]", "Advanced label"
-    )
+    advanced_label = Locator(By.XPATH, "//mat-checkbox[.//span[text()='Advanced']]", "Advanced label")
     search_input = Locator(By.CSS_SELECTOR, "#config_search_input", "Search input")
     search_input_clear_btn = Locator(
         By.CSS_SELECTOR, "app-search button[aria-label='Clear']", "Clear search input button"
@@ -42,12 +36,8 @@ class CommonConfigMenu:
     save_btn = Locator(By.XPATH, "//button[.//span[text()='Save']]", "Save configuration button")
     history_btn = Locator(By.XPATH, "//button[.//mat-icon[text()='history']]", "History button")
 
-    compare_version_select = Locator(
-        By.CSS_SELECTOR, "mat-select[placeholder='History']", "Base version to compare"
-    )
-    compare_to_select = Locator(
-        By.CSS_SELECTOR, "mat-select[placeholder='Compare to']", "Compare to version select"
-    )
+    compare_version_select = Locator(By.CSS_SELECTOR, "mat-select[placeholder='History']", "Base version to compare")
+    compare_to_select = Locator(By.CSS_SELECTOR, "mat-select[placeholder='Compare to']", "Compare to version select")
     config_version_option = TemplateLocator(
         By.XPATH, "//mat-option//span[contains(text(), '{}')]", "Config version with text: {}"
     )
@@ -90,9 +80,7 @@ class CommonConfigMenu:
             "Confirm password input",
         )
         history = Locator(By.CSS_SELECTOR, "mat-list-item span.accent", "Row history")
-        reset_btn = Locator(
-            By.CSS_SELECTOR, "button[mattooltip='Reset to default']", "Reset button"
-        )
+        reset_btn = Locator(By.CSS_SELECTOR, "button[mattooltip='Reset to default']", "Reset button")
         group_chbx = Locator(By.CSS_SELECTOR, ".group-checkbox mat-checkbox", "Group checkbox")
         checkbox = Locator(By.CSS_SELECTOR, "app-fields-boolean mat-checkbox", "Checkbox")
 
@@ -104,9 +92,7 @@ class CommonConfigMenu:
         )
         map_item = Locator(By.CSS_SELECTOR, "div.item", "Map parameter item")
         map_input_key = Locator(By.XPATH, ".//input[@formcontrolname='key']", "Map input key input")
-        map_input_value = Locator(
-            By.XPATH, ".//input[@formcontrolname='value']", "Map input value input"
-        )
+        map_input_value = Locator(By.XPATH, ".//input[@formcontrolname='value']", "Map input value input")
 
         select_btn = Locator(By.CSS_SELECTOR, "app-fields-dropdown", "Select option button")
         select_item = Locator(By.CSS_SELECTOR, ".mat-select-panel mat-option", "Select option item")
@@ -121,10 +107,6 @@ class CommonConfigMenu:
     class HistoryRow:
         """Configuration menu history row locators"""
 
-        history_select = Locator(
-            By.CSS_SELECTOR, "mat-select[placeholder='History']", "History select"
-        )
-        compare_select = Locator(
-            By.CSS_SELECTOR, "mat-select[placeholder='Compare to']", "Compare select"
-        )
+        history_select = Locator(By.CSS_SELECTOR, "mat-select[placeholder='History']", "History select")
+        compare_select = Locator(By.CSS_SELECTOR, "mat-select[placeholder='Compare to']", "Compare select")
         option = Locator(By.CSS_SELECTOR, "mat-option", "Option in select")

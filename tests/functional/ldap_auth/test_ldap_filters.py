@@ -55,9 +55,7 @@ def two_adcm_groups_with_users(sdk_client_fs) -> Tuple[Group, User, Group, User]
 
 
 @pytest.fixture()
-def two_ldap_groups_with_users(
-    ldap_ad, ldap_basic_ous
-) -> Tuple[GroupInfo, UserInfo, GroupInfo, UserInfo]:
+def two_ldap_groups_with_users(ldap_ad, ldap_basic_ous) -> Tuple[GroupInfo, UserInfo, GroupInfo, UserInfo]:
     """Create two ldap users and groups with a user in each one"""
     groups_ou, users_ou = ldap_basic_ous
     group_1 = {'name': 'group-with-users-1'}
@@ -89,9 +87,7 @@ def check_sync_with_filters(
     )
     sync_adcm_with_ldap(client)
 
-    active_users_records = {
-        u.username for u in client.user_list() if u.type == "ldap" and u.is_active
-    }
+    active_users_records = {u.username for u in client.user_list() if u.type == "ldap" and u.is_active}
     groups_records = {g.name for g in client.group_list() if g.type == "ldap"}
     sets_are_equal(
         actual=active_users_records,
@@ -124,9 +120,7 @@ def test_search_filters_users(sdk_client_fs, two_ldap_groups_with_users):
     ldap_user_2 = get_ldap_user_from_adcm(sdk_client_fs, user_info_2['name'])
 
     with allure.step('Check filter for one user and check'):
-        search_filter = (
-            f"(&(objectcategory=person)(objectclass=person)(name={ldap_user_1.username}))"
-        )
+        search_filter = f"(&(objectcategory=person)(objectclass=person)(name={ldap_user_1.username}))"
         check_sync_with_filters(
             sdk_client_fs,
             user_filter=search_filter,
@@ -176,9 +170,7 @@ def test_search_filters_users(sdk_client_fs, two_ldap_groups_with_users):
 
 @pytest.mark.usefixtures('configure_adcm_ldap_ad')
 # pylint: disable-next=too-many-arguments, too-many-locals, too-many-statements
-def test_search_filters_groups(
-    sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users
-):
+def test_search_filters_groups(sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users):
     """Check LDAP filters for groups"""
     turn_off_periodic_ldap_sync(client=sdk_client_fs)
     adcm_group_1, adcm_user_1, adcm_group_2, adcm_user_2 = two_adcm_groups_with_users
@@ -258,9 +250,7 @@ def test_search_filters_groups(
 
 @pytest.mark.usefixtures('configure_adcm_ldap_ad')
 # pylint: disable-next=too-many-arguments, too-many-locals, too-many-statements
-def test_search_filters_groups_with_symbols(
-    sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users
-):
+def test_search_filters_groups_with_symbols(sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users):
     """Check LDAP filters for users and groups"""
     turn_off_periodic_ldap_sync(client=sdk_client_fs)
 
@@ -339,9 +329,7 @@ def test_search_filters_groups_with_symbols(
             {group_info_1['name'], group_info_2['name']},
             {adcm_group_1.name, adcm_group_2.name},
         )
-        check_existing_users(
-            sdk_client_fs, {user_info_1['name'], user_info_2['name']}, adcm_user_names
-        )
+        check_existing_users(sdk_client_fs, {user_info_1['name'], user_info_2['name']}, adcm_user_names)
 
         ldap_group_1 = get_ldap_group_from_adcm(sdk_client_fs, group_info_1['name'])
         ldap_group_2 = get_ldap_group_from_adcm(sdk_client_fs, group_info_2['name'])
@@ -365,9 +353,7 @@ def test_search_filters_groups_with_symbols(
 
 @pytest.mark.usefixtures('configure_adcm_ldap_ad')
 # pylint: disable-next=too-many-arguments, too-many-locals, too-many-statements
-def test_search_filters_login_users(
-    sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users
-):
+def test_search_filters_login_users(sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users):
     """Check LDAP filters for users login"""
     turn_off_periodic_ldap_sync(client=sdk_client_fs)
 
@@ -398,9 +384,7 @@ def test_search_filters_login_users(
         check_users_in_group(adcm_group_2, adcm_user_2, ldap_user_2)
 
     with allure.step('Check filter for one user and check'):
-        search_filter = (
-            f"(&(objectcategory=person)(objectclass=person)(name={ldap_user_1.username}))"
-        )
+        search_filter = f"(&(objectcategory=person)(objectclass=person)(name={ldap_user_1.username}))"
         change_adcm_ldap_config(
             sdk_client_fs,
             attach_to_allure=False,

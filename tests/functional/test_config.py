@@ -406,14 +406,10 @@ def assert_config_type(path, config_type, entities, is_required, is_default, sen
     """
     for entity in entities:
         with allure.step(f"Assert that {entity} config works expected"):
-            ASSERT_TYPE[config_type](
-                path, config_type, entity, is_required, is_default, sent_value_type
-            )
+            ASSERT_TYPE[config_type](path, config_type, entity, is_required, is_default, sent_value_type)
 
 
-@fixture_parametrized_by_data_subdirs(
-    __file__, 'not_required', 'with_default', 'sent_correct_value'
-)
+@fixture_parametrized_by_data_subdirs(__file__, 'not_required', 'with_default', 'sent_correct_value')
 def nr_wd_cv(sdk_client_fs: ADCMClient, request):
     """Process data for not_required_with_default_sent_correct_value"""
     return processing_data(sdk_client_fs, request, 'not_required_with_default_sent_correct_value')
@@ -482,27 +478,19 @@ def test_not_required_with_default_sent_null_value(nr_wd_nv):
     assert_config_type(*nr_wd_nv, False, True, 'null_value')
 
 
-@fixture_parametrized_by_data_subdirs(
-    __file__, 'not_required', 'without_default', 'sent_correct_value'
-)
+@fixture_parametrized_by_data_subdirs(__file__, 'not_required', 'without_default', 'sent_correct_value')
 def nr_wod_cv(sdk_client_fs: ADCMClient, request):
     """Process data for not_required_without_default_sent_correct_value"""
-    return processing_data(
-        sdk_client_fs, request, 'not_required_without_default_sent_correct_value'
-    )
+    return processing_data(sdk_client_fs, request, 'not_required_without_default_sent_correct_value')
 
 
-@fixture_parametrized_by_data_subdirs(
-    __file__, 'not_required', 'without_default', 'sent_empty_value'
-)
+@fixture_parametrized_by_data_subdirs(__file__, 'not_required', 'without_default', 'sent_empty_value')
 def nr_wod_ev(sdk_client_fs: ADCMClient, request):
     """Process data for not_required_without_default_sent_empty_value"""
     return processing_data(sdk_client_fs, request, 'not_required_without_default_sent_empty_value')
 
 
-@fixture_parametrized_by_data_subdirs(
-    __file__, 'not_required', 'without_default', 'sent_null_value'
-)
+@fixture_parametrized_by_data_subdirs(__file__, 'not_required', 'without_default', 'sent_null_value')
 def nr_wod_nv(sdk_client_fs: ADCMClient, request):
     """Process data for not_required_without_default_sent_null_value"""
     return processing_data(sdk_client_fs, request, 'not_required_without_default_sent_null_value')
@@ -701,9 +689,7 @@ def test_required_without_default_sent_null_value(r_wod_nv):
 def cluster(request: SubRequest, sdk_client_fs: ADCMClient) -> Cluster:
     """Upload cluster bundle, create cluster, add service"""
     bundle_subdir = request.param if hasattr(request, 'param') else "simple_config"
-    bundle = sdk_client_fs.upload_from_fs(
-        os.path.join(get_data_dir(__file__), bundle_subdir, "cluster")
-    )
+    bundle = sdk_client_fs.upload_from_fs(os.path.join(get_data_dir(__file__), bundle_subdir, "cluster"))
     cluster = bundle.cluster_create(name='test cluster')
     cluster.service_add(name='test_service')
     return cluster
@@ -713,9 +699,7 @@ def cluster(request: SubRequest, sdk_client_fs: ADCMClient) -> Cluster:
 def provider(request: SubRequest, sdk_client_fs: ADCMClient) -> Provider:
     """Upload provider bundle, create provider, add host"""
     bundle_subdir = request.param if hasattr(request, 'param') else "simple_config"
-    bundle = sdk_client_fs.upload_from_fs(
-        os.path.join(get_data_dir(__file__), bundle_subdir, "provider")
-    )
+    bundle = sdk_client_fs.upload_from_fs(os.path.join(get_data_dir(__file__), bundle_subdir, "provider"))
     provider = bundle.provider_create(name='test_provider')
     provider.host_create(fqdn='test-host')
     return provider
@@ -765,9 +749,7 @@ class TestConfigFieldTypes:
         with allure.step(f'Set required fields that has no default to {value_to_set}'):
             for adcm_object in objects_to_change:
                 adcm_object.config_set_diff(required_diff)
-        with allure.step(
-            f'Set other fields to {value_to_set} and check that config changed correctly'
-        ):
+        with allure.step(f'Set other fields to {value_to_set} and check that config changed correctly'):
             self._change_config_and_check_changed_by_action(
                 objects_to_change, changed_diff, 'check_default', 'check_changed'
             )
@@ -802,9 +784,7 @@ class TestConfigFieldTypes:
 @pytest.mark.parametrize("provider", ["no_config"], indirect=True)
 def test_config_absence(cluster: Cluster, provider: Provider):
     """Check that ADCM reacts adequate on passing config to bundle with no config"""
-    _expect_correct_fail_on_config(
-        cluster, provider, {'oh_no': 'config is absent'}, CONFIG_NOT_FOUND
-    )
+    _expect_correct_fail_on_config(cluster, provider, {'oh_no': 'config is absent'}, CONFIG_NOT_FOUND)
 
 
 def test_pass_wrong_config_keys(cluster: Cluster, provider: Provider):
@@ -812,9 +792,7 @@ def test_pass_wrong_config_keys(cluster: Cluster, provider: Provider):
     _expect_correct_fail_on_config(cluster, provider, {'no_such_key': 'okay'}, CONFIG_KEY_ERROR)
 
 
-def _expect_correct_fail_on_config(
-    cluster: Cluster, provider: Provider, config: dict, error: ADCMError
-):
+def _expect_correct_fail_on_config(cluster: Cluster, provider: Provider, config: dict, error: ADCMError):
     """Check that config_set fails with CONFIG_VALUE_ERROR"""
     component = (service := cluster.service()).component()
     host = provider.host()
@@ -829,12 +807,12 @@ def _expect_correct_fail_on_config(
 
 
 @allure.step("Run action '{action_name}' on {adcm_object} and expect status '{expected_status}'")
-def _run_action_and_assert_status(
-    adcm_object: AnyADCMObject, action_name: str, expected_status: str = 'success'
-):
+def _run_action_and_assert_status(adcm_object: AnyADCMObject, action_name: str, expected_status: str = 'success'):
     """
     Run action on any ADCM object and assert status
     """
     assert (
         actual_status := adcm_object.action(name=action_name).run().wait()
-    ) == expected_status, f"Actions '{action_name}' is expected to finish with status '{expected_status}', not '{actual_status}'"
+    ) == expected_status, (
+        f"Actions '{action_name}' is expected to finish with status '{expected_status}', not '{actual_status}'"
+    )

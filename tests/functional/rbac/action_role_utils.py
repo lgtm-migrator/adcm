@@ -49,16 +49,12 @@ def action_business_role(
     else:
         action_owner = action_on_host if action_on_host else adcm_object
         action_id = action_owner.action(display_name=action_display_name).id
-        deny_checker = ForbiddenCallChecker(
-            action_owner.__class__, f'action/{action_id}/run', HTTPMethod.POST
-        )
+        deny_checker = ForbiddenCallChecker(action_owner.__class__, f'action/{action_id}/run', HTTPMethod.POST)
 
     role_name = get_action_role_name(adcm_object, action_display_name)
     return BusinessRole(
         role_name,
-        lambda user_obj, *args, **kwargs: user_obj.action(display_name=action_display_name).run(
-            **kwargs
-        ),
+        lambda user_obj, *args, **kwargs: user_obj.action(display_name=action_display_name).run(**kwargs),
         deny_checker,
     )
 
@@ -78,9 +74,7 @@ def create_action_policy(
     group = group or []
     child_roles = [{'id': client.role(name=role.role_name).id} for role in business_roles]
     role_name = f"Test Action Role {random_string(6)}"
-    action_parent_role = client.role_create(
-        name=role_name, display_name=role_name, child=child_roles
-    )
+    action_parent_role = client.role_create(name=role_name, display_name=role_name, child=child_roles)
     return client.policy_create(
         name=f"Test Action Policy {role_name[-6:]}",
         role=action_parent_role,
@@ -130,9 +124,7 @@ def check_cluster_actions_roles_are_created_correctly(
     """
     cluster_proto = cluster.prototype()
     actions = cluster_proto.actions
-    full_hidden_prefix = (
-        f'{hidden_role_prefix}{get_prototype_prefix_for_action_role(cluster_proto)}'
-    )
+    full_hidden_prefix = f'{hidden_role_prefix}{get_prototype_prefix_for_action_role(cluster_proto)}'
     with allure.step('Check that "hidden" roles are created for each action in cluster'):
         cluster_actions_role_names = get_actions_role_names(full_hidden_prefix, actions)
         is_superset_of(
@@ -140,9 +132,7 @@ def check_cluster_actions_roles_are_created_correctly(
             cluster_actions_role_names,
             'Not all expected "hidden" roles were found',
         )
-    _, business = check_business_roles_children(
-        client, cluster_proto, actions, cluster_actions_role_names
-    )
+    _, business = check_business_roles_children(client, cluster_proto, actions, cluster_actions_role_names)
 
     with allure.step('Check that business roles are applied correctly to RBAC default roles'):
         business_roles_ids = get_roles_ids_from_info(business)
@@ -176,27 +166,19 @@ def check_service_and_components_roles_are_created_correctly(
     ):
         service_proto = service.prototype()
         service_actions = service_proto.actions
-        service_full_hidden_prefix = (
-            f'{hidden_role_prefix}{get_prototype_prefix_for_action_role(service_proto)}'
-        )
+        service_full_hidden_prefix = f'{hidden_role_prefix}{get_prototype_prefix_for_action_role(service_proto)}'
 
         with allure.step('Check that "hidden" roles are created for each action in service'):
-            service_actions_role_names = get_actions_role_names(
-                service_full_hidden_prefix, service_actions
-            )
+            service_actions_role_names = get_actions_role_names(service_full_hidden_prefix, service_actions)
             is_superset_of(
                 hidden_role_names,
                 service_actions_role_names,
                 "Some of required roles weren't created for service",
             )
 
-        _, business = check_business_roles_children(
-            client, service_proto, service_actions, service_actions_role_names
-        )
+        _, business = check_business_roles_children(client, service_proto, service_actions, service_actions_role_names)
 
-        check_roles_are_added_to_rbac_roles(
-            client, expected_parent_roles, get_roles_ids_from_info(business)
-        )
+        check_roles_are_added_to_rbac_roles(client, expected_parent_roles, get_roles_ids_from_info(business))
 
         check_all_roles_have_category(service.cluster().prototype().display_name, business)
 
@@ -212,9 +194,7 @@ def check_service_and_components_roles_are_created_correctly(
     'Check that "hidden" roles are created for each action in each component in service '
     'and that they are correctly connected to corresponding business roles'
 )
-def _check_components_roles_are_created_correctly(
-    client, service, hidden_role_names, prefix_for_component: str
-):
+def _check_components_roles_are_created_correctly(client, service, hidden_role_names, prefix_for_component: str):
     """Check that component action roles are created correctly"""
     expected_parent_roles = (
         RbacRoles.ClusterAdministrator,
@@ -229,9 +209,7 @@ def _check_components_roles_are_created_correctly(
             f'{prefix_for_component}{get_prototype_prefix_for_action_role(component_proto)}',
             component_actions,
         )
-        is_superset_of(
-            hidden_role_names, component_actions_role_names, 'Not all roles were created'
-        )
+        is_superset_of(hidden_role_names, component_actions_role_names, 'Not all roles were created')
 
         _, business = check_business_roles_children(
             client, component_proto, component_actions, component_actions_role_names
@@ -242,9 +220,7 @@ def _check_components_roles_are_created_correctly(
         client, expected_parent_roles, get_roles_ids_from_info(component_business_roles)
     )
 
-    check_all_roles_have_category(
-        service.cluster().prototype().display_name, component_business_roles
-    )
+    check_all_roles_have_category(service.cluster().prototype().display_name, component_business_roles)
 
 
 def check_provider_based_object_action_roles_are_created_correctly(
@@ -260,9 +236,7 @@ def check_provider_based_object_action_roles_are_created_correctly(
 
     with allure.step(f'Check that "hidden" roles are created for each action in {prototype.type}'):
         actions_role_names = get_actions_role_names(full_hidden_prefix, actions)
-        is_superset_of(
-            hidden_role_names, actions_role_names, 'Not all expected "hidden" roles were found'
-        )
+        is_superset_of(hidden_role_names, actions_role_names, 'Not all expected "hidden" roles were found')
 
     _, business = check_business_roles_children(client, prototype, actions, actions_role_names)
 
@@ -283,18 +257,12 @@ def check_business_roles_children(
     """
     hidden_roles = set()
     business_roles = set()
-    for action_display_name, hidden_role_name in zip(
-        key_values_from('display_name', actions), actions_role_names
-    ):
+    for action_display_name, hidden_role_name in zip(key_values_from('display_name', actions), actions_role_names):
         business_role_name = f'{prototype.type.capitalize()} Action: {action_display_name}'
         with allure.step(f'Check role "{hidden_role_name}" is a child of "{business_role_name}"'):
-            with catch_failed(
-                ObjectNotFound, f'There should be a hidden role with name "{hidden_role_name}"'
-            ):
+            with catch_failed(ObjectNotFound, f'There should be a hidden role with name "{hidden_role_name}"'):
                 hidden_role = client.role(name=hidden_role_name, type=RoleType.HIDDEN.value)
-            with catch_failed(
-                ObjectNotFound, f'There should be a business role with name "{business_role_name}"'
-            ):
+            with catch_failed(ObjectNotFound, f'There should be a business role with name "{business_role_name}"'):
                 business_role = client.role(name=business_role_name, type=RoleType.BUSINESS.value)
             is_in_collection(
                 hidden_role.id,

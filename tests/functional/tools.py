@@ -122,9 +122,7 @@ def create_config_group_and_add_host(
     *hosts: Iterable[Host],
 ) -> GroupConfig:
     """Create config group with given name and add all passed hosts"""
-    with allure.step(
-        f"Create config group '{group_name}' and add hosts: {' '.join((h.fqdn for h in hosts))}"
-    ):
+    with allure.step(f"Create config group '{group_name}' and add hosts: {' '.join((h.fqdn for h in hosts))}"):
         group = object_with_group.group_config_create(name=group_name)
         for host in hosts:
             group.host_add(host)
@@ -151,12 +149,8 @@ def build_hc_for_hc_acl_action(
     Build a `hc` argument for a `hc_acl` action run based on cluster's hostcomponent and add/remove "directives".
     Result contains only unique entries (because of the HC nature).
     """
-    hostcomponent = {
-        (hc['service_id'], hc['component_id'], hc['host_id']) for hc in cluster.hostcomponent()
-    }
-    to_remove = {
-        (component.service_id, component.id, from_host.id) for component, from_host in remove
-    }
+    hostcomponent = {(hc['service_id'], hc['component_id'], hc['host_id']) for hc in cluster.hostcomponent()}
+    to_remove = {(component.service_id, component.id, from_host.id) for component, from_host in remove}
     hostcomponent.difference_update(to_remove)
     to_add = {(component.service_id, component.id, to_host.id) for component, to_host in add}
     return [

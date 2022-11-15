@@ -38,21 +38,15 @@ def test_category_lifecycle(sdk_client_fs):
     }
 
     check_categories_before_bundle_upload(sdk_client_fs, expected_categories)
-    check_categories_during_cluster_bundle_uploads(
-        sdk_client_fs, filepaths['clusters'], expected_categories
-    )
-    check_categories_after_provider_bundle_upload(
-        sdk_client_fs, filepaths['providers']['first'], expected_categories
-    )
+    check_categories_during_cluster_bundle_uploads(sdk_client_fs, filepaths['clusters'], expected_categories)
+    check_categories_after_provider_bundle_upload(sdk_client_fs, filepaths['providers']['first'], expected_categories)
 
 
 @allure.step('Check categories before upload of any bundle')
 def check_categories_before_bundle_upload(client: ADCMClient, expected_categories: Set[str]):
     """Check that there's only one default category"""
     _check_category_list(client, expected_categories)
-    roles_with_categories = tuple(
-        filter(lambda role: len(role.categories) != 0, _get_all_roles_info(client))
-    )
+    roles_with_categories = tuple(filter(lambda role: len(role.categories) != 0, _get_all_roles_info(client)))
     is_empty(roles_with_categories, 'There should be no role with category.')
 
 
@@ -98,9 +92,7 @@ def check_categories_during_cluster_bundle_uploads(
 
 
 @allure.step('Check categories after provider bundle upload')
-def check_categories_after_provider_bundle_upload(
-    client: ADCMClient, bundle_path: str, expected_categories: Set[str]
-):
+def check_categories_after_provider_bundle_upload(client: ADCMClient, bundle_path: str, expected_categories: Set[str]):
     """Check that new categories wasn't created after provider bundle upload"""
     bundle = client.upload_from_fs(bundle_path)
     category_name = bundle.provider_prototype().display_name

@@ -68,9 +68,7 @@ pytestmark = pytest.mark.usefixtures("_login_to_adcm_over_api")
 
 
 @pytest.fixture()
-def create_cluster_with_service(
-    sdk_client_fs: ADCMClient, bundle_archive: str
-) -> Tuple[Cluster, Service]:
+def create_cluster_with_service(sdk_client_fs: ADCMClient, bundle_archive: str) -> Tuple[Cluster, Service]:
     """Create cluster with service"""
 
     cluster_bundle = sdk_client_fs.upload_from_fs(bundle_archive)
@@ -86,9 +84,7 @@ def create_cluster_with_hostcomponents(
     """Create cluster with component"""
 
     cluster, service = create_cluster_with_service
-    provider_bundle = sdk_client_fs.upload_from_fs(
-        os.path.join(utils.get_data_dir(__file__), PROVIDER_BUNDLE)
-    )
+    provider_bundle = sdk_client_fs.upload_from_fs(os.path.join(utils.get_data_dir(__file__), PROVIDER_BUNDLE))
     provider = provider_bundle.provider_create(PROVIDER_NAME)
     host = provider.host_create(HOST_NAME)
     cluster.host_add(host)
@@ -99,9 +95,7 @@ def create_cluster_with_hostcomponents(
 # !===== Tests =====!
 
 
-@pytest.mark.parametrize(
-    "bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True
-)
+@pytest.mark.parametrize("bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True)
 class TestComponentMainPage:
     """Tests for the /cluster/{}/service/{}/component/{}/ page"""
 
@@ -117,9 +111,7 @@ class TestComponentMainPage:
         ).open()
         component_main_page = component_config_page.open_main_tab()
         component_main_page.check_all_elements()
-        component_main_page.check_component_toolbar(
-            CLUSTER_NAME, SERVICE_NAME, FIRST_COMPONENT_NAME
-        )
+        component_main_page.check_component_toolbar(CLUSTER_NAME, SERVICE_NAME, FIRST_COMPONENT_NAME)
 
     def test_open_by_toolbar_admin_page(self, app_fs, create_cluster_with_service):
         """Test open admin/intro page from component toolbar"""
@@ -141,13 +133,9 @@ class TestComponentMainPage:
             app_fs.driver, app_fs.adcm.url, cluster.id, service.id, component.id
         ).open()
         component_config_page.click_link_by_name(FIRST_COMPONENT_NAME)
-        component_main_page = ComponentMainPage(
-            app_fs.driver, app_fs.adcm.url, cluster.id, service.id, component.id
-        )
+        component_main_page = ComponentMainPage(app_fs.driver, app_fs.adcm.url, cluster.id, service.id, component.id)
         component_main_page.wait_page_is_opened()
-        component_main_page.check_component_toolbar(
-            CLUSTER_NAME, SERVICE_NAME, FIRST_COMPONENT_NAME
-        )
+        component_main_page.check_component_toolbar(CLUSTER_NAME, SERVICE_NAME, FIRST_COMPONENT_NAME)
 
     def test_open_by_toolbar_main_component_list_page(self, app_fs, create_cluster_with_service):
         """Test open /cluster/{}/service/{}/component page from toolbar"""
@@ -158,9 +146,7 @@ class TestComponentMainPage:
             app_fs.driver, app_fs.adcm.url, cluster.id, service.id, component.id
         ).open()
         component_main_page.click_link_by_name("COMPONENTS")
-        service_comp_page = ServiceComponentPage(
-            app_fs.driver, app_fs.adcm.url, cluster.id, service.id
-        )
+        service_comp_page = ServiceComponentPage(app_fs.driver, app_fs.adcm.url, cluster.id, service.id)
         service_comp_page.wait_page_is_opened()
         service_comp_page.check_service_toolbar(CLUSTER_NAME, SERVICE_NAME)
 
@@ -168,9 +154,7 @@ class TestComponentMainPage:
 class TestComponentConfigPage:
     """Tests for the /cluster/{}/service/{}/component/{}/config page"""
 
-    @pytest.mark.parametrize(
-        "bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True
-    )
+    @pytest.mark.parametrize("bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True)
     def test_open_by_tab_config_component_page(self, app_fs, create_cluster_with_service):
         """Test open /cluster/{}/service/{}/component/{}/config from left menu"""
 
@@ -181,13 +165,9 @@ class TestComponentConfigPage:
         ).open()
         component_config_page = component_main_page.open_config_tab()
         component_config_page.check_all_elements()
-        component_config_page.check_component_toolbar(
-            CLUSTER_NAME, SERVICE_NAME, FIRST_COMPONENT_NAME
-        )
+        component_config_page.check_component_toolbar(CLUSTER_NAME, SERVICE_NAME, FIRST_COMPONENT_NAME)
 
-    @pytest.mark.parametrize(
-        "bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True
-    )
+    @pytest.mark.parametrize("bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True)
     def test_filter_config_on_component_config_page(self, app_fs, create_cluster_with_service):
         """Test config filtration on /cluster/{}/service/{}/component/{}/config page"""
 
@@ -204,16 +184,13 @@ class TestComponentConfigPage:
             config_rows = component_config_page.config.get_all_config_rows()
             assert len(config_rows) == 1, "Rows are not filtered: there should be 1 row"
             assert (
-                component_config_page.config.get_config_row_info(config_rows[0]).name
-                == f"{params['search_param']}:"
+                component_config_page.config.get_config_row_info(config_rows[0]).name == f"{params['search_param']}:"
             ), f"Name should be {params['search_param']}"
         with component_config_page.config.wait_rows_change():
             component_config_page.config.clear_search_input()
         with allure.step("Check that rows are not filtered"):
             config_rows = component_config_page.config.get_all_config_rows()
-            assert (
-                len(config_rows) == 5
-            ), "Rows are filtered: there should be 4 row and 1 config group"
+            assert len(config_rows) == 5, "Rows are filtered: there should be 4 row and 1 config group"
         with component_config_page.config.wait_rows_change(expected_rows_amount=3):
             component_config_page.config.click_on_group(params["group_name"])
 
@@ -243,12 +220,8 @@ class TestComponentConfigPage:
         component_config_page.config.compare_versions(params["config_name_old"])
         component_config_page.config.check_config_fields_history_with_test_values()
 
-    @pytest.mark.parametrize(
-        "bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True
-    )
-    def test_reset_config_in_row_on_component_config_page(
-        self, app_fs, create_cluster_with_service
-    ):
+    @pytest.mark.parametrize("bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True)
+    def test_reset_config_in_row_on_component_config_page(self, app_fs, create_cluster_with_service):
         """Test config reset on /cluster/{}/service/{}/component/{}/config page"""
 
         params = {
@@ -299,9 +272,7 @@ class TestComponentConfigPage:
         component_config_page.config.check_password_confirm_required(params['pass_name'])
         component_config_page.config.check_field_is_required(params['req_name'])
         config_row = component_config_page.config.get_all_config_rows()[0]
-        component_config_page.config.type_in_field_with_few_inputs(
-            row=config_row, values=[params['wrong_value']]
-        )
+        component_config_page.config.type_in_field_with_few_inputs(row=config_row, values=[params['wrong_value']])
         component_config_page.config.check_field_is_invalid(params['not_req_name'])
         component_config_page.config.check_config_warn_icon_on_left_menu()
         component_config_page.toolbar.check_warn_button(
@@ -341,9 +312,7 @@ class TestComponentConfigPage:
         [utils.get_data_dir(__file__, COMPONENT_WITH_DESCRIPTION_FIELDS)],
         indirect=True,
     )
-    def test_field_tooltips_on_component_config_page(
-        self, app_fs, create_cluster_with_service, create_bundle_archives
-    ):
+    def test_field_tooltips_on_component_config_page(self, app_fs, create_cluster_with_service, create_bundle_archives):
         """Test config fields tooltips on /cluster/{}/service/{}/component/{}/config page"""
 
         cluster, service = create_cluster_with_service
@@ -355,9 +324,7 @@ class TestComponentConfigPage:
             component_config_page.config.check_text_in_tooltip(item, f"Test description {item}")
 
 
-@pytest.mark.parametrize(
-    "bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True
-)
+@pytest.mark.parametrize("bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True)
 class TestComponentGroupConfigPage:
     """Tests for the /cluster/{}/service/{}/component/{}/group_config page"""
 
@@ -371,9 +338,7 @@ class TestComponentGroupConfigPage:
         ).open()
         component_groupconf_page = component_main_page.open_group_config_tab()
         component_groupconf_page.check_all_elements()
-        component_groupconf_page.check_component_toolbar(
-            CLUSTER_NAME, SERVICE_NAME, FIRST_COMPONENT_NAME
-        )
+        component_groupconf_page.check_component_toolbar(CLUSTER_NAME, SERVICE_NAME, FIRST_COMPONENT_NAME)
 
     def test_create_group_config_component(self, app_fs, create_cluster_with_service):
         """Test create group config on /cluster/{}/service/{}/component/{}/group_config"""
@@ -389,9 +354,7 @@ class TestComponentGroupConfigPage:
             app_fs.driver, app_fs.adcm.url, cluster.id, service.id, component.id
         ).open()
         with component_group_conf_page.group_config.wait_rows_change(expected_rows_amount=1):
-            component_group_conf_page.group_config.create_group(
-                name=params['name'], description=params['description']
-            )
+            component_group_conf_page.group_config.create_group(name=params['name'], description=params['description'])
         group_row = component_group_conf_page.group_config.get_all_config_rows()[0]
         with allure.step("Check created row in component"):
             group_info = component_group_conf_page.group_config.get_config_row_info(group_row)
@@ -401,9 +364,7 @@ class TestComponentGroupConfigPage:
         with component_group_conf_page.group_config.wait_rows_change(expected_rows_amount=0):
             component_group_conf_page.group_config.delete_row(group_row)
 
-    def test_check_pagination_on_group_config_component_page(
-        self, app_fs, create_cluster_with_service
-    ):
+    def test_check_pagination_on_group_config_component_page(self, app_fs, create_cluster_with_service):
         """Test pagination on /cluster/{}/service/{}/component/{}/group_config page"""
 
         cluster, service = create_cluster_with_service
@@ -415,9 +376,7 @@ class TestComponentGroupConfigPage:
         group_conf_page.table.check_pagination(second_page_item_amount=1)
 
 
-@pytest.mark.parametrize(
-    "bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True
-)
+@pytest.mark.parametrize("bundle_archive", [utils.get_data_dir(__file__, BUNDLE_COMMUNITY)], indirect=True)
 class TestComponentStatusPage:
     """Tests for the /cluster/{}/service/{}/component/{}/status page"""
 
@@ -431,13 +390,9 @@ class TestComponentStatusPage:
         ).open()
         component_status_page = component_config_page.open_status_tab()
         component_status_page.check_all_elements()
-        component_status_page.check_component_toolbar(
-            CLUSTER_NAME, SERVICE_NAME, FIRST_COMPONENT_NAME
-        )
+        component_status_page.check_component_toolbar(CLUSTER_NAME, SERVICE_NAME, FIRST_COMPONENT_NAME)
 
-    def test_status_on_component_status_page(
-        self, app_fs, adcm_fs, sdk_client_fs, create_cluster_with_hostcomponents
-    ):
+    def test_status_on_component_status_page(self, app_fs, adcm_fs, sdk_client_fs, create_cluster_with_hostcomponents):
         """Changes status on /cluster/{}/service/{}/component/{}/status"""
 
         success_status = [
@@ -448,9 +403,7 @@ class TestComponentStatusPage:
                 state_color=SUCCESS_COLOR,
                 link=None,
             ),
-            StatusRowInfo(
-                icon_status=True, group_name=None, state=None, state_color=None, link='test-host'
-            ),
+            StatusRowInfo(icon_status=True, group_name=None, state=None, state_color=None, link='test-host'),
         ]
         negative_status = [
             StatusRowInfo(
@@ -460,9 +413,7 @@ class TestComponentStatusPage:
                 state_color=NEGATIVE_COLOR,
                 link=None,
             ),
-            StatusRowInfo(
-                icon_status=False, group_name=None, state=None, state_color=None, link='test-host'
-            ),
+            StatusRowInfo(icon_status=False, group_name=None, state=None, state_color=None, link='test-host'),
         ]
 
         cluster, service, host = create_cluster_with_hostcomponents
@@ -482,9 +433,7 @@ class TestComponentStatusPage:
         with allure.step("Check collapse button"):
             with component_status_page.wait_rows_collapsed():
                 component_status_page.click_collapse_all_btn()
-            assert (
-                len(component_status_page.get_all_rows()) == 1
-            ), "Status rows should have been collapsed"
+            assert len(component_status_page.get_all_rows()) == 1, "Status rows should have been collapsed"
 
     def test_link_to_host_on_component_status_page(
         self, app_fs, adcm_fs, sdk_client_fs, create_cluster_with_hostcomponents

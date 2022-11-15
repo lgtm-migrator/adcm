@@ -164,9 +164,7 @@ def _update_config_and_attr_for_changed_group_customisation_test(
 
 
 @allure.step("Assert that configs has been updated for {obj_type}")
-def _assert_configs(
-    obj_type: str, actual_config: OrderedDict, expected_config: OrderedDict, group_config=False
-):
+def _assert_configs(obj_type: str, actual_config: OrderedDict, expected_config: OrderedDict, group_config=False):
     actual_config = ordered_dict_to_dict(actual_config)
     expected_config = ordered_dict_to_dict(expected_config)
     if actual_config != expected_config:
@@ -187,9 +185,7 @@ def _assert_configs(
 
 
 @allure.step("Assert that attrs has been updated for {obj_type}")
-def _assert_attr(
-    obj_type: str, actual_attr: OrderedDict, expected_attr: OrderedDict, group_config=False
-):
+def _assert_attr(obj_type: str, actual_attr: OrderedDict, expected_attr: OrderedDict, group_config=False):
     actual_attr = ordered_dict_to_dict(actual_attr)
     expected_attr = ordered_dict_to_dict(expected_attr)
     if actual_attr != expected_attr:
@@ -247,9 +243,7 @@ class TestUpgradeWithConfigs:
             ),
         ],
     )
-    def test_upgrade_cluster_with_ordinary_configs(
-        self, sdk_client_fs, bundle_name, update_func: Callable
-    ):
+    def test_upgrade_cluster_with_ordinary_configs(self, sdk_client_fs, bundle_name, update_func: Callable):
         """
         Test upgrade cluster with ordinary configs
         - Upload cluster bundle
@@ -258,9 +252,7 @@ class TestUpgradeWithConfigs:
         - Assert that new parameter/default value or removed parameter is presented/absent in configs
         """
         with allure.step("Upload cluster bundle"):
-            cluster_bundle = sdk_client_fs.upload_from_fs(
-                get_data_dir(__file__, "cluster_with_configs")
-            )
+            cluster_bundle = sdk_client_fs.upload_from_fs(get_data_dir(__file__, "cluster_with_configs"))
         with allure.step("Create cluster and add service"):
             cluster = cluster_bundle.cluster_create("test")
             service = cluster.service_add(name="test_service")
@@ -314,9 +306,7 @@ class TestUpgradeWithConfigs:
             ),
         ],
     )
-    def test_upgrade_provider_with_ordinary_configs(
-        self, sdk_client_fs, bundle_name, update_func: Callable
-    ):
+    def test_upgrade_provider_with_ordinary_configs(self, sdk_client_fs, bundle_name, update_func: Callable):
         """
         Test upgrade provider with ordinary configs
         - Upload provider bundle
@@ -325,9 +315,7 @@ class TestUpgradeWithConfigs:
         - Assert that new parameter/default value or removed parameter is presented/absent in config
         """
         with allure.step("Upload provider bundle"):
-            provider_bundle = sdk_client_fs.upload_from_fs(
-                get_data_dir(__file__, "provider_with_configs")
-            )
+            provider_bundle = sdk_client_fs.upload_from_fs(get_data_dir(__file__, "provider_with_configs"))
         with allure.step("Create provider"):
             provider = provider_bundle.provider_create("test")
             provider_ref_config_and_attr = _get_config_and_attr(provider)
@@ -399,9 +387,7 @@ class TestUpgradeWithGroupConfigs:
             ),
         ],
     )
-    def test_upgrade_cluster_with_group_configs(
-        self, sdk_client_fs, bundle_name, update_func: Callable
-    ):
+    def test_upgrade_cluster_with_group_configs(self, sdk_client_fs, bundle_name, update_func: Callable):
         """
         Test upgrade cluster with group configs enabled
         - Upload cluster bundle
@@ -411,9 +397,7 @@ class TestUpgradeWithGroupConfigs:
         - Assert that new parameter/default value or removed parameter is presented/absent in all group configs
         """
         with allure.step("Upload cluster bundle"):
-            cluster_bundle = sdk_client_fs.upload_from_fs(
-                get_data_dir(__file__, "cluster_with_group_configs")
-            )
+            cluster_bundle = sdk_client_fs.upload_from_fs(get_data_dir(__file__, "cluster_with_group_configs"))
         with allure.step("Create cluster and add service"):
             cluster = cluster_bundle.cluster_create("test")
             service = cluster.service_add(name="test_service")
@@ -477,9 +461,7 @@ class TestUpgradeWithGroupConfigs:
             ),
         ],
     )
-    def test_upgrade_provider_with_group_configs(
-        self, sdk_client_fs, bundle_name, update_func: Callable
-    ):
+    def test_upgrade_provider_with_group_configs(self, sdk_client_fs, bundle_name, update_func: Callable):
         """
         Test upgrade provider with group configs enabled
         - Upload provider bundle
@@ -489,9 +471,7 @@ class TestUpgradeWithGroupConfigs:
         - Assert that new parameter/default value or removed parameter is presented/absent in group config
         """
         with allure.step("Upload provider bundle"):
-            provider_bundle = sdk_client_fs.upload_from_fs(
-                get_data_dir(__file__, "provider_with_group_configs")
-            )
+            provider_bundle = sdk_client_fs.upload_from_fs(get_data_dir(__file__, "provider_with_group_configs"))
         with allure.step("Create provider"):
             provider = provider_bundle.provider_create("test")
         with allure.step("Create group config for provider"):
@@ -509,9 +489,7 @@ class TestUpgradeWithGroupConfigs:
             )
 
     @staticmethod
-    def _update_and_assert_config(
-        update_func: Callable, ref_config_and_attr, group_config: GroupConfig
-    ):
+    def _update_and_assert_config(update_func: Callable, ref_config_and_attr, group_config: GroupConfig):
         ref_config, ref_attr = update_func(*ref_config_and_attr, group_config=True)
         new_config, new_attr = _get_config_and_attr(group_config)
         _assert_configs(

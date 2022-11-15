@@ -110,10 +110,7 @@ class ClusterListPage(BasePageObject):  # pylint: disable=too-many-public-method
         self.wait_element_visible(self.table.locators.ActionPopup.block)
         try:
             actions_names = [
-                name.text
-                for name in self.find_elements(
-                    self.table.locators.ActionPopup.action_buttons, timeout=2
-                )
+                name.text for name in self.find_elements(self.table.locators.ActionPopup.action_buttons, timeout=2)
             ]
         except TimeoutException:
             actions_names = []
@@ -174,9 +171,7 @@ class ClusterListPage(BasePageObject):  # pylint: disable=too-many-public-method
         dialog.wait_opened()
         return dialog
 
-    @allure.step(
-        "Run upgrade {upgrade_name} for cluster from row"
-    )  # pylint: disable-next=too-many-arguments
+    @allure.step("Run upgrade {upgrade_name} for cluster from row")  # pylint: disable-next=too-many-arguments
     def run_upgrade_in_cluster_row(
         self,
         row: WebElement,
@@ -203,9 +198,7 @@ class ClusterListPage(BasePageObject):  # pylint: disable=too-many-public-method
         self.find_and_click(self.table.locators.UpgradePopup.button(upgrade_name))
         self.wait_element_visible(ActionDialog.body)
         if disclaimer_text:
-            assert (
-                self.find_element(ActionDialog.text).text == disclaimer_text
-            ), "Different text in disclaimer dialog"
+            assert self.find_element(ActionDialog.text).text == disclaimer_text, "Different text in disclaimer dialog"
             self.find_and_click(ActionDialog.run)
             self.wait_element_visible(ActionDialog.body)
         if config:

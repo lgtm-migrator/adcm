@@ -91,9 +91,7 @@ def two_hosts(sdk_client_fs, old_cluster) -> Tuple[Host, Host]:
 def check_state(cluster: Cluster, state: str):
     """Check state of a cluster"""
     cluster.reread()
-    assert (
-        actual_state := cluster.state
-    ) == state, f'State after failed upgrade should be {state}, not {actual_state}'
+    assert (actual_state := cluster.state) == state, f'State after failed upgrade should be {state}, not {actual_state}'
 
 
 @allure.step('Check that cluster prototype is equal to {expected_prototype_id}')
@@ -102,9 +100,7 @@ def check_prototype(cluster: Cluster, expected_prototype_id: int):
     cluster.reread()
     assert (
         actual_id := cluster.prototype_id
-    ) == expected_prototype_id, (
-        f'Prototype of cluster should be {expected_prototype_id}, not {actual_id}'
-    )
+    ) == expected_prototype_id, f'Prototype of cluster should be {expected_prototype_id}, not {actual_id}'
 
 
 def check_cluster_objects_configs_equal_bundle_default(
@@ -118,9 +114,7 @@ def check_cluster_objects_configs_equal_bundle_default(
         f'Check configuration of cluster {cluster.name} is equal to default configuration of cluster from {bundle.name}'
     ):
         actual_configs = _extract_configs(cluster)
-        cluster_with_defaults = bundle.cluster_create(
-            f'Cluster to take config from {random_string(4)}'
-        )
+        cluster_with_defaults = bundle.cluster_create(f'Cluster to take config from {random_string(4)}')
         for service in service_names:
             cluster_with_defaults.service_add(name=service)
         expected_configs = _extract_configs(cluster_with_defaults)
@@ -137,9 +131,7 @@ def check_cluster_objects_configs_equal_bundle_default(
             name='Actual cluster objects configuration',
             attachment_type=allure.attachment_type.JSON,
         )
-        raise AssertionError(
-            "Cluster objects' configs aren't equal to expected, check attachments for more details"
-        )
+        raise AssertionError("Cluster objects' configs aren't equal to expected, check attachments for more details")
 
 
 def _compare_inventory_files(adcm_fs, job_id: int):
@@ -160,9 +152,7 @@ def _compare_inventory_files(adcm_fs, job_id: int):
         name=f'Actual inventory of job {job_id}',
         attachment_type=allure.attachment_type.JSON,
     )
-    raise AssertionError(
-        f'Inventories should be equal for job {job_id}.\nSee attachments for more details.'
-    )
+    raise AssertionError(f'Inventories should be equal for job {job_id}.\nSee attachments for more details.')
 
 
 def _extract_configs(cluster: Cluster):
@@ -173,8 +163,7 @@ def _extract_configs(cluster: Cluster):
             service.name: {
                 'config': dict(service.config()),
                 'components': {
-                    component.name: {'config': dict(component.config())}
-                    for component in service.component_list()
+                    component.name: {'config': dict(component.config())} for component in service.component_list()
                 },
             }
             for service in cluster.service_list()
@@ -204,16 +193,12 @@ def _get_component_prototype_id(bundle, service_name, component_name) -> int:
     service_proto = bundle.service_prototype(name=service_name)
     component = next((c for c in service_proto.components if c['name'] == component_name), None)
     if component is None:
-        raise ValueError(
-            f'Component "{component_name}" is not presented in prototype of service "{service_name}"'
-        )
+        raise ValueError(f'Component "{component_name}" is not presented in prototype of service "{service_name}"')
     return component['id']
 
 
 def _set_hc_and_prepare_new_hc_for_upgrade_action(old_cluster, new_bundle, host_1, host_2):
-    second_component_id = _get_component_prototype_id(
-        new_bundle, TEST_SERVICE_NAME, 'second_component'
-    )
+    second_component_id = _get_component_prototype_id(new_bundle, TEST_SERVICE_NAME, 'second_component')
     some_component_id = _get_component_prototype_id(new_bundle, NEW_SERVICE, 'some_component')
     test_component = old_cluster.service().component(name='test_component')
     willbegone_component = old_cluster.service_add(name=SERVICE_WILL_BE_REMOVED).component()
@@ -237,9 +222,7 @@ class TestUpgradeActionSectionValidation:
     def test_validation_succeed_on_upload(self, sdk_client_fs, path):
         """Test that valid bundles with upgrade actions succeed to upload"""
         verbose_bundle_name = os.path.basename(path).replace('_', ' ').capitalize()
-        with allure.step(
-            f'Upload bundle "{verbose_bundle_name}" and expect it to succeed'
-        ), catch_failed(
+        with allure.step(f'Upload bundle "{verbose_bundle_name}" and expect it to succeed'), catch_failed(
             ErrorMessage, f'Bundle "{verbose_bundle_name}" should be uploaded successfully'
         ):
             bundle = sdk_client_fs.upload_from_fs(path)
@@ -277,9 +260,7 @@ class TestSuccessfulUpgrade:
     def test_successful_upgrade(self, upgrade_name, old_cluster: Cluster, sdk_client_fs):
         """Test successful upgrade scenarios"""
         upgrade_config = UPGRADE_EXTRA_ARGS.get(upgrade_name, {})
-        self._upgrade_to_newly_uploaded_version(
-            sdk_client_fs, old_cluster, upgrade_name, upgrade_config
-        )
+        self._upgrade_to_newly_uploaded_version(sdk_client_fs, old_cluster, upgrade_name, upgrade_config)
 
     def test_successful_upgrade_with_content_change(self, sdk_client_fs, old_cluster):
         """
@@ -324,9 +305,7 @@ class TestSuccessfulUpgrade:
         }
         new_bundle = sdk_client_fs.upload_from_fs(get_data_dir(__file__, 'hc_acl'))
 
-        hc_after_upgrade = _set_hc_and_prepare_new_hc_for_upgrade_action(
-            old_cluster, new_bundle, host_1, host_2
-        )
+        hc_after_upgrade = _set_hc_and_prepare_new_hc_for_upgrade_action(old_cluster, new_bundle, host_1, host_2)
         self._run_successful_upgrade(
             new_bundle,
             old_cluster,
@@ -402,18 +381,14 @@ class TestSuccessfulUpgrade:
             new_bundle = client.upload_from_fs(get_data_dir(__file__, *new_bundle_dirs))
         self._run_successful_upgrade(new_bundle, old_cluster, upgrade_name, upgrade_config)
 
-    def _run_successful_upgrade(
-        self, new_bundle, old_cluster, upgrade_name, upgrade_config, **check_kwargs
-    ):
+    def _run_successful_upgrade(self, new_bundle, old_cluster, upgrade_name, upgrade_config, **check_kwargs):
         with allure.step('Run upgrade and expect it to be successful'):
             upgrade_task = old_cluster.upgrade(name=upgrade_name).do(**upgrade_config)
             assert upgrade_task.wait() == 'success', f'Upgrade {upgrade_name} failed unexpectedly'
             check_state(old_cluster, 'ready_to_upgrade')
         with allure.step('Check that prototype was upgraded successfully'):
             check_prototype(old_cluster, new_bundle.cluster_prototype().id)
-            check_cluster_objects_configs_equal_bundle_default(
-                old_cluster, new_bundle, **check_kwargs
-            )
+            check_cluster_objects_configs_equal_bundle_default(old_cluster, new_bundle, **check_kwargs)
 
     @staticmethod
     def _check_group_is_presented(group_name, groups):
@@ -435,16 +410,12 @@ class FailedUploadMixin:
     """Useful methods for upload failures tests"""
 
     @allure.step('Upload new version of cluster bundle')
-    def _upload_new_version(
-        self, client: ADCMClient, name: str, directories: tuple = (FAILURES_DIR,)
-    ) -> Bundle:
+    def _upload_new_version(self, client: ADCMClient, name: str, directories: tuple = (FAILURES_DIR,)) -> Bundle:
         """Upload new version of bundle based on the given bundle file_name"""
         return client.upload_from_fs(get_data_dir(__file__, *directories, name))
 
     @allure.step('Upgrade cluster and expect it to enter the "{state}" state')
-    def _upgrade_and_expect_state(
-        self, cluster: Cluster, state: str, name: Optional[str] = None, **kwargs
-    ):
+    def _upgrade_and_expect_state(self, cluster: Cluster, state: str, name: Optional[str] = None, **kwargs):
         """
         Upgrade cluster to a new version (expect upgrade to fail)
         and check if it's state is correct
@@ -468,9 +439,7 @@ class FailedUploadMixin:
         sets_are_equal(presented_action_names, action_names, message='Incorrect action list')
 
 
-@pytest.mark.parametrize(
-    'old_cluster', [(FAILURES_DIR, 'old')], indirect=True, ids=['failures_old_bundle']
-)
+@pytest.mark.parametrize('old_cluster', [(FAILURES_DIR, 'old')], indirect=True, ids=['failures_old_bundle'])
 class TestFailedUpgradeAction(FailedUploadMixin):
     """Test cases when upgrade action is failed during execution"""
 
@@ -548,9 +517,7 @@ class TestUpgradeWithHCFailures(FailedUploadMixin):
         ['fail after switch', 'fail on first action after switch'],
         ids=lambda x: x.replace(' ', '_'),
     )
-    def test_hc_acl_fail_after_switch(
-        self, upgrade_name: str, sdk_client_fs, old_cluster, two_hosts
-    ):
+    def test_hc_acl_fail_after_switch(self, upgrade_name: str, sdk_client_fs, old_cluster, two_hosts):
         """
         Test an upgrade with `hc_acl` failed after the bundle switch
         """
@@ -558,9 +525,7 @@ class TestUpgradeWithHCFailures(FailedUploadMixin):
         expected_hc = {(host_2.fqdn, TEST_SERVICE_NAME, 'test_component')}
 
         new_bundle = self._upload_new_version(sdk_client_fs, 'hc_acl', ())
-        hc_argument = _set_hc_and_prepare_new_hc_for_upgrade_action(
-            old_cluster, new_bundle, host_1, host_2
-        )
+        hc_argument = _set_hc_and_prepare_new_hc_for_upgrade_action(old_cluster, new_bundle, host_1, host_2)
 
         self._upgrade_and_expect_state(old_cluster, 'created', name=upgrade_name, hc=hc_argument)
 
@@ -578,23 +543,17 @@ class TestUpgradeWithHCFailures(FailedUploadMixin):
         host_1, host_2 = two_hosts
 
         new_bundle = self._upload_new_version(sdk_client_fs, 'hc_acl', ())
-        hc_argument = _set_hc_and_prepare_new_hc_for_upgrade_action(
-            old_cluster, new_bundle, host_1, host_2
-        )
+        hc_argument = _set_hc_and_prepare_new_hc_for_upgrade_action(old_cluster, new_bundle, host_1, host_2)
         expected_hc = _get_hc_names(old_cluster.hostcomponent())
 
-        self._upgrade_and_expect_state(
-            old_cluster, 'created', name='fail before switch', hc=hc_argument
-        )
+        self._upgrade_and_expect_state(old_cluster, 'created', name='fail before switch', hc=hc_argument)
 
         _check_service_is_in_cluster(old_cluster, TEST_SERVICE_NAME)
         _check_service_is_in_cluster(old_cluster, SERVICE_WILL_BE_REMOVED)
         _check_service_is_not_in_cluster(old_cluster, NEW_SERVICE)
 
         actual_hc = _get_hc_names(old_cluster.hostcomponent())
-        sets_are_equal(
-            actual_hc, expected_hc, 'The hostcomponent from before the upgrade was expected'
-        )
+        sets_are_equal(actual_hc, expected_hc, 'The hostcomponent from before the upgrade was expected')
 
 
 # pylint: disable-next=too-few-public-methods
@@ -621,9 +580,7 @@ class TestUpgradeActionRelations:
         with allure.step("Check cluster actions list before update"):
             actions_before = cluster.action_list()
             assert len(actions_before) == 1, "Should be 1 action"
-            assert (
-                actions_before[0].display_name == "dummy_action"
-            ), "Should be action 'dummy_action'"
+            assert actions_before[0].display_name == "dummy_action", "Should be action 'dummy_action'"
         cluster.upgrade().do().wait()
         cluster.reread()
         with allure.step("Check jobs"):
@@ -631,10 +588,7 @@ class TestUpgradeActionRelations:
             jobs_expected = 3 + len(jobs_before)
             assert len(jobs) == jobs_expected, f"There are should be {jobs_expected} jobs"
             assert (
-                len(
-                    {'first action after switch', 'switch action', 'first_action'}
-                    & {j.display_name for j in jobs}
-                )
+                len({'first action after switch', 'switch action', 'first_action'} & {j.display_name for j in jobs})
                 == 3
             ), "Jobs names differ"
             logs_expected = 6 + len(logs_before)
@@ -643,9 +597,7 @@ class TestUpgradeActionRelations:
             ), f"There are should be {logs_expected} or more log files"
         with allure.step("Check cluster actions list after update"):
             actions_after = cluster.action_list()
-            assert (
-                len(actions_after) == 2 if "success" in folder_dir else 1
-            ), "Not all actions avaliable"
+            assert len(actions_after) == 2 if "success" in folder_dir else 1, "Not all actions avaliable"
             assert {action.display_name for action in actions_after} == (
                 {'dummy_action', 'restore'} if "success" in folder_dir else {'dummy_action'}
             ), "Not all actions avaliable"
@@ -732,18 +684,14 @@ class TestConstraintsChangeAfterUpgrade:
         """Upload bundles created dynamically based on the given constraints"""
         # request.param should be like ([0,1], ['+'])
         old_constraint, new_constraint = request.param
-        with allure.step(
-            f'Preparing bundles: constraint in old {old_constraint}, constraint in new {new_constraint}'
-        ):
+        with allure.step(f'Preparing bundles: constraint in old {old_constraint}, constraint in new {new_constraint}'):
             old_bundle_config = [
                 self.OLD_CLUSTER,
                 {
                     **self.SERVICE_DESC,
                     # old constraint may be []
                     'components': {
-                        self.COMPONENT_NAME: (
-                            {'constraint': old_constraint} if old_constraint else {}
-                        ),
+                        self.COMPONENT_NAME: ({'constraint': old_constraint} if old_constraint else {}),
                         self.DUMMY_COMPONENT_NAME: {},
                     },
                 },
@@ -761,9 +709,7 @@ class TestConstraintsChangeAfterUpgrade:
                 {
                     **self.SERVICE_DESC,
                     'components': {
-                        self.COMPONENT_NAME: (
-                            {'constraint': new_constraint} if new_constraint else {}
-                        ),
+                        self.COMPONENT_NAME: ({'constraint': new_constraint} if new_constraint else {}),
                         self.DUMMY_COMPONENT_NAME: {},
                     },
                 },
@@ -803,22 +749,15 @@ class TestConstraintsChangeAfterUpgrade:
             raise ValueError('Check `set_hc` and give correct param values IDHTFCE')
         cluster, component = cluster_with_component
         with allure.step(f'Create {hosts_in_cluster} and add all of them to a cluster'):
-            hosts = [
-                cluster.host_add(generic_provider.host_create(f'host-{i}'))
-                for i in range(hosts_in_cluster)
-            ]
-        with allure.step(
-            f'Map component to {hosts_per_component} hosts and add dummy component on one of the hosts'
-        ):
+            hosts = [cluster.host_add(generic_provider.host_create(f'host-{i}')) for i in range(hosts_in_cluster)]
+        with allure.step(f'Map component to {hosts_per_component} hosts and add dummy component on one of the hosts'):
             cluster.hostcomponent_set(
                 (hosts[0], cluster.service().component(name=self.DUMMY_COMPONENT_NAME)),
                 *[(h, component) for h in hosts[:hosts_per_component]],
             )
 
     # wrap it in something readable
-    @pytest.mark.parametrize(
-        'with_hc_in_upgrade', [True, False], indirect=True, ids=lambda i: f'with_hc_acl_{i}'
-    )
+    @pytest.mark.parametrize('with_hc_in_upgrade', [True, False], indirect=True, ids=lambda i: f'with_hc_acl_{i}')
     @pytest.mark.parametrize(
         ('upload_bundles', '_set_hc'),
         [
@@ -846,9 +785,7 @@ class TestConstraintsChangeAfterUpgrade:
         ids=_set_ids_for_upload_bundles_set_hc,
     )
     @pytest.mark.usefixtures('_set_hc', 'upload_bundles')
-    def test_incorrect_hc_in_upgrade_with_actions(
-        self, sdk_client_fs, cluster_with_component, with_hc_in_upgrade
-    ):
+    def test_incorrect_hc_in_upgrade_with_actions(self, sdk_client_fs, cluster_with_component, with_hc_in_upgrade):
         """
         Test that when incorrect for new constraints HC is set,
         upgrade with actions won't start
@@ -866,13 +803,9 @@ class TestConstraintsChangeAfterUpgrade:
             ],
         )
         with allure.step('Check no actions were launched'):
-            assert (
-                len(sdk_client_fs.job_list()) == 0
-            ), 'At least one action has been launched. None should.'
+            assert len(sdk_client_fs.job_list()) == 0, 'At least one action has been launched. None should.'
 
-    @pytest.mark.parametrize(
-        'with_hc_in_upgrade', [True], indirect=True, ids=lambda i: f'with_hc_acl_{i}'
-    )
+    @pytest.mark.parametrize('with_hc_in_upgrade', [True], indirect=True, ids=lambda i: f'with_hc_acl_{i}')
     @pytest.mark.parametrize(
         'hc_acl_block',
         [
@@ -907,9 +840,7 @@ class TestConstraintsChangeAfterUpgrade:
         wait_for_task_and_assert_result(task, 'success', action_name=upgrade.name)
 
     # pylint: disable-next=too-many-locals
-    def test_upgrade_with_hc_acl_new_component_with_constraint(
-        self, cluster_with_new_component, generic_provider
-    ):
+    def test_upgrade_with_hc_acl_new_component_with_constraint(self, cluster_with_new_component, generic_provider):
         """Test upgrade when new component appears and it has constraints"""
         upgrade_name = 'with_hc_acl'
         message = 'Host-component map of upgraded cluster should satisfy constraints of new bundle. Now error is:'
@@ -920,21 +851,13 @@ class TestConstraintsChangeAfterUpgrade:
             component.prototype_id,
         )
         with allure.step('Map component on 1 host'):
-            cluster.hostcomponent_set(
-                (cluster.host_add(generic_provider.host_create('host-1')), component)
-            )
+            cluster.hostcomponent_set((cluster.host_add(generic_provider.host_create('host-1')), component))
         with allure.step(f'Run upgrade {upgrade_name} and expect it to fail'):
-            hc_kwargs = (
-                {'hc': build_hc_for_hc_acl_action(cluster)}
-                if upgrade_name.startswith('with_')
-                else {}
-            )
+            hc_kwargs = {'hc': build_hc_for_hc_acl_action(cluster)} if upgrade_name.startswith('with_') else {}
             task = cluster.upgrade(name=upgrade_name).do(**hc_kwargs)
             wait_for_task_and_assert_result(task, 'failed', action_name=upgrade_name)
             _ = cluster.reread() or service.reread() or component.reread()
-        with allure.step(
-            'Check that correct job failed and it has a message about broken constraints'
-        ):
+        with allure.step('Check that correct job failed and it has a message about broken constraints'):
             failed_job = task.job(status='failed')
             assert (
                 failed_job.display_name == 'switch'
@@ -956,25 +879,19 @@ class TestConstraintsChangeAfterUpgrade:
                 component.prototype_id == component_proto_id
             ), 'Component prototype should not be changed after failed upgrade'
 
-    def test_upgrade_without_hc_acl_new_component_with_constraint(
-        self, cluster_with_new_component, generic_provider
-    ):
+    def test_upgrade_without_hc_acl_new_component_with_constraint(self, cluster_with_new_component, generic_provider):
         """Test upgrade when new component appears, and it has constraints, but no hc_acl in upgrade definition"""
         upgrade_name = 'without_hc_acl'
         cluster, service, component = cluster_with_new_component
         with allure.step('Map component on 1 host'):
-            cluster.hostcomponent_set(
-                (cluster.host_add(generic_provider.host_create('host-1')), component)
-            )
+            cluster.hostcomponent_set((cluster.host_add(generic_provider.host_create('host-1')), component))
         with allure.step(f'Run upgrade {upgrade_name} and expect it to succeed'):
             task = cluster.upgrade(name=upgrade_name).do()
             wait_for_task_and_assert_result(task, 'success', action_name=upgrade_name)
             _ = cluster.reread() or service.reread() or component.reread()
         with allure.step('Check that state after upgrade is correct'):
             self._check_hc_stays_the_same_after_upgrade(cluster)
-            assert (
-                len(cluster.concerns()) == 1
-            ), 'There should be exactly 1 concern on cluster after an upgrade'
+            assert len(cluster.concerns()) == 1, 'There should be exactly 1 concern on cluster after an upgrade'
 
     @allure.step('Check HC is the same as it was before the upgrade')
     def _check_hc_stays_the_same_after_upgrade(self, cluster):

@@ -31,19 +31,13 @@ from tests.functional.rbac.conftest import (
 )
 
 
-def test_lower_cluster_hierarchy(
-    user_sdk: ADCMClient, user, is_denied_to_user, prepare_objects, sdk_client_fs
-):
+def test_lower_cluster_hierarchy(user_sdk: ADCMClient, user, is_denied_to_user, prepare_objects, sdk_client_fs):
     """
     Test that cluster role can be applied to lower cluster objects - services and components
     """
     cluster, service, component, provider, host = prepare_objects
-    policy = create_policy(
-        sdk_client_fs, CLUSTER_VIEW_CONFIG_ROLES, objects=[cluster], users=[user], groups=[]
-    )
-    user_cluster, user_service, user_component = as_user_objects(
-        user_sdk, cluster, service, component
-    )
+    policy = create_policy(sdk_client_fs, CLUSTER_VIEW_CONFIG_ROLES, objects=[cluster], users=[user], groups=[])
+    user_cluster, user_service, user_component = as_user_objects(user_sdk, cluster, service, component)
     is_allowed(user_cluster, BusinessRoles.ViewClusterConfigurations)
     is_allowed(user_service, BusinessRoles.ViewServiceConfigurations)
     is_allowed(user_component, BusinessRoles.ViewComponentConfigurations)
@@ -51,9 +45,7 @@ def test_lower_cluster_hierarchy(
     is_denied_to_user(host, BusinessRoles.ViewHostConfigurations)
     delete_policy(policy)
 
-    policy = create_policy(
-        sdk_client_fs, CLUSTER_VIEW_CONFIG_ROLES, objects=[service], users=[user], groups=[]
-    )
+    policy = create_policy(sdk_client_fs, CLUSTER_VIEW_CONFIG_ROLES, objects=[service], users=[user], groups=[])
     is_denied_to_user(cluster, BusinessRoles.ViewClusterConfigurations)
     is_allowed(user_service, BusinessRoles.ViewServiceConfigurations)
     is_allowed(user_component, BusinessRoles.ViewComponentConfigurations)
@@ -61,9 +53,7 @@ def test_lower_cluster_hierarchy(
     is_denied_to_user(host, BusinessRoles.ViewHostConfigurations)
     delete_policy(policy)
 
-    create_policy(
-        sdk_client_fs, CLUSTER_VIEW_CONFIG_ROLES, objects=[component], users=[user], groups=[]
-    )
+    create_policy(sdk_client_fs, CLUSTER_VIEW_CONFIG_ROLES, objects=[component], users=[user], groups=[])
     is_denied_to_user(cluster, BusinessRoles.ViewClusterConfigurations)
     is_denied_to_user(service, BusinessRoles.ViewServiceConfigurations)
     is_allowed(user_component, BusinessRoles.ViewComponentConfigurations)
@@ -99,17 +89,13 @@ def test_service_in_cluster_hierarchy(user, prepare_objects, sdk_client_fs, seco
         is_denied(service, BusinessRoles.RemoveService, client=user_sdk)
 
 
-def test_provider_hierarchy(
-    user_sdk: ADCMClient, user, is_denied_to_user, prepare_objects, sdk_client_fs
-):
+def test_provider_hierarchy(user_sdk: ADCMClient, user, is_denied_to_user, prepare_objects, sdk_client_fs):
     """
     Parametrize role with provider related objects
     """
     cluster, service, component, provider, host = prepare_objects
 
-    policy = create_policy(
-        sdk_client_fs, PROVIDER_VIEW_CONFIG_ROLES, objects=[provider], users=[user], groups=[]
-    )
+    policy = create_policy(sdk_client_fs, PROVIDER_VIEW_CONFIG_ROLES, objects=[provider], users=[user], groups=[])
 
     user_provider, user_host = as_user_objects(user_sdk, provider, host)
     is_allowed(user_provider, BusinessRoles.ViewProviderConfigurations)
@@ -119,9 +105,7 @@ def test_provider_hierarchy(
     is_denied_to_user(component, BusinessRoles.ViewComponentConfigurations)
     delete_policy(policy)
 
-    create_policy(
-        sdk_client_fs, PROVIDER_VIEW_CONFIG_ROLES, objects=[host], users=[user], groups=[]
-    )
+    create_policy(sdk_client_fs, PROVIDER_VIEW_CONFIG_ROLES, objects=[host], users=[user], groups=[])
     is_denied_to_user(provider, BusinessRoles.ViewProviderConfigurations)
     is_allowed(user_host, BusinessRoles.ViewHostConfigurations)
     is_denied_to_user(cluster, BusinessRoles.ViewClusterConfigurations)
@@ -135,18 +119,10 @@ def test_role_with_two_hierarchy_not_allowed(sdk_client_fs):
     """
     Test that we can not create a new role with childs from different hierarchy
     """
-    application_role = {
-        "id": sdk_client_fs.role(name=BusinessRoles.ViewClusterConfigurations.value.role_name).id
-    }
-    infrastructure_role = {
-        "id": sdk_client_fs.role(name=BusinessRoles.ViewProviderConfigurations.value.role_name).id
-    }
-    generic_role = {
-        "id": sdk_client_fs.role(name=BusinessRoles.ViewADCMSettings.value.role_name).id
-    }
-    with allure.step(
-        "Assert that create role with different hierarchy is not possible"
-    ), pytest.raises(ErrorMessage):
+    application_role = {"id": sdk_client_fs.role(name=BusinessRoles.ViewClusterConfigurations.value.role_name).id}
+    infrastructure_role = {"id": sdk_client_fs.role(name=BusinessRoles.ViewProviderConfigurations.value.role_name).id}
+    generic_role = {"id": sdk_client_fs.role(name=BusinessRoles.ViewADCMSettings.value.role_name).id}
+    with allure.step("Assert that create role with different hierarchy is not possible"), pytest.raises(ErrorMessage):
         sdk_client_fs.role_create(
             name=random_string(),
             display_name=random_string(),
@@ -157,9 +133,7 @@ def test_role_with_two_hierarchy_not_allowed(sdk_client_fs):
         display_name=random_string(),
         child=[application_role],
     )
-    with allure.step(
-        "Assert that update role to different hierarchy is not possible"
-    ), pytest.raises(ErrorMessage):
+    with allure.step("Assert that update role to different hierarchy is not possible"), pytest.raises(ErrorMessage):
         role.update(child=[application_role, infrastructure_role])
     with allure.step("Assert that cluster role can be mixed with not parametrized role"):
         sdk_client_fs.role_create(
@@ -180,9 +154,7 @@ def test_host_and_cluster_roles(sdk_client_fs):
     """
     Test that cluster and host roles is allowed to use together
     """
-    cluster_role = {
-        "id": sdk_client_fs.role(name=BusinessRoles.ViewClusterConfigurations.value.role_name).id
-    }
+    cluster_role = {"id": sdk_client_fs.role(name=BusinessRoles.ViewClusterConfigurations.value.role_name).id}
     host_role = {"id": sdk_client_fs.role(name=BusinessRoles.RemoveHosts.value.role_name).id}
     with allure.step("Assert that create role with cluster and host parametrization is allowed"):
         sdk_client_fs.role_create(

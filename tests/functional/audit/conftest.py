@@ -74,9 +74,7 @@ def parametrize_audit_scenario_parsing(scenario_name: str, context: Optional[dic
     Helper to use as decorator to provide scenario name and context for parametrizing "parsed_audit_log"
     """
     context = {} if context is None else context
-    return pytest.mark.parametrize(
-        "parsed_audit_log", [ScenarioArg(scenario_name, context)], indirect=True
-    )
+    return pytest.mark.parametrize("parsed_audit_log", [ScenarioArg(scenario_name, context)], indirect=True)
 
 
 @pytest.fixture()
@@ -91,9 +89,7 @@ def build_policy(
 ) -> Callable[[BusinessRoles, Union[ClusterRelatedObject, ProviderRelatedObject, ADCM]], Policy]:
     """Prepare "policy builder" that grants some permission to (already created) new user"""
     user_id = new_user_client.me().id
-    return lambda role, obj: create_policy(
-        sdk_client_fs, role, [obj], [sdk_client_fs.user(id=user_id)], []
-    )
+    return lambda role, obj: create_policy(sdk_client_fs, role, [obj], [sdk_client_fs.user(id=user_id)], [])
 
 
 # CREATE/DELETE utilities
@@ -255,17 +251,15 @@ def check_succeed(response: requests.Response) -> requests.Response:
     allowed_codes = (200, 201, 204)
     assert (
         code := response.status_code
-    ) in allowed_codes, f"Request failed with code: {code}\nBody: {response.json() if not code >= 500 else response.text}"
+    ) in allowed_codes, (
+        f"Request failed with code: {code}\nBody: {response.json() if not code >= 500 else response.text}"
+    )
     return response
 
 
-def check_failed(
-    response: requests.Response, exact_code: Optional[int] = None
-) -> requests.Response:
+def check_failed(response: requests.Response, exact_code: Optional[int] = None) -> requests.Response:
     """Check that request has failed"""
-    with allure.step(
-        f'Expecting request to fail with code {exact_code if exact_code else ">=400 and < 500"}'
-    ):
+    with allure.step(f'Expecting request to fail with code {exact_code if exact_code else ">=400 and < 500"}'):
         assert response.status_code < 500, "Request should not failed with 500"
         if exact_code:
             assert (

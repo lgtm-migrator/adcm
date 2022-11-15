@@ -143,8 +143,7 @@ class ADCMModel(models.Model):
         if len(values) != len(cls._meta.concrete_fields):
             values_iter = iter(values)
             values = [
-                next(values_iter) if f.attname in field_names else models.DEFERRED
-                for f in cls._meta.concrete_fields
+                next(values_iter) if f.attname in field_names else models.DEFERRED for f in cls._meta.concrete_fields
             ]
         instance = cls(*values)
         instance._state.adding = False
@@ -201,9 +200,7 @@ class ProductCategory(ADCMModel):
     def re_collect(cls) -> None:
         """Re-sync category list with installed bundles"""
         for bundle in Bundle.objects.filter(category=None).all():
-            prototype = Prototype.objects.filter(
-                bundle=bundle, name=bundle.name, type=ObjectType.Cluster
-            ).first()
+            prototype = Prototype.objects.filter(bundle=bundle, name=bundle.name, type=ObjectType.Cluster).first()
             if prototype:
                 value = prototype.display_name or bundle.name
                 bundle.category, _ = cls.objects.get_or_create(value=value)
@@ -803,9 +800,7 @@ class GroupConfig(ADCMModel):
     name = models.CharField(max_length=30, validators=[validate_line_break_character])
     description = models.TextField(blank=True)
     hosts = models.ManyToManyField(Host, blank=True, related_name="group_config")
-    config = models.OneToOneField(
-        ObjectConfig, on_delete=models.CASCADE, null=True, related_name="group_config"
-    )
+    config = models.OneToOneField(ObjectConfig, on_delete=models.CASCADE, null=True, related_name="group_config")
 
     __error_code__ = "GROUP_CONFIG_NOT_FOUND"
 
@@ -817,9 +812,9 @@ class GroupConfig(ADCMModel):
     def get_config_spec(self):
         """Return spec for config"""
         spec = {}
-        for field in PrototypeConfig.objects.filter(
-            prototype=self.object.prototype, action__isnull=True
-        ).order_by("id"):
+        for field in PrototypeConfig.objects.filter(prototype=self.object.prototype, action__isnull=True).order_by(
+            "id"
+        ):
             group_customization = field.group_customization
             if group_customization is None:
                 group_customization = self.object.prototype.config_group_customization
@@ -857,9 +852,7 @@ class GroupConfig(ADCMModel):
                     value = False
                 group_keys.setdefault(k, {"value": value, "fields": {}})
                 custom_group_keys.setdefault(k, {"value": v["group_customization"], "fields": {}})
-                self.create_group_keys(
-                    v["fields"], group_keys[k]["fields"], custom_group_keys[k]["fields"]
-                )
+                self.create_group_keys(v["fields"], group_keys[k]["fields"], custom_group_keys[k]["fields"])
             else:
                 group_keys[k] = False
                 custom_group_keys[k] = v["group_customization"]
@@ -902,9 +895,7 @@ class GroupConfig(ADCMModel):
         for k, v in group_keys.items():
             if isinstance(v, Mapping):
                 config.setdefault(k, {})
-                self.merge_config(
-                    object_config[k], group_config[k], group_keys[k]["fields"], config[k]
-                )
+                self.merge_config(object_config[k], group_config[k], group_keys[k]["fields"], config[k])
             else:
                 if v and k in group_config:
                     config[k] = group_config[k]
@@ -954,13 +945,9 @@ class GroupConfig(ADCMModel):
         if isinstance(self.object, (Cluster, HostProvider)):
             hosts = self.object.host_set.all()
         elif isinstance(self.object, ClusterObject):
-            hosts = Host.objects.filter(
-                cluster=self.object.cluster, hostcomponent__service=self.object
-            ).distinct()
+            hosts = Host.objects.filter(cluster=self.object.cluster, hostcomponent__service=self.object).distinct()
         elif isinstance(self.object, ServiceComponent):
-            hosts = Host.objects.filter(
-                cluster=self.object.cluster, hostcomponent__component=self.object
-            ).distinct()
+            hosts = Host.objects.filter(cluster=self.object.cluster, hostcomponent__component=self.object).distinct()
         else:
             raise AdcmEx("GROUP_CONFIG_TYPE_ERROR")
         return hosts.exclude(group_config__in=self.object.group_config.all())
@@ -1275,9 +1262,7 @@ class PrototypeImport(ADCMModel):
 class ClusterBind(ADCMModel):
     cluster = models.ForeignKey(Cluster, on_delete=models.CASCADE)
     service = models.ForeignKey(ClusterObject, on_delete=models.CASCADE, null=True, default=None)
-    source_cluster = models.ForeignKey(
-        Cluster, related_name="source_cluster", on_delete=models.CASCADE
-    )
+    source_cluster = models.ForeignKey(Cluster, related_name="source_cluster", on_delete=models.CASCADE)
     source_service = models.ForeignKey(
         ClusterObject,
         related_name="source_service",
@@ -1445,9 +1430,7 @@ class LogStorage(ADCMModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["job"], condition=models.Q(type="check"), name="unique_check_job"
-            )
+            models.UniqueConstraint(fields=["job"], condition=models.Q(type="check"), name="unique_check_job")
         ]
 
 

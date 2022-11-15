@@ -73,11 +73,7 @@ class ActionList(PermissionListMixin, GenericUIView):
     permission_required = ['cm.view_action']
 
     def _get_host_actions(self, host: Host) -> set:
-        actions = set(
-            filter_actions(
-                host, self.filter_queryset(self.get_queryset().filter(prototype=host.prototype))
-            )
-        )
+        actions = set(filter_actions(host, self.filter_queryset(self.get_queryset().filter(prototype=host.prototype))))
         hcs = HostComponent.objects.filter(host_id=host.id)
         if hcs:
             for hc in hcs:
@@ -89,9 +85,7 @@ class ActionList(PermissionListMixin, GenericUIView):
                         filter_actions(
                             connect_obj,
                             self.filter_queryset(
-                                self.get_queryset().filter(
-                                    prototype=connect_obj.prototype, host_action=True
-                                )
+                                self.get_queryset().filter(prototype=connect_obj.prototype, host_action=True)
                             ),
                         )
                     )
@@ -101,9 +95,7 @@ class ActionList(PermissionListMixin, GenericUIView):
                     filter_actions(
                         host.cluster,
                         self.filter_queryset(
-                            self.get_queryset().filter(
-                                prototype=host.cluster.prototype, host_action=True
-                            )
+                            self.get_queryset().filter(prototype=host.cluster.prototype, host_action=True)
                         ),
                     )
                 )
@@ -127,9 +119,7 @@ class ActionList(PermissionListMixin, GenericUIView):
             obj, _ = get_obj(**kwargs)
             actions = filter_actions(
                 obj,
-                self.filter_queryset(
-                    self.get_queryset().filter(prototype=obj.prototype, host_action=False)
-                ),
+                self.filter_queryset(self.get_queryset().filter(prototype=obj.prototype, host_action=False)),
             )
             objects = {obj.prototype.type: obj}
 
@@ -159,9 +149,7 @@ class ActionDetail(PermissionListMixin, GenericUIView):
         object_type, object_id, action_id = get_object_type_id(**kwargs)
         model = get_model_by_type(object_type)
         ct = ContentType.objects.get_for_model(model)
-        obj = get_object_for_user(
-            request.user, f'{ct.app_label}.view_{ct.model}', model, id=object_id
-        )
+        obj = get_object_for_user(request.user, f'{ct.app_label}.view_{ct.model}', model, id=object_id)
         # TODO: we can access not only the actions of this object
         action = get_object_for_user(
             request.user,
@@ -174,9 +162,7 @@ class ActionDetail(PermissionListMixin, GenericUIView):
             objects = {'host': obj}
         else:
             objects = {action.prototype.type: obj}
-        serializer = self.get_serializer(
-            action, context={'request': request, 'objects': objects, 'obj': obj}
-        )
+        serializer = self.get_serializer(action, context={'request': request, 'objects': objects, 'obj': obj})
 
         return Response(serializer.data)
 
@@ -227,9 +213,7 @@ class RunTask(GenericUIView):
         object_type, object_id, action_id = get_object_type_id(**kwargs)
         model = get_model_by_type(object_type)
         ct = ContentType.objects.get_for_model(model)
-        obj = get_object_for_user(
-            request.user, f'{ct.app_label}.view_{ct.model}', model, id=object_id
-        )
+        obj = get_object_for_user(request.user, f'{ct.app_label}.view_{ct.model}', model, id=object_id)
         action = get_object_for_user(request.user, 'cm.view_action', Action, id=action_id)
         self.check_action_perm(action, obj)
         self.check_disabling_cause(action, obj)

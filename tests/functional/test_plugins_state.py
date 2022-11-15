@@ -129,9 +129,7 @@ def test_host_from_provider(two_providers: Tuple[Provider, Provider], sdk_client
     with check_objects_state_changed(sdk_client_fs, {host}), allure.step(
         f'Set state of {host_name} with action from {provider_name}'
     ):
-        run_provider_action_and_assert_result(
-            provider, 'set_host_from_provider', config={'host_id': host.id}
-        )
+        run_provider_action_and_assert_result(provider, 'set_host_from_provider', config={'host_id': host.id})
 
 
 # pylint: disable-next=possibly-unused-variable
@@ -187,9 +185,7 @@ def test_state_set_from_host_actions(
     name = "first"
     with allure.step('Bind component to host'):
         host = two_providers[0].host_list()[0]
-        component = (service := (cluster := two_clusters[0]).service(name=name)).component(
-            name=name
-        )
+        component = (service := (cluster := two_clusters[0]).service(name=name)).component(name=name)
         cluster.host_add(host)
         cluster.hostcomponent_set((host, component))
     affected_objects = set()

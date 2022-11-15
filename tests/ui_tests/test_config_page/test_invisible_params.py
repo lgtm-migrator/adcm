@@ -58,9 +58,7 @@ def test_group_configs_fields_invisible_true(sdk_client_fs: ADCMClient, app_fs):
             {**combination[0]["config"][0], "name": f"{combination[0]['config'][0]['name']}_{i}"}
             for i, combination in enumerate(res)
         ]
-        _, _, path = prepare_group_config(
-            ([{**res[0][0], "config": full_config}], None), enforce_file=True
-        )
+        _, _, path = prepare_group_config(([{**res[0][0], "config": full_config}], None), enforce_file=True)
 
     cluster, _ = prepare_cluster_and_open_config_page(sdk_client_fs, path, app_fs)
     cluster_group_config = cluster.group_config_create(name="Test group")
@@ -101,9 +99,7 @@ def test_configs_fields_invisible_true(sdk_client_fs: ADCMClient, app_fs):
             {**combination[0]["config"][0], "name": f"{combination[0]['config'][0]['name']}_{i}"}
             for i, combination in enumerate(res)
         ]
-        _, _, path = prepare_config(
-            ([{**res[0][0], "config": full_config}], None), enforce_file=True
-        )
+        _, _, path = prepare_config(([{**res[0][0], "config": full_config}], None), enforce_file=True)
 
     _, cluster_config_page = prepare_cluster_and_open_config_page(sdk_client_fs, path, app_fs)
     cluster_config_page.config.check_no_rows_or_groups_on_page()

@@ -89,9 +89,7 @@ class TestReapplyTriggers:
         is_denied_to_user(admin_host, BusinessRoles.EditHostConfigurations)
         is_allowed(user_another_host, BusinessRoles.EditHostConfigurations)
 
-    def test_add_remove_service_from_cluster(
-        self, clients, is_denied_to_user, prepare_objects, user
-    ):
+    def test_add_remove_service_from_cluster(self, clients, is_denied_to_user, prepare_objects, user):
         """Test that policies are applied/removed after service add/remove after the policy was assigned at first"""
         admin_cluster, admin_service, *_ = prepare_objects
 
@@ -121,9 +119,7 @@ class TestReapplyTriggers:
         admin_cluster.host_add(admin_host)
         admin_cluster.host_add(admin_another_host)
 
-        def _check_host_configs(
-            allowed_on: Collection[Host] = (), denied_on: Collection[Host] = ()
-        ):
+        def _check_host_configs(allowed_on: Collection[Host] = (), denied_on: Collection[Host] = ()):
             with new_client_instance(*TEST_USER_CREDENTIALS, clients.user.url) as user_client:
                 for obj in as_user_objects(user_client, *allowed_on):
                     is_allowed(obj, BusinessRoles.ViewHostConfigurations)
@@ -131,9 +127,7 @@ class TestReapplyTriggers:
                 for obj in denied_on:
                     is_denied(obj, BusinessRoles.ViewHostConfigurations, client=user_client)
 
-        with allure.step(
-            "Check configs of hosts aren't allowed to view before Service Admin is granted to user"
-        ):
+        with allure.step("Check configs of hosts aren't allowed to view before Service Admin is granted to user"):
             _check_host_configs([], [admin_host, admin_another_host])
 
         self.grant_role(clients.admin, user, RbacRoles.ServiceAdministrator, admin_service)
@@ -142,9 +136,7 @@ class TestReapplyTriggers:
             _check_host_configs([], [admin_host, admin_another_host])
 
         with allure.step(f'Assign component of test_service on host {admin_host.fqdn}'):
-            admin_cluster.hostcomponent_set(
-                (admin_host, admin_service.component(name='test_component'))
-            )
+            admin_cluster.hostcomponent_set((admin_host, admin_service.component(name='test_component')))
             host, *_ = as_user_objects(clients.user, admin_host)
             _check_host_configs([host], [admin_another_host])
 
@@ -166,9 +158,7 @@ class TestReapplyTriggers:
             another_host, *_ = as_user_objects(clients.user, admin_another_host)
             _check_host_configs([another_host], [host])
 
-    def grant_role(
-        self, client: ADCMClient, user: User, role: RbacRoles, *objects: AnyADCMObject
-    ) -> Policy:
+    def grant_role(self, client: ADCMClient, user: User, role: RbacRoles, *objects: AnyADCMObject) -> Policy:
         """Grant RBAC default role to a user"""
         with allure.step(f'Grant role "{role.value}" to user {user.username}'):
             return client.policy_create(
@@ -178,16 +168,12 @@ class TestReapplyTriggers:
                 user=[user],
             )
 
-    def test_add_remove_user_from_group_and_policy(
-        self, clients, is_denied_to_user, prepare_objects, user
-    ):
+    def test_add_remove_user_from_group_and_policy(self, clients, is_denied_to_user, prepare_objects, user):
         """Test that user added/removed to the policy directly or as a part of a group"""
 
         admin_cluster, admin_service, admin_component, *_ = prepare_objects
 
-        with allure.step(
-            "Check that edit cluster, service and component configurations are forbidden for user"
-        ):
+        with allure.step("Check that edit cluster, service and component configurations are forbidden for user"):
             is_denied_to_user(admin_cluster, BusinessRoles.EditClusterConfigurations)
             is_denied_to_user(admin_service, BusinessRoles.EditServiceConfigurations)
             is_denied_to_user(admin_component, BusinessRoles.EditComponentConfigurations)
@@ -205,40 +191,30 @@ class TestReapplyTriggers:
         user_cluster, user_service, user_component = as_user_objects(
             clients.user, admin_cluster, admin_service, admin_component
         )
-        with allure.step(
-            "Check that edit cluster, service and component configurations are allowed for user"
-        ):
+        with allure.step("Check that edit cluster, service and component configurations are allowed for user"):
             is_allowed(user_cluster, BusinessRoles.EditClusterConfigurations)
             is_allowed(user_service, BusinessRoles.EditServiceConfigurations)
             is_allowed(user_component, BusinessRoles.EditComponentConfigurations)
         with allure.step('Change group: delete user'):
             test_group.update(user=[])
-        with allure.step(
-            "Check that edit cluster, service and component configurations are forbidden for user"
-        ):
+        with allure.step("Check that edit cluster, service and component configurations are forbidden for user"):
             is_denied_to_user(admin_cluster, BusinessRoles.EditClusterConfigurations)
             is_denied_to_user(admin_service, BusinessRoles.EditServiceConfigurations)
             is_denied_to_user(admin_component, BusinessRoles.EditComponentConfigurations)
         with allure.step('Change test policy: add user'):
             test_policy.update(user=[{"id": user.id}])
-        with allure.step(
-            "Check that edit cluster, service and component configurations are allowed for user"
-        ):
+        with allure.step("Check that edit cluster, service and component configurations are allowed for user"):
             is_allowed(user_cluster, BusinessRoles.EditClusterConfigurations)
             is_allowed(user_service, BusinessRoles.EditServiceConfigurations)
             is_allowed(user_component, BusinessRoles.EditComponentConfigurations)
         with allure.step('Change test policy: delete user'):
             test_policy.update(user=[])
-        with allure.step(
-            "Check that edit cluster, service and component configurations are forbidden for user"
-        ):
+        with allure.step("Check that edit cluster, service and component configurations are forbidden for user"):
             is_denied_to_user(admin_cluster, BusinessRoles.EditClusterConfigurations)
             is_denied_to_user(admin_service, BusinessRoles.EditServiceConfigurations)
             is_denied_to_user(admin_component, BusinessRoles.EditComponentConfigurations)
 
-    def test_add_remove_cluster_from_policy(
-        self, clients, is_denied_to_user, prepare_objects, user
-    ):
+    def test_add_remove_cluster_from_policy(self, clients, is_denied_to_user, prepare_objects, user):
         """Test that policies are applied after cluster add/remove to the policy"""
 
         admin_cluster, *_ = prepare_objects
@@ -262,9 +238,7 @@ class TestReapplyTriggers:
                 objects=[first_cluster],
             )
             clients.user.reread()
-        with allure.step(
-            f"Check that {role_to_check.name} is allowed for user for first cluster and denied for other"
-        ):
+        with allure.step(f"Check that {role_to_check.name} is allowed for user for first cluster and denied for other"):
             is_allowed(as_user_objects(clients.user, first_cluster)[0], role_to_check)
             is_denied_to_user(admin_cluster, role_to_check)
             is_denied_to_user(second_cluster, role_to_check)
@@ -277,9 +251,7 @@ class TestReapplyTriggers:
             is_denied_to_user(admin_cluster, role_to_check)
             is_denied_to_user(first_cluster, role_to_check)
 
-    def test_add_remove_service_from_policy(
-        self, clients, is_denied_to_user, prepare_objects, user
-    ):
+    def test_add_remove_service_from_policy(self, clients, is_denied_to_user, prepare_objects, user):
         """Test that policies are applied after service add/remove to the policy"""
 
         _, admin_service, *_ = prepare_objects
@@ -303,9 +275,7 @@ class TestReapplyTriggers:
             )
             clients.user.reread()
 
-        with allure.step(
-            f"Check that {role_to_check.name} is allowed for user for first service and denied for other"
-        ):
+        with allure.step(f"Check that {role_to_check.name} is allowed for user for first service and denied for other"):
             is_allowed(as_user_objects(clients.user, first_service)[0], role_to_check)
             is_denied_to_user(admin_service, role_to_check)
             is_denied_to_user(second_service, role_to_check)
@@ -318,9 +288,7 @@ class TestReapplyTriggers:
             is_denied_to_user(admin_service, role_to_check)
             is_denied_to_user(first_service, role_to_check)
 
-    def test_add_remove_provider_from_policy(
-        self, clients, is_denied_to_user, prepare_objects, user
-    ):
+    def test_add_remove_provider_from_policy(self, clients, is_denied_to_user, prepare_objects, user):
         """Test that policies are applied after provider add/remove to the policy"""
 
         _, _, _, admin_provider, _ = prepare_objects
@@ -365,9 +333,7 @@ class TestMultiplePolicyReapply:
     """
 
     @pytest.fixture()
-    def objects(
-        self, cluster_bundle, provider_bundle
-    ) -> Tuple[Cluster, Cluster, Service, Service, Provider]:
+    def objects(self, cluster_bundle, provider_bundle) -> Tuple[Cluster, Cluster, Service, Service, Provider]:
         """Prepare various objects for multiple policies test"""
         first_cluster = cluster_bundle.cluster_create(name='Test Cluster 1')
         second_cluster = cluster_bundle.cluster_create(name='Test Cluster 2')
@@ -408,9 +374,7 @@ class TestMultiplePolicyReapply:
         self.check_edit_is_denied(clients.user, second_cluster, test_service)
 
     @allure.step('Grant policies on Cluster #1, service of Cluster #2 and Provider #1')
-    def grant_policies_to_user(
-        self, admin_client, cluster_service_provider, admin_roles, user
-    ) -> List[Policy]:
+    def grant_policies_to_user(self, admin_client, cluster_service_provider, admin_roles, user) -> List[Policy]:
         """Grant policies to user (different policy for each role)"""
         return [
             admin_client.policy_create(
@@ -464,9 +428,7 @@ def check_role_wo_parametrization(clients, user, cluster_bundle, provider_bundle
 
 def check_role_with_parametrization(clients, user, cluster_bundle: Bundle, provider_bundle: Bundle):
     """Check that update of role with parametrization leads to correct permissions update"""
-    cluster, provider = cluster_bundle.cluster_create(
-        'clusteraster'
-    ), provider_bundle.provider_create('provideraider')
+    cluster, provider = cluster_bundle.cluster_create('clusteraster'), provider_bundle.provider_create('provideraider')
     role_name = "Role with parametrization"
 
     role = clients.admin.role_create(
@@ -474,26 +436,18 @@ def check_role_with_parametrization(clients, user, cluster_bundle: Bundle, provi
         display_name=role_name,
         child=_form_children(clients.admin, BusinessRoles.EditClusterConfigurations),
     )
-    with allure.step(
-        'Create policy with role (Edit cluster config) and expect cluster config is editable'
-    ):
-        policy = clients.admin.policy_create(
-            name="User policy", role=role, objects=[cluster], user=[user]
-        )
+    with allure.step('Create policy with role (Edit cluster config) and expect cluster config is editable'):
+        policy = clients.admin.policy_create(name="User policy", role=role, objects=[cluster], user=[user])
         with new_client_instance(*TEST_USER_CREDENTIALS, clients.user.url) as user_client:
             user_cluster, *_ = as_user_objects(user_client, cluster)
             is_allowed(user_cluster, BusinessRoles.EditClusterConfigurations)
             is_denied(provider, BusinessRoles.EditProviderConfigurations, client=user_client)
-    with allure.step(
-        'Change role child to Edit provider config and expect both cluster and provider non editable'
-    ):
+    with allure.step('Change role child to Edit provider config and expect both cluster and provider non editable'):
         role.update(child=_form_children(clients.admin, BusinessRoles.EditProviderConfigurations))
         with new_client_instance(*TEST_USER_CREDENTIALS, clients.user.url) as user_client:
             is_denied(cluster, BusinessRoles.EditClusterConfigurations, client=user_client)
             is_denied(provider, BusinessRoles.EditProviderConfigurations, client=user_client)
-    with allure.step(
-        'Change policy object parametrization to provider and expect provider to be editable'
-    ):
+    with allure.step('Change policy object parametrization to provider and expect provider to be editable'):
         policy.update(object=[{'type': 'provider', 'id': provider.id}])
         with new_client_instance(*TEST_USER_CREDENTIALS, clients.user.url) as user_client:
             user_provider, *_ = as_user_objects(user_client, provider)
@@ -503,8 +457,6 @@ def check_role_with_parametrization(clients, user, cluster_bundle: Bundle, provi
     role.delete()
 
 
-def _form_children(
-    admin_client: ADCMClient, *business_roles: BusinessRoles
-) -> List[Dict[str, int]]:
+def _form_children(admin_client: ADCMClient, *business_roles: BusinessRoles) -> List[Dict[str, int]]:
     """Create list of children for role based on business roles"""
     return [{"id": admin_client.role(name=role.value.role_name).id} for role in business_roles]

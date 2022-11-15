@@ -29,9 +29,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     'id',
-                    models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
-                    ),
+                    models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
                 ),
                 ('name', models.CharField(max_length=160)),
                 ('display_name', models.CharField(blank=True, max_length=160)),
@@ -56,9 +54,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     'id',
-                    models.AutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
-                    ),
+                    models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
                 ),
                 ('name', models.CharField(max_length=160)),
                 ('display_name', models.CharField(blank=True, max_length=160)),
@@ -74,9 +70,7 @@ class Migration(migrations.Migration):
                 ('params', models.TextField(blank=True)),
                 (
                     'action',
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to='cm.StageAction'
-                    ),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='cm.StageAction'),
                 ),
             ],
         ),

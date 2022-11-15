@@ -128,9 +128,7 @@ class ADCMWebsocket:
     async def expect_message(self, timeout=None) -> WSMessageData:
         """Get next message or raise `AssertionError` if it won't come on time"""
         timeout = timeout or self._default_timeout
-        with catch_failed(
-            asyncio.TimeoutError, f'Message was failed to be received in {timeout} seconds'
-        ):
+        with catch_failed(asyncio.TimeoutError, f'Message was failed to be received in {timeout} seconds'):
             return await self.get_message(timeout)
 
     @allure.step("Ensure there won't come any WS message for a {timeout} seconds")
@@ -165,9 +163,7 @@ class ADCMWebsocket:
                  then check will be passed (ok).
         """
         messages_to_check = (
-            messages
-            if messages is not None
-            else tuple(msg[0] for msg in sorted(self._messages, key=lambda x: x[0]))
+            messages if messages is not None else tuple(msg[0] for msg in sorted(self._messages, key=lambda x: x[0]))
         )
         if check_order:
             self._check_messages_ordered_presence(tuple(expected), tuple(messages_to_check))
@@ -283,9 +279,7 @@ class ADCMWebsocket:
         )
         raise AssertionError('WS message should not match.\nCheck attachments for more details.')
 
-    def _check_messages_ordered_presence(
-        self, expected: Tuple[EventMessage], messages: Tuple[WSMessageData]
-    ):
+    def _check_messages_ordered_presence(self, expected: Tuple[EventMessage], messages: Tuple[WSMessageData]):
         start_ind = 0
         for ind, expected_message in enumerate(expected):
             for i, presented_message in enumerate(messages[start_ind:]):
@@ -293,13 +287,9 @@ class ADCMWebsocket:
                     start_ind = i + 1
                     break
             else:
-                raise AssertionError(
-                    f'Message at #{ind} position was not found: {expected_message}'
-                )
+                raise AssertionError(f'Message at #{ind} position was not found: {expected_message}')
 
-    def _check_messages_unordered_presence(
-        self, expected: Tuple[EventMessage], messages: Tuple[WSMessageData]
-    ):
+    def _check_messages_unordered_presence(self, expected: Tuple[EventMessage], messages: Tuple[WSMessageData]):
         missing_messages = []
         for expected_message in expected:
             for presented_message in messages:
@@ -314,12 +304,8 @@ class ADCMWebsocket:
             name='Missing WS messages',
             attachment_type=allure.attachment_type.TEXT,
         )
-        allure.attach(
-            pformat(messages), name='Searched messages', attachment_type=allure.attachment_type.TEXT
-        )
-        raise AssertionError(
-            'Some of the expected WS messages were missing, check attachments for more details'
-        )
+        allure.attach(pformat(messages), name='Searched messages', attachment_type=allure.attachment_type.TEXT)
+        raise AssertionError('Some of the expected WS messages were missing, check attachments for more details')
 
     async def _get_until_error(self, acc: List[WSMessageData]) -> List[WSMessageData]:
         try:

@@ -74,9 +74,7 @@ class ConfigFieldsManipulator(BasePageObject):
             key_input = self.find_child(item, CommonConfigMenu.ConfigRow.map_input_key)
             if not key_input.get_attribute('value'):
                 return item
-        raise ValueError(
-            'All items in map has "value" in key input field or no items are presented'
-        )
+        raise ValueError('All items in map has "value" in key input field or no items are presented')
 
     @contextmanager
     def _with_items_added(self, row: WebElement):

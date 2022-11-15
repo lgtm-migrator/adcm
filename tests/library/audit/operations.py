@@ -52,11 +52,7 @@ class NamedOperation(NamedTuple):
                 'Please check definition of an operation.'
             )
         try:
-            type_ = (
-                object_type.value.capitalize()
-                if object_type != ObjectType.ADCM
-                else object_type.value.upper()
-            )
+            type_ = object_type.value.capitalize() if object_type != ObjectType.ADCM else object_type.value.upper()
             return self.naming_template.format(type_=type_, **format_args).strip()
         except KeyError as e:
             raise KeyError(
@@ -112,26 +108,18 @@ _NAMED_OPERATIONS: Dict[Union[str, Tuple[OperationResult, str]], NamedOperation]
             ),
         ),
         # Imports / Binds
-        NamedOperation(
-            'change-imports', '{type_} import updated', (ObjectType.CLUSTER, ObjectType.SERVICE)
-        ),
+        NamedOperation('change-imports', '{type_} import updated', (ObjectType.CLUSTER, ObjectType.SERVICE)),
         # ! note that name in (un-)bind operations is like "<Export cluster name>/<Export service display name>"
         NamedOperation('bind', '{type_} bound to {name}', (ObjectType.CLUSTER, ObjectType.SERVICE)),
         NamedOperation('unbind', '{name} unbound', (ObjectType.CLUSTER, ObjectType.SERVICE)),
         # Actions
-        NamedOperation(
-            'launch-action', '{name} action launched', _OBJECTS_WITH_ACTIONS_AND_CONFIGS
-        ),
-        NamedOperation(
-            'complete-action', '{name} action completed', _OBJECTS_WITH_ACTIONS_AND_CONFIGS
-        ),
+        NamedOperation('launch-action', '{name} action launched', _OBJECTS_WITH_ACTIONS_AND_CONFIGS),
+        NamedOperation('complete-action', '{name} action completed', _OBJECTS_WITH_ACTIONS_AND_CONFIGS),
         # Tasks
         NamedOperation('cancel-task', '{name} cancelled', _OBJECTS_WITH_ACTIONS_AND_CONFIGS),
         NamedOperation('restart-task', '{name} restarted', _OBJECTS_WITH_ACTIONS_AND_CONFIGS),
         # object will be nullified
-        NamedOperation(
-            'restart-not-existing-task', '{name} restarted', _OBJECTS_WITH_ACTIONS_AND_CONFIGS
-        ),
+        NamedOperation('restart-not-existing-task', '{name} restarted', _OBJECTS_WITH_ACTIONS_AND_CONFIGS),
         # Background tasks
         NamedOperation('launch-background-task', '"{name}" job launched', (ObjectType.ADCM,)),
         NamedOperation('complete-background-task', '"{name}" job completed', (ObjectType.ADCM,)),
@@ -157,12 +145,8 @@ _NAMED_OPERATIONS: Dict[Union[str, Tuple[OperationResult, str]], NamedOperation]
             _OBJECTS_WITH_CONFIG_GROUPS,
         ),
         # Upgrades
-        NamedOperation(
-            'do-upgrade', 'Upgraded to {name}', (ObjectType.CLUSTER, ObjectType.PROVIDER)
-        ),
-        NamedOperation(
-            'launch-upgrade', '{name} upgrade launched', (ObjectType.CLUSTER, ObjectType.PROVIDER)
-        ),
+        NamedOperation('do-upgrade', 'Upgraded to {name}', (ObjectType.CLUSTER, ObjectType.PROVIDER)),
+        NamedOperation('launch-upgrade', '{name} upgrade launched', (ObjectType.CLUSTER, ObjectType.PROVIDER)),
         NamedOperation(
             'complete-upgrade',
             '{name} upgrade completed',
@@ -214,9 +198,7 @@ class Operation:
     username: Optional[str] = field(default=None, compare=False)
     # used for operation name building
     # the value from "how" section of operation description in scenario
-    code: Dict[Literal['operation', 'name'], str] = field(
-        default_factory=dict, compare=False, repr=False
-    )
+    code: Dict[Literal['operation', 'name'], str] = field(default_factory=dict, compare=False, repr=False)
 
     def __post_init__(self):
         self.operation_name = self._detect_operation_name()
@@ -225,9 +207,7 @@ class Operation:
 
     def is_equal_to(self, operation_object: AuditOperation) -> bool:
         """Compare this operation to an API audit operation object"""
-        for field_name in (
-            f.name for f in fields(self) if f.name not in self.EXCLUDED_FROM_COMPARISON
-        ):
+        for field_name in (f.name for f in fields(self) if f.name not in self.EXCLUDED_FROM_COMPARISON):
             if getattr(self, field_name) != getattr(operation_object, field_name):
                 return False
         return True
@@ -368,8 +348,7 @@ def _check_all_users_are_presented(usernames, username_id_map):
         return
     raise RuntimeError(
         'Not all users are presented in users map, so their ids cannot be figured out from username.\n',
-        'You should try to use `set_user_map` method.\n'
-        f'Missing usernames: {usernames.difference(registered_users)}',
+        'You should try to use `set_user_map` method.\n' f'Missing usernames: {usernames.difference(registered_users)}',
     )
 
 

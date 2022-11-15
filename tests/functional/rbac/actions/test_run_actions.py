@@ -60,14 +60,10 @@ def test_cluster_basic(clients, user, actions_cluster, simple_cluster):
     cluster = actions_cluster
     service = cluster.service(name='actions_service')
     component = service.component(name='simple_component')
-    all_objects = *get_all_cluster_tree_plain(actions_cluster), *get_all_cluster_tree_plain(
-        simple_cluster
-    )
+    all_objects = *get_all_cluster_tree_plain(actions_cluster), *get_all_cluster_tree_plain(simple_cluster)
 
     for adcm_object in (cluster, service, component):
-        _test_basic_action_run_permissions(
-            adcm_object, clients.admin, clients.user, user, all_objects
-        )
+        _test_basic_action_run_permissions(adcm_object, clients.admin, clients.user, user, all_objects)
 
 
 def test_provider_basic(clients, user, actions_provider, simple_provider):
@@ -82,9 +78,7 @@ def test_provider_basic(clients, user, actions_provider, simple_provider):
     all_objects = provider, host, simple_provider, simple_provider.host()
 
     for adcm_object in (provider, host):
-        _test_basic_action_run_permissions(
-            adcm_object, clients.admin, clients.user, user, all_objects
-        )
+        _test_basic_action_run_permissions(adcm_object, clients.admin, clients.user, user, all_objects)
 
 
 def _test_basic_action_run_permissions(adcm_object, admin_sdk, user_sdk, user, all_objects):
@@ -95,13 +89,9 @@ def _test_basic_action_run_permissions(adcm_object, admin_sdk, user_sdk, user, a
         business_role = action_business_role(adcm_object, DO_NOTHING_ACTION)
         policy = create_action_policy(admin_sdk, adcm_object, business_role, user=user)
 
-        check_single_action_is_allowed_on_object(
-            DO_NOTHING_ACTION, adcm_object, user_sdk, business_role
-        )
+        check_single_action_is_allowed_on_object(DO_NOTHING_ACTION, adcm_object, user_sdk, business_role)
 
-    with allure.step(
-        f"Check that granted permission doesn't allow running '{DO_NOTHING_ACTION}' on other objects"
-    ):
+    with allure.step(f"Check that granted permission doesn't allow running '{DO_NOTHING_ACTION}' on other objects"):
         for obj in filter(
             lambda x: not _is_the_same(x, adcm_object) and not _do_nothing_action_not_presented(x),
             all_objects,
@@ -129,12 +119,8 @@ def test_config_change_via_plugin(clients, user, actions_cluster, actions_provid
 
     provider, host = actions_provider, actions_provider.host()
 
-    _test_config_change(
-        cluster, (cluster,), user=user, user_client=clients.user, admin_client=clients.admin
-    )
-    _test_config_change(
-        service, (cluster, service), user=user, user_client=clients.user, admin_client=clients.admin
-    )
+    _test_config_change(cluster, (cluster,), user=user, user_client=clients.user, admin_client=clients.admin)
+    _test_config_change(service, (cluster, service), user=user, user_client=clients.user, admin_client=clients.admin)
     _test_config_change(
         component,
         (cluster, service, component),
@@ -143,12 +129,8 @@ def test_config_change_via_plugin(clients, user, actions_cluster, actions_provid
         admin_client=clients.admin,
     )
 
-    _test_config_change(
-        provider, (provider,), user=user, user_client=clients.user, admin_client=clients.admin
-    )
-    _test_config_change(
-        host, (provider, host), user=user, user_client=clients.user, admin_client=clients.admin
-    )
+    _test_config_change(provider, (provider,), user=user, user_client=clients.user, admin_client=clients.admin)
+    _test_config_change(host, (provider, host), user=user, user_client=clients.user, admin_client=clients.admin)
 
 
 def _test_config_change(
@@ -170,13 +152,8 @@ def _test_config_change(
     :param user: User instance to apply policy to.
     """
     owner_object_represent = get_object_represent(action_owner_object)
-    action_names = [
-        CHANGE_ACTION_NAME_TEMPLATE.format(object_type=obj.__class__.__name__)
-        for obj in objects_to_change
-    ]
-    business_roles = [
-        action_business_role(action_owner_object, action_name) for action_name in action_names
-    ]
+    action_names = [CHANGE_ACTION_NAME_TEMPLATE.format(object_type=obj.__class__.__name__) for obj in objects_to_change]
+    business_roles = [action_business_role(action_owner_object, action_name) for action_name in action_names]
     object_role_map = tuple(zip(objects_to_change, business_roles))
 
     with allure.step(
@@ -188,12 +165,8 @@ def _test_config_change(
         for admin_object, business_role in object_role_map:
             config_field_value = admin_object.config()[CONFIG_FIELD_TO_CHANGE]
             new_value = f'{config_field_value}_{admin_object.__class__.__name__}'
-            with allure.step(
-                f'Try to change {get_object_represent(admin_object)} from {owner_object_represent}'
-            ):
-                task = is_allowed(
-                    user_object, business_role, config={ACTION_CONFIG_ARGUMENT: new_value}
-                )
+            with allure.step(f'Try to change {get_object_represent(admin_object)} from {owner_object_represent}'):
+                task = is_allowed(user_object, business_role, config={ACTION_CONFIG_ARGUMENT: new_value})
                 assert task.wait() == 'success', 'Action should succeeded'
                 assert (
                     admin_object.config()[CONFIG_FIELD_TO_CHANGE] == new_value
@@ -202,9 +175,7 @@ def _test_config_change(
     with allure.step('Delete policy and check actions are denied and config stays the same'):
         delete_policy(policy)
         for admin_object, business_role in object_role_map:
-            with allure.step(
-                f'Try to change {get_object_represent(admin_object)} from {owner_object_represent}'
-            ):
+            with allure.step(f'Try to change {get_object_represent(admin_object)} from {owner_object_represent}'):
                 config_val_before = admin_object.config()[CONFIG_FIELD_TO_CHANGE]
                 is_denied(
                     action_owner_object,
@@ -259,9 +230,7 @@ def test_host_actions(clients, actions_cluster, actions_cluster_bundle, actions_
 
         host, *_ = as_user_objects(clients.user, first_host)
 
-    with allure.step(
-        'Run host actions from cluster, service and component on host in and out of cluster'
-    ):
+    with allure.step('Run host actions from cluster, service and component on host in and out of cluster'):
         for role in business_roles:
             is_allowed(host, role).wait()
             is_denied(second_host, role, client=clients.user)
@@ -274,9 +243,7 @@ def test_host_actions(clients, actions_cluster, actions_cluster_bundle, actions_
 
 
 @pytest.mark.extra_rbac()
-def test_action_on_host_available_with_cluster_parametrization(
-    clients, actions_cluster, actions_provider, user
-):
+def test_action_on_host_available_with_cluster_parametrization(clients, actions_cluster, actions_provider, user):
     """Test that host owned action is still available"""
     admin_host = actions_provider.host()
     admin_cluster = actions_cluster
@@ -285,9 +252,7 @@ def test_action_on_host_available_with_cluster_parametrization(
     cluster_business_role, host_business_role = action_business_role(
         admin_cluster, DO_NOTHING_ACTION
     ), action_business_role(admin_host, DO_NOTHING_ACTION)
-    policy = create_action_policy(
-        clients.admin, admin_cluster, cluster_business_role, host_business_role, user=user
-    )
+    policy = create_action_policy(clients.admin, admin_cluster, cluster_business_role, host_business_role, user=user)
 
     user_cluster, user_host = as_user_objects(clients.user, actions_cluster, admin_host)
 
@@ -411,9 +376,7 @@ def check_single_action_is_allowed_on_object(
     business_role = business_role or action_business_role(allowed_object, action_display_name)
 
     is_allowed(allowed_object, business_role).wait()
-    for action_name in (
-        a.display_name for a in adcm_object.action_list() if a.display_name != action_display_name
-    ):
+    for action_name in (a.display_name for a in adcm_object.action_list() if a.display_name != action_display_name):
         is_denied(adcm_object, action_business_role(adcm_object, action_name), client=user_sdk)
 
 

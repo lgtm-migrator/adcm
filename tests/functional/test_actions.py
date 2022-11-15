@@ -39,9 +39,7 @@ def check_verbosity(log, verbose_state):
     assert ("verbosity: 4" in log.content) is verbose_state
 
 
-@pytest.mark.parametrize(
-    "verbose_state", [True, False], ids=["verbose_state_true", "verbose_state_false"]
-)
+@pytest.mark.parametrize("verbose_state", [True, False], ids=["verbose_state_true", "verbose_state_false"])
 def test_check_verbose_option_of_action_run(sdk_client_fs: ADCMClient, verbose_state):
     """Test action run with verbose switch"""
     bundle_dir = utils.get_data_dir(__file__, "verbose_state")
@@ -244,16 +242,8 @@ def test_cluster_action_availability_at_state_new_dsl_special(cluster_special: C
     """
     Test that cluster host action is available on a specific cluster state (special availability cases)
     """
-    actions_in_objects_are_absent(
-        [(action, cluster_special) for action in UNAVAILABLE_ACTIONS_SPECIAL_CASE_CREATED]
-    )
-    actions_in_objects_are_present(
-        [(action, cluster_special) for action in AVAILABLE_ACTIONS_SPECIAL_CASE_CREATED]
-    )
+    actions_in_objects_are_absent([(action, cluster_special) for action in UNAVAILABLE_ACTIONS_SPECIAL_CASE_CREATED])
+    actions_in_objects_are_present([(action, cluster_special) for action in AVAILABLE_ACTIONS_SPECIAL_CASE_CREATED])
     run_cluster_action_and_assert_result(cluster_special, SWITCH_CLUSTER_STATE)
-    actions_in_objects_are_absent(
-        [(action, cluster_special) for action in UNAVAILABLE_ACTIONS_SPECIAL_CASE_INSTALLED]
-    )
-    actions_in_objects_are_present(
-        [(action, cluster_special) for action in AVAILABLE_ACTIONS_SPECIAL_CASE_INSTALLED]
-    )
+    actions_in_objects_are_absent([(action, cluster_special) for action in UNAVAILABLE_ACTIONS_SPECIAL_CASE_INSTALLED])
+    actions_in_objects_are_present([(action, cluster_special) for action in AVAILABLE_ACTIONS_SPECIAL_CASE_INSTALLED])

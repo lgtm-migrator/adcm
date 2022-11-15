@@ -98,25 +98,19 @@ def turn_mm_off(host: Host):
         host.maintenance_mode_set(MM_IS_OFF)
         assert (
             actual_mm := host.maintenance_mode
-        ) == MM_IS_OFF, (
-            f'Maintenance mode of host {host.fqdn} should be {MM_IS_OFF}, not {actual_mm}'
-        )
+        ) == MM_IS_OFF, f'Maintenance mode of host {host.fqdn} should be {MM_IS_OFF}, not {actual_mm}'
 
 
 def add_hosts_to_cluster(cluster: Cluster, hosts: Iterable[Host]):
     """Add hosts to cluster"""
-    with allure.step(
-        f'Add hosts to the cluster "{cluster.name}": {get_hosts_fqdn_representation(hosts)}'
-    ):
+    with allure.step(f'Add hosts to the cluster "{cluster.name}": {get_hosts_fqdn_representation(hosts)}'):
         for host in hosts:
             cluster.host_add(host)
 
 
 def remove_hosts_from_cluster(cluster: Cluster, hosts: Iterable[Host]):
     """Remove hosts from cluster"""
-    with allure.step(
-        f'Add hosts to the cluster "{cluster.name}": {get_hosts_fqdn_representation(hosts)}'
-    ):
+    with allure.step(f'Add hosts to the cluster "{cluster.name}": {get_hosts_fqdn_representation(hosts)}'):
         for host in hosts:
             cluster.host_delete(host)
 
@@ -129,9 +123,7 @@ def check_hosts_mm_is(maintenance_mode: MaintenanceModeOnHostValue, *hosts: Host
     ):
         for host in hosts:
             host.reread()
-        hosts_in_wrong_mode = tuple(
-            host for host in hosts if host.maintenance_mode != maintenance_mode
-        )
+        hosts_in_wrong_mode = tuple(host for host in hosts if host.maintenance_mode != maintenance_mode)
         if len(hosts_in_wrong_mode) == 0:
             return
         raise AssertionError(
@@ -142,17 +134,9 @@ def check_hosts_mm_is(maintenance_mode: MaintenanceModeOnHostValue, *hosts: Host
 
 def get_enabled_actions_names(adcm_object: AnyADCMObject) -> Set[str]:
     """Get actions that aren't disabled by maintenance mode"""
-    return {
-        action.name
-        for action in adcm_object.action_list()
-        if action.disabling_cause != DISABLING_CAUSE
-    }
+    return {action.name for action in adcm_object.action_list() if action.disabling_cause != DISABLING_CAUSE}
 
 
 def get_disabled_actions_names(adcm_object: AnyADCMObject) -> Set[str]:
     """Get actions disabled because of maintenance mode"""
-    return {
-        action.name
-        for action in adcm_object.action_list()
-        if action.disabling_cause == DISABLING_CAUSE
-    }
+    return {action.name for action in adcm_object.action_list() if action.disabling_cause == DISABLING_CAUSE}

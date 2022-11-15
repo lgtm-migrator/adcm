@@ -88,9 +88,7 @@ def check_roles_are_created(client, bundles: Tuple[Bundle, Bundle, Bundle, Bundl
         for cluster_bundle in (first_bundle, second_bundle):
             hidden_role_prefix = get_bundle_prefix_for_role_name(cluster_bundle)
             cluster = cluster_bundle.cluster_create(name=f'Test cluster {random_string(4)}')
-            check_cluster_actions_roles_are_created_correctly(
-                client, cluster, hidden_role_names, hidden_role_prefix
-            )
+            check_cluster_actions_roles_are_created_correctly(client, cluster, hidden_role_names, hidden_role_prefix)
             for service_name in SERVICE_NAMES:
                 check_service_and_components_roles_are_created_correctly(
                     client,

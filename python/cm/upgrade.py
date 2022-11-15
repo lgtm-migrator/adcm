@@ -57,9 +57,7 @@ def switch_services(upgrade: Upgrade, cluster: Cluster) -> None:
 
     for service in ClusterObject.objects.filter(cluster=cluster):
         try:
-            prototype = Prototype.objects.get(
-                bundle=upgrade.bundle, type='service', name=service.prototype.name
-            )
+            prototype = Prototype.objects.get(bundle=upgrade.bundle, type='service', name=service.prototype.name)
             switch_object(service, prototype)
             switch_components(cluster, service, prototype)
         except Prototype.DoesNotExist:
@@ -72,9 +70,7 @@ def switch_components(cluster: Cluster, co: ClusterObject, new_co_proto: Prototy
     """Upgrade components"""
     for sc in ServiceComponent.objects.filter(cluster=cluster, service=co):
         try:
-            new_sc_prototype = Prototype.objects.get(
-                parent=new_co_proto, type='component', name=sc.prototype.name
-            )
+            new_sc_prototype = Prototype.objects.get(parent=new_co_proto, type='component', name=sc.prototype.name)
             switch_object(sc, new_sc_prototype)
         except Prototype.DoesNotExist:
             sc.delete()
@@ -185,9 +181,7 @@ def check_upgrade_import(
     for cbind in ClusterBind.objects.filter(source_cluster=obj):
         export = get_export(cbind)
         try:
-            proto = Prototype.objects.get(
-                bundle=upgrade.bundle, name=export.prototype.name, type=export.prototype.type
-            )
+            proto = Prototype.objects.get(bundle=upgrade.bundle, name=export.prototype.name, type=export.prototype.type)
         except Prototype.DoesNotExist:
             msg = 'Upgrade does not have new version of {} required for export'
             return False, msg.format(proto_ref(export.prototype))
@@ -230,9 +224,7 @@ def switch_hc(obj: Cluster, upgrade: Upgrade) -> None:
 
     def find_component(component, proto):
         try:
-            return Prototype.objects.get(
-                parent=proto, type='component', name=component.prototype.name
-            )
+            return Prototype.objects.get(parent=proto, type='component', name=component.prototype.name)
         except Prototype.DoesNotExist:
             return None
 
@@ -348,15 +340,11 @@ def bundle_switch(obj: Union[Cluster, HostProvider], upgrade: Upgrade):
             if not old_proto.allow_maintenance_mode and new_proto.allow_maintenance_mode:
                 Host.objects.filter(cluster=obj).update(maintenance_mode=MaintenanceModeType.Off)
             elif old_proto.allow_maintenance_mode and not new_proto.allow_maintenance_mode:
-                Host.objects.filter(cluster=obj).update(
-                    maintenance_mode=MaintenanceModeType.Disabled
-                )
+                Host.objects.filter(cluster=obj).update(maintenance_mode=MaintenanceModeType.Disabled)
         elif obj.prototype.type == 'provider':
             switch_hosts(upgrade, obj)
         cm.issue.update_hierarchy_issues(obj)
         if isinstance(obj, Cluster):
             update_components_after_bundle_switch(obj, upgrade)
     logger.info('upgrade %s OK to version %s', obj_ref(obj), obj.prototype.version)
-    cm.status_api.post_event(
-        'upgrade', obj.prototype.type, obj.id, 'version', str(obj.prototype.version)
-    )
+    cm.status_api.post_event('upgrade', obj.prototype.type, obj.id, 'version', str(obj.prototype.version))

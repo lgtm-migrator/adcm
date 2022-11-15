@@ -136,9 +136,7 @@ def test_delete(
             check_failed(delete(endpoint, obj.id, headers=unauthorized_creds), 403)
         check_failed(delete(*from_provider, **provider_path_fmt, headers=unauthorized_creds), 403)
         for group_config in (o.group_config()[0] for o in (cluster, service, component)):
-            check_failed(
-                delete(Delete.GROUP_CONFIG, group_config.id, headers=unauthorized_creds), 403
-            )
+            check_failed(delete(Delete.GROUP_CONFIG, group_config.id, headers=unauthorized_creds), 403)
     with allure.step("Fail to delete objects"):
         for obj in (provider, host_1, *bundles):
             endpoint = _get_endpoint_by_object(obj)

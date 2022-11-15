@@ -44,14 +44,10 @@ def test_roles_creation_on_cluster_bundle_upload(sdk_client_fs, actions_cluster_
     hidden_role_prefix = get_bundle_prefix_for_role_name(bundle)
 
     with allure.step('Get info about roles created right after bundle upload'):
-        hidden_role_names = {
-            role.name for role in get_roles_of_type(RoleType.HIDDEN, sdk_client_fs)
-        }
+        hidden_role_names = {role.name for role in get_roles_of_type(RoleType.HIDDEN, sdk_client_fs)}
 
     cluster = bundle.cluster_create("Test Cluster")
-    check_cluster_actions_roles_are_created_correctly(
-        sdk_client_fs, cluster, hidden_role_names, hidden_role_prefix
-    )
+    check_cluster_actions_roles_are_created_correctly(sdk_client_fs, cluster, hidden_role_names, hidden_role_prefix)
     for service_name in ALL_SERVICE_NAMES:
         check_service_and_components_roles_are_created_correctly(
             sdk_client_fs,
@@ -73,9 +69,7 @@ def test_roles_creation_on_provider_bundle_upload(sdk_client_fs, actions_provide
     hidden_role_prefix = get_bundle_prefix_for_role_name(bundle)
 
     with allure.step('Get info about roles created right after bundle upload'):
-        hidden_role_names = {
-            role.name for role in get_roles_of_type(RoleType.HIDDEN, sdk_client_fs)
-        }
+        hidden_role_names = {role.name for role in get_roles_of_type(RoleType.HIDDEN, sdk_client_fs)}
 
     check_provider_based_object_action_roles_are_created_correctly(
         bundle.provider_prototype(), sdk_client_fs, hidden_role_names, hidden_role_prefix

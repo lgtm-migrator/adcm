@@ -90,9 +90,7 @@ class TestStatusAggregationWithMM:
 
         self.enable_cluster(status_changer, cluster)
 
-        with allure.step(
-            f'Disable component {component_name} on host {host_2.fqdn} and host itself'
-        ):
+        with allure.step(f'Disable component {component_name} on host {host_2.fqdn} and host itself'):
             status_changer.set_host_negative_status(host_2)
             status_changer.set_component_negative_status((host_2, component))
             check_statuses(
@@ -113,9 +111,7 @@ class TestStatusAggregationWithMM:
                 hosts={host_2.fqdn},
             )
 
-        self._turn_off_component_not_on_mm_host(
-            sdk_client_fs, status_changer, cluster, host_2, host_3
-        )
+        self._turn_off_component_not_on_mm_host(sdk_client_fs, status_changer, cluster, host_2, host_3)
 
     # pylint: disable-next=too-many-arguments
     def test_turn_mm_before_negative_status(
@@ -137,9 +133,7 @@ class TestStatusAggregationWithMM:
 
         self.enable_cluster(status_changer, cluster)
 
-        with allure.step(
-            f'Disable component {component_name} on host {host_2.fqdn} and host itself'
-        ):
+        with allure.step(f'Disable component {component_name} on host {host_2.fqdn} and host itself'):
             status_changer.set_host_negative_status(host_2)
             status_changer.set_component_negative_status((host_2, component))
             check_statuses(
@@ -148,9 +142,7 @@ class TestStatusAggregationWithMM:
                 hosts={host_2.fqdn},
             )
 
-        self._turn_off_component_not_on_mm_host(
-            sdk_client_fs, status_changer, cluster, host_2, host_3
-        )
+        self._turn_off_component_not_on_mm_host(sdk_client_fs, status_changer, cluster, host_2, host_3)
 
     @allure.step('Turn all components in cluster "on"')
     def enable_cluster(self, status_changer, cluster) -> None:
@@ -199,10 +191,7 @@ def retrieve_status(client: ADCMClient, cluster: Cluster) -> dict:
                 'components': {
                     hc['name']: {
                         'status': hc['status'],
-                        'hosts': {
-                            host_info['name']: {'status': host_info['status']}
-                            for host_info in hc['hosts']
-                        },
+                        'hosts': {host_info['name']: {'status': host_info['status']} for host_info in hc['hosts']},
                     }
                     for hc in service['hc']
                 },
@@ -233,24 +222,18 @@ def check_statuses(
         'name': statuses['name'],
         'status': _expected_status(p(bool(cluster))),
         'hosts': {
-            fqdn: {'status': _expected_status(p(fqdn in hosts))}
-            for fqdn, host_dict in statuses['hosts'].items()
+            fqdn: {'status': _expected_status(p(fqdn in hosts))} for fqdn, host_dict in statuses['hosts'].items()
         },
         'services': {
             service_name: {
                 'status': _expected_status(p(service_name in services)),
                 'components': {
                     component_name: {
-                        'status': _expected_status(
-                            p(f'{service_name}.{component_name}' in components)
-                        ),
+                        'status': _expected_status(p(f'{service_name}.{component_name}' in components)),
                         'hosts': {
                             fqdn: {
                                 'status': _expected_status(
-                                    p(
-                                        f'{service_name}.{component_name}.{fqdn}'
-                                        in hosts_on_components
-                                    )
+                                    p(f'{service_name}.{component_name}.{fqdn}' in hosts_on_components)
                                 )
                             }
                             for fqdn, host_dict in component_dict['hosts'].items()

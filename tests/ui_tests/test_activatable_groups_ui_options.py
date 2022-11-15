@@ -31,9 +31,7 @@ pytestmark = [pytest.mark.usefixtures("_login_to_adcm_over_api")]
 
 
 @pytest.fixture()
-def create_cluster_and_open_config_page(
-    sdk_client_fs: ADCMClient, path, app_fs
-) -> ClusterConfigPage:
+def create_cluster_and_open_config_page(sdk_client_fs: ADCMClient, path, app_fs) -> ClusterConfigPage:
     """Create cluster with config and open config page in it"""
 
     cluster = prepare_cluster(sdk_client_fs, path)

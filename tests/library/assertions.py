@@ -25,9 +25,7 @@ from tests.library.errorcodes import ADCMError
 T = TypeVar('T')
 
 
-def is_superset_of(
-    first: set, second: set, assertion_message: Union[str, Callable], *args, **kwargs
-) -> None:
+def is_superset_of(first: set, second: set, assertion_message: Union[str, Callable], *args, **kwargs) -> None:
     """
     Check if first argument (that should be of type "set") is a superset of second.
     """
@@ -39,15 +37,11 @@ def is_superset_of(
     allure.attach(pprint.pformat(second), name='Elements expected to be found')
     allure.attach(pprint.pformat(second.difference(first)), name='Not found elements')
 
-    message = (
-        assertion_message if not callable(assertion_message) else assertion_message(*args, **kwargs)
-    )
+    message = assertion_message if not callable(assertion_message) else assertion_message(*args, **kwargs)
     raise AssertionError(message)
 
 
-def does_not_intersect(
-    first: set, second: set, assertion_message: Union[str, Callable], *args, **kwargs
-) -> None:
+def does_not_intersect(first: set, second: set, assertion_message: Union[str, Callable], *args, **kwargs) -> None:
     """
     Check if there's no intersection between first and second sets.
     """
@@ -57,15 +51,11 @@ def does_not_intersect(
 
     allure.attach(pprint.pformat(intersection), name='Sets intersection')
 
-    message = (
-        assertion_message if not callable(assertion_message) else assertion_message(*args, **kwargs)
-    )
+    message = assertion_message if not callable(assertion_message) else assertion_message(*args, **kwargs)
     raise AssertionError(message)
 
 
-def is_in_collection(
-    item: T, collection: Collection[T], extra_message: Union[str, Callable] = '', **kwargs
-) -> None:
+def is_in_collection(item: T, collection: Collection[T], extra_message: Union[str, Callable] = '', **kwargs) -> None:
     """
     Check if item is a part of collection.
     """
@@ -80,9 +70,7 @@ def is_in_collection(
     )
 
 
-def is_not_in_collection(
-    item: T, collection: Collection[T], extra_message: Union[str, Callable] = '', **kwargs
-):
+def is_not_in_collection(item: T, collection: Collection[T], extra_message: Union[str, Callable] = '', **kwargs):
     """
     Check if item is not a part of collection.
     """
@@ -112,9 +100,7 @@ def is_empty(collection: Collection, extra_message: Union[str, Callable] = '', *
     )
 
 
-def sets_are_equal(
-    actual: set, expected: set, message: Union[str, Callable] = '', **kwargs
-) -> None:
+def sets_are_equal(actual: set, expected: set, message: Union[str, Callable] = '', **kwargs) -> None:
     """
     Check if two sets are equal
     """
@@ -129,9 +115,7 @@ def sets_are_equal(
     raise AssertionError(message)
 
 
-def dicts_are_equal(
-    actual: dict, expected: dict, message: Union[str, Callable] = '', **kwargs
-) -> None:
+def dicts_are_equal(actual: dict, expected: dict, message: Union[str, Callable] = '', **kwargs) -> None:
     """
     Check that two dicts are equal (direct comparison with `==`)
     """
@@ -154,9 +138,7 @@ def dicts_are_equal(
     raise AssertionError(message)
 
 
-def dicts_are_not_equal(
-    first: dict, second: dict, message: Union[str, Callable] = '', **kwargs
-) -> None:
+def dicts_are_not_equal(first: dict, second: dict, message: Union[str, Callable] = '', **kwargs) -> None:
     """
     Check that two dicts aren't equal (direct comparison with `!=`)
     """

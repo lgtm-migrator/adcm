@@ -388,9 +388,7 @@ def test_coreapi_schema(sdk_client_fs: ADCMClient, tested_class: Type[BaseAPIObj
         ),
     ],
 )
-def test_filter(
-    sdk_client: ADCMClient, tested_class, tested_list_class, search_args, expected_args
-):
+def test_filter(sdk_client: ADCMClient, tested_class, tested_list_class, search_args, expected_args):
     """Scenario:
     * Create a lot of objects in ADCM (more than allowed to get without paging)
     * Call listing over *List class with tested filter as search args.
@@ -405,9 +403,7 @@ def test_filter(
     with allure.step('Inspect first (and only) element of list'):
         for k, v in expected_args.items():
             assert getattr(objects[0], k) == v
-    with allure.step(
-        'Create single object over class call (like Cluster or Bundle) with tested filter as search args'
-    ):
+    with allure.step('Create single object over class call (like Cluster or Bundle) with tested filter as search args'):
         single_object = tested_class(sdk_client._api, **search_args)
     with allure.step('Check created object'):
         for k, v in expected_args.items():
@@ -509,9 +505,7 @@ def job_task_id_attr(host_ok_action: Action):
             {'name': 'ok14'},
             id="on Provider",
         ),
-        pytest.param(
-            lazy_fixture('host_with_actions'), {'name': 'fail15'}, {'name': 'fail15'}, id="on Host"
-        ),
+        pytest.param(lazy_fixture('host_with_actions'), {'name': 'fail15'}, {'name': 'fail15'}, id="on Host"),
     ],
 )
 def test_actions_name_filter(

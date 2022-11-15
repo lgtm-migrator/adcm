@@ -39,9 +39,7 @@ class BodyAssertionError(AssertionError):
 @allure.step("Response status code should be equal {status_code}")
 def status_code_should_be(response: Response, status_code=HTTPStatus.OK):
     """Assert response status code"""
-    assert (
-        response.status_code == status_code
-    ), f"Expecting status code {status_code} but got {response.status_code}"
+    assert response.status_code == status_code, f"Expecting status code {status_code} but got {response.status_code}"
 
 
 @allure.step("Response body should be")
@@ -49,9 +47,7 @@ def body_should_be(response: Response, expected_body: ExpectedBody):
     """Assert response body and attach it"""
     actual_body: dict = response.json()
     expected_values = {
-        key: value
-        for key, value in expected_body.fields.items()
-        if not isinstance(value, (NotSet, NotEqual))
+        key: value for key, value in expected_body.fields.items() if not isinstance(value, (NotSet, NotEqual))
     }
     unexpected_values: Dict[str, NotEqual] = {
         key: value for key, value in expected_body.fields.items() if isinstance(value, NotEqual)
@@ -71,9 +67,7 @@ def body_should_be(response: Response, expected_body: ExpectedBody):
 
     if expected_values:
         with allure.step("Fields values should be"):
-            actual_values = {
-                key: value for key, value in actual_body.items() if key in expected_values
-            }
+            actual_values = {key: value for key, value in actual_body.items() if key in expected_values}
 
             allure.attach(
                 json.dumps(expected_values, indent=2),
@@ -92,9 +86,7 @@ def body_should_be(response: Response, expected_body: ExpectedBody):
                     raise BodyAssertionError(error) from error
     if unexpected_values:
         with allure.step("Fields values should NOT be"):
-            actual_values = {
-                key: value for key, value in actual_body.items() if key in unexpected_values
-            }
+            actual_values = {key: value for key, value in actual_body.items() if key in unexpected_values}
             allure.attach(
                 json.dumps(unexpected_values, indent=2, cls=NotEqual.Encoder),
                 name='Unexpected fields values',
@@ -107,9 +99,7 @@ def body_should_be(response: Response, expected_body: ExpectedBody):
             )
             try:
                 for key, value in unexpected_values.items():
-                    assert value.value != actual_values.get(
-                        key
-                    ), f"Response field {key} has unexpected value"
+                    assert value.value != actual_values.get(key), f"Response field {key} has unexpected value"
             except AssertionError as error:
                 # maybe we want to check it above
                 if _clean_values(actual_values) == _clean_values(unexpected_values):

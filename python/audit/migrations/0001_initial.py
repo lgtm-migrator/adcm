@@ -30,9 +30,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     'id',
-                    models.BigAutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
-                    ),
+                    models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
                 ),
                 ('object_id', models.PositiveIntegerField()),
                 ('object_name', models.CharField(max_length=253)),
@@ -63,9 +61,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     'id',
-                    models.BigAutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
-                    ),
+                    models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
                 ),
                 (
                     'login_result',
@@ -96,9 +92,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     'id',
-                    models.BigAutoField(
-                        auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
-                    ),
+                    models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
                 ),
                 ('operation_name', models.CharField(max_length=160)),
                 (

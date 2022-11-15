@@ -47,9 +47,7 @@ ADCMObjectField = TypeVar('ADCMObjectField')
 DEFAULT_OBJECT_NAMES = ('first', 'second')
 
 
-def create_two_clusters(
-    adcm_client: ADCMClient, caller_file: str, bundle_dir: str
-) -> Tuple[Cluster, Cluster]:
+def create_two_clusters(adcm_client: ADCMClient, caller_file: str, bundle_dir: str) -> Tuple[Cluster, Cluster]:
     """
     Create two clusters with two services on each with "default object names"
     :param adcm_client: ADCM client
@@ -66,9 +64,7 @@ def create_two_clusters(
     return clusters
 
 
-def create_two_providers(
-    adcm_client: ADCMClient, caller_file: str, bundle_dir: str
-) -> Tuple[Provider, Provider]:
+def create_two_providers(adcm_client: ADCMClient, caller_file: str, bundle_dir: str) -> Tuple[Provider, Provider]:
     """
     Create two providers with two hosts
     :param adcm_client: ADCM client
@@ -219,9 +215,7 @@ def generate_provider_success_params(action_prefix: str, id_template: str) -> Li
             host,
             id=id_template.format('provider') + '_from_host',
         ),
-        pytest.param(
-            f'{action_prefix}_host', host, host, id=id_template.format('host') + '_from_self'
-        ),
+        pytest.param(f'{action_prefix}_host', host, host, id=id_template.format('host') + '_from_self'),
     ]
 
 
@@ -244,9 +238,7 @@ def get_cluster_related_object(
         return client.cluster(name=cluster).service(name=service)
     if service and component:
         return client.cluster(name=cluster).service(name=service).component(name=component)
-    raise ValueError(
-        'You can provide either only "service" argument or both "service" and "component" argument'
-    )
+    raise ValueError('You can provide either only "service" argument or both "service" and "component" argument')
 
 
 def get_provider_related_object(
@@ -285,14 +277,10 @@ def build_objects_comparator(
     def compare(adcm_object: AnyADCMObject, expected_value: ADCMObjectField):
         adcm_object_name = name_composer(adcm_object)
         adcm_object.reread()
-        with allure.step(
-            f"Assert that {adcm_object_name} has {expected_value} in {field_name.lower()} value"
-        ):
+        with allure.step(f"Assert that {adcm_object_name} has {expected_value} in {field_name.lower()} value"):
             assert (
                 actual_value := get_compare_value(adcm_object)
-            ) == expected_value, (
-                f'{field_name} of {adcm_object_name} should be {expected_value}, not {actual_value}'
-            )
+            ) == expected_value, f'{field_name} of {adcm_object_name} should be {expected_value}, not {actual_value}'
 
     return compare
 
@@ -459,9 +447,7 @@ class TestImmediateChange:
         self, provider_host: Tuple[Provider, Host], sdk_client_fs: ADCMClient
     ) -> Tuple[Cluster, Service, Component]:
         """Get cluster, service and component with added service and host for immediate config change"""
-        uploaded_bundle = sdk_client_fs.upload_from_fs(
-            plugin_utils.get_data_dir(self._file, self._cluster_bundle_name)
-        )
+        uploaded_bundle = sdk_client_fs.upload_from_fs(plugin_utils.get_data_dir(self._file, self._cluster_bundle_name))
         cluster = uploaded_bundle.cluster_create('Cooler')
         _, host = provider_host
         cluster.host_add(host)

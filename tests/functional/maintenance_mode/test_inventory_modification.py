@@ -76,9 +76,7 @@ def config_groups(cluster_with_hc_set) -> Tuple[GroupConfig, GroupConfig, GroupC
     host_1, host_2, host_3, *_ = cluster_with_hc_set.host_list()
     service = cluster_with_hc_set.service()
     component = service.component(name=FIRST_COMPONENT)
-    cluster_group = create_config_group_and_add_host(
-        "Cluster Config Group", cluster_with_hc_set, host_1
-    )
+    cluster_group = create_config_group_and_add_host("Cluster Config Group", cluster_with_hc_set, host_1)
     cluster_group.config_set_diff(changed_config)
     service_group = create_config_group_and_add_host("Service Config Group", service, host_2)
     service_group.config_set_diff(changed_config)
@@ -90,10 +88,7 @@ def config_groups(cluster_with_hc_set) -> Tuple[GroupConfig, GroupConfig, GroupC
 @pytest.fixture()
 def host_not_in_config_group(cluster_with_hc_set, config_groups) -> Host:
     """Get one host that is not in config group"""
-    hosts_in_groups = {
-        host.fqdn
-        for host in itertools.chain.from_iterable(group.hosts() for group in config_groups)
-    }
+    hosts_in_groups = {host.fqdn for host in itertools.chain.from_iterable(group.hosts() for group in config_groups)}
     return [host for host in cluster_with_hc_set.host_list() if host.fqdn not in hosts_in_groups][0]
 
 
@@ -112,9 +107,7 @@ def test_hosts_in_mm_removed_from_inventory(adcm_fs, cluster_with_hc_set):
     check_hosts_in_mm_are_absent(inventory, cluster_with_hc_set)
 
 
-def test_hosts_in_mm_removed_from_group_config(
-    adcm_fs, cluster_with_hc_set, config_groups, host_not_in_config_group
-):
+def test_hosts_in_mm_removed_from_group_config(adcm_fs, cluster_with_hc_set, config_groups, host_not_in_config_group):
     """Test filtering of hosts in inventory file when hosts are in MM and in config group"""
     *_, component_group = config_groups
     component: Component = cluster_with_hc_set.service().component(name=FIRST_COMPONENT)
@@ -134,11 +127,7 @@ def test_hosts_filtered_when_added_to_group_config_after_entering_mm(adcm_fs, cl
     """Test filtering of hosts in inventory file when host entered MM and then added to config group"""
     component: Component = cluster_with_hc_set.service().component(name=FIRST_COMPONENT)
     host = cluster_with_hc_set.host(
-        fqdn=next(
-            filter(
-                lambda hc: hc["component_id"] == component.id, cluster_with_hc_set.hostcomponent()
-            )
-        )["host"]
+        fqdn=next(filter(lambda hc: hc["component_id"] == component.id, cluster_with_hc_set.hostcomponent()))["host"]
     )
     action_on_component = component.action(name=ACTION_ALLOWED_IN_MM)
 
@@ -165,9 +154,7 @@ def test_host_filtering_with_hc_acl(adcm_fs, cluster_with_hc_set: Cluster, hosts
     inventory = run_action_and_get_inventory(
         service.action(name="change"),
         adcm_fs,
-        hc=build_hc_for_hc_acl_action(
-            cluster, add=[(first_component, free_host)], remove=[(first_component, host)]
-        ),
+        hc=build_hc_for_hc_acl_action(cluster, add=[(first_component, free_host)], remove=[(first_component, host)]),
     )
     check_hosts_in_mm_are_absent(inventory, cluster, service_name=HC_ACL_SERVICE_NAME)
     _check_add_remove_groups(inventory, add={free_host.fqdn}, remove=set())
@@ -186,28 +173,20 @@ def run_action_and_get_inventory(action: Action, adcm: ADCM, **run_kwargs) -> di
 def check_all_hosts_are_present(inventory: dict, cluster: Cluster) -> None:
     """Expect all hosts to be presented in inventory"""
     expected = {host.fqdn for host in cluster.host_list()}
-    expected_on_second_component = {
-        hc["host"] for hc in cluster.hostcomponent() if hc["component"] == SECOND_COMPONENT
-    }
+    expected_on_second_component = {hc["host"] for hc in cluster.hostcomponent() if hc["component"] == SECOND_COMPONENT}
     _check_groups(inventory, expected, expected_on_second_component)
 
 
 @allure.step("Check that hosts in maintenance mode are absent in regular groups")
-def check_hosts_in_mm_are_absent(
-    inventory: dict, cluster: Cluster, service_name: str = DEFAULT_SERVICE_NAME
-) -> None:
+def check_hosts_in_mm_are_absent(inventory: dict, cluster: Cluster, service_name: str = DEFAULT_SERVICE_NAME) -> None:
     """Expect hosts in MM are filtered out from inventory"""
-    hostnames_in_mm = {
-        host.fqdn for host in cluster.host_list() if host.maintenance_mode == MM_IS_ON
-    }
+    hostnames_in_mm = {host.fqdn for host in cluster.host_list() if host.maintenance_mode == MM_IS_ON}
     expected = {host.fqdn for host in cluster.host_list()}.difference(hostnames_in_mm)
     expected_on_second_component = {
         hc["host"] for hc in cluster.hostcomponent() if hc["component"] == SECOND_COMPONENT
     }.difference(hostnames_in_mm)
     _check_groups(inventory, expected, expected_on_second_component, service_name)
-    components_with_mm = {
-        hc["component"] for hc in cluster.hostcomponent() if hc["host"] in hostnames_in_mm
-    }
+    components_with_mm = {hc["component"] for hc in cluster.hostcomponent() if hc["host"] in hostnames_in_mm}
     if len(components_with_mm) == 0:
         raise RuntimeError('There should be at least 1 component with host in MM')
     for component in components_with_mm:
@@ -240,28 +219,20 @@ def _check_groups(
     )
 
 
-def _check_mm_groups(
-    inventory: dict, service_name: str, component_name: str, hosts_in_mm: Set[str]
-):
+def _check_mm_groups(inventory: dict, service_name: str, component_name: str, hosts_in_mm: Set[str]):
     children = inventory["all"]["children"]
     service_key = f"{service_name}.maintenance_mode"
     second_component_key = f"{service_name}.{component_name}.maintenance_mode"
 
     with allure.step("Check maintenance mode groups are presented in inventory"):
         assert service_key in children, f"{service_key} not found in: {', '.join(children.keys())}"
-        assert (
-            second_component_key in children
-        ), f"{second_component_key} not found in: {', '.join(children.keys())}"
+        assert second_component_key in children, f"{second_component_key} not found in: {', '.join(children.keys())}"
 
     with allure.step("Check that correct hosts are in MM groups"):
         hosts_in_group = set(children[service_key]["hosts"].keys())
-        sets_are_equal(
-            hosts_in_group, hosts_in_mm, "Wrong hosts in service's maintenance mode group"
-        )
+        sets_are_equal(hosts_in_group, hosts_in_mm, "Wrong hosts in service's maintenance mode group")
         hosts_in_group = set(children[second_component_key]["hosts"].keys())
-        sets_are_equal(
-            hosts_in_group, hosts_in_mm, "Wrong hosts in component's maintenance mode group"
-        )
+        sets_are_equal(hosts_in_group, hosts_in_mm, "Wrong hosts in component's maintenance mode group")
 
 
 def _check_add_remove_groups(inventory, add: Set[str], remove: Set[str]):
@@ -272,9 +243,7 @@ def _check_add_remove_groups(inventory, add: Set[str], remove: Set[str]):
         raise AssertionError('At least one node with "add" suffix should be presented in inventory')
     remove_nodes = [(k, v) for k, v in children.items() if "remove" in k]
     if not remove_nodes:
-        raise AssertionError(
-            'At least on node with "remove" suffix should be presented in inventory'
-        )
+        raise AssertionError('At least on node with "remove" suffix should be presented in inventory')
 
     node_name, node_value = add_nodes[0]
     with allure.step(f"Check node {node_name}"):

@@ -79,9 +79,7 @@ def test_background_operations_audit(audit_log_checker, adcm_fs, sdk_client_fs):
         assert any(
             map(
                 lambda task: (
-                    task.status == "failed"
-                    and task.action_id is not None
-                    and task.action().name == RUN_SYNC_NAME
+                    task.status == "failed" and task.action_id is not None and task.action().name == RUN_SYNC_NAME
                 ),
                 map(methodcaller("task"), sdk_client_fs.job_list()),
             )
@@ -89,9 +87,7 @@ def test_background_operations_audit(audit_log_checker, adcm_fs, sdk_client_fs):
 
     logrotate(adcm_fs, "all")
     clearaudit(adcm_fs)
-    with allure.step(
-        "Wait until ldap sync is launched on schedule and increase ldap sync interval"
-    ):
+    with allure.step("Wait until ldap sync is launched on schedule and increase ldap sync interval"):
         wait_until_step_succeeds(_sync_ran_finished, timeout=65, period=5)
         sdk_client_fs.adcm().config_set_diff(
             {
@@ -102,9 +98,7 @@ def test_background_operations_audit(audit_log_checker, adcm_fs, sdk_client_fs):
         )
     operations = sdk_client_fs.audit_operation_list()
     audit_log_checker.check(operations)
-    with allure.step(
-        "Check that after 1 minute there is no new audit records (crobtab-related bug)"
-    ):
+    with allure.step("Check that after 1 minute there is no new audit records (crobtab-related bug)"):
         # to check if there's "crontab" spawned record that shouldn't be there
         time.sleep(61)
         operations_after = len(sdk_client_fs.audit_operation_list())

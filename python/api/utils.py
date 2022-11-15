@@ -66,9 +66,7 @@ def check_obj(model, req, error=None):
 
 
 def hlink(view, lookup, lookup_url):
-    return HyperlinkedIdentityField(
-        view_name=view, lookup_field=lookup, lookup_url_kwarg=lookup_url
-    )
+    return HyperlinkedIdentityField(view_name=view, lookup_field=lookup, lookup_url_kwarg=lookup_url)
 
 
 def check_custom_perm(user, action_type, model, obj, second_perm=None):
@@ -142,9 +140,7 @@ def filter_actions(obj: ADCMEntity, actions_set: List[Action]):
     for action in actions_set:
         if action.allowed(obj):
             allowed.append(action)
-            action.config = PrototypeConfig.objects.filter(
-                prototype=action.prototype, action=action
-            ).order_by("id")
+            action.config = PrototypeConfig.objects.filter(prototype=action.prototype, action=action).order_by("id")
             set_disabling_cause(obj, action)
 
     return allowed

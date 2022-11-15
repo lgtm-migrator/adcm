@@ -93,9 +93,7 @@ class TestClusterUpdates:
     @pytest.mark.parametrize(
         "parse_with_context", ["plain_service_add.yaml"], indirect=True
     )  # pylint: disable-next=too-many-arguments
-    def test_plain_service_add(
-        self, import_bundle, parse_with_context, post, delete, new_user_client
-    ):
+    def test_plain_service_add(self, import_bundle, parse_with_context, post, delete, new_user_client):
         """Test adding service from /api/v1/service/"""
         new_user = self.client.user(id=new_user_client.me().id)
         path = "service"
@@ -109,9 +107,7 @@ class TestClusterUpdates:
             check_failed(post(path, data, self.new_user_creds), exact_code=403)
         service = cluster.service()
         display_name = service.display_name
-        create_policy(
-            self.client, [BusinessRoles.ViewServiceConfigurations], [service], [new_user], []
-        )
+        create_policy(self.client, [BusinessRoles.ViewServiceConfigurations], [service], [new_user], [])
         with allure.step("Get denied trying to remove service"):
             check_failed(delete(path, service.id, headers=self.new_user_creds), exact_code=403)
         with allure.step("Remove service"):
@@ -155,9 +151,7 @@ class TestClusterUpdates:
         self._accept_license(bundle_with_license, import_bundle)
         cluster = bundle_with_license.cluster_create("Cluster")
         host = generic_provider.host_create("first")
-        create_policy(
-            self.client, [BusinessRoles.ViewClusterConfigurations], [cluster], [new_user], []
-        )
+        create_policy(self.client, [BusinessRoles.ViewClusterConfigurations], [cluster], [new_user], [])
         self._add_service(cluster)
         create_policy(
             self.client,
@@ -181,9 +175,7 @@ class TestClusterUpdates:
         new_host = generic_provider.host_create("second")
         with allure.step("Add another host to a cluster"):
             cluster.host_add(new_host)
-        create_policy(
-            self.client, [BusinessRoles.ViewHostConfigurations], [new_host], [new_user], []
-        )
+        create_policy(self.client, [BusinessRoles.ViewHostConfigurations], [new_host], [new_user], [])
         new_host.reread()
         self._remove_host(new_host)
         checker = AuditLogChecker(
@@ -213,9 +205,7 @@ class TestClusterUpdates:
             check_failed(requests.put(url, headers=self.admin_creds), exact_code=409)
 
     def _add_service(self, cluster):
-        service_proto_id = requests.get(cluster.serviceprototype, headers=self.admin_creds).json()[
-            0
-        ]["id"]
+        service_proto_id = requests.get(cluster.serviceprototype, headers=self.admin_creds).json()[0]["id"]
         url = f"{self.client.url}/api/v1/cluster/{cluster.id}/service/"
         data = {"prototype_id": service_proto_id}
         with allure.step(f"Add service via POST {url} with data: {data}"):
@@ -232,17 +222,13 @@ class TestClusterUpdates:
             check_succeed(requests.post(url, json=data, headers=self.admin_creds))
         with allure.step(f"Fail to add host to cluster via POST {url} with data: {data}"):
             check_failed(requests.post(url, json=data, headers=self.admin_creds), 409)
-        with allure.step(
-            f"Get denied trying to add host to cluster via POST {url} with data: {data}"
-        ):
+        with allure.step(f"Get denied trying to add host to cluster via POST {url} with data: {data}"):
             check_failed(requests.post(url, json=data, headers=self.new_user_creds), 403)
 
     def _set_hostcomponent(self, cluster, host):
         component = (service := cluster.service()).component()
         url = f"{self.client.url}/api/v1/cluster/{cluster.id}/hostcomponent/"
-        data = {
-            "hc": [{"service_id": service.id, "component_id": component.id, "host_id": host.id}]
-        }
+        data = {"hc": [{"service_id": service.id, "component_id": component.id, "host_id": host.id}]}
         with allure.step(f"Set HC via POST {url} with data: {data}"):
             check_succeed(requests.post(url, json=data, headers=self.admin_creds))
         data = {}
@@ -325,20 +311,10 @@ class TestImportAudit:
         export_service = export_cluster.service()
         cluster_import_path = f"/api/v1/cluster/{import_cluster.id}/import/"
         base_url = self.client.url
-        import_path = (
-            f"{base_url}/api/v1/cluster/{import_cluster.id}/service/{import_service.id}/import/"
-        )
+        import_path = f"{base_url}/api/v1/cluster/{import_cluster.id}/service/{import_service.id}/import/"
         with allure.step("Update cluster/service imports"):
-            data = {
-                "bind": [
-                    {"import_id": cluster_import_id, "export_id": {"cluster_id": export_cluster.id}}
-                ]
-            }
-            check_succeed(
-                requests.post(
-                    f"{self.client.url}{cluster_import_path}", json=data, headers=self.admin_creds
-                )
-            )
+            data = {"bind": [{"import_id": cluster_import_id, "export_id": {"cluster_id": export_cluster.id}}]}
+            check_succeed(requests.post(f"{self.client.url}{cluster_import_path}", json=data, headers=self.admin_creds))
             data = {
                 "bind": [
                     {
@@ -353,24 +329,16 @@ class TestImportAudit:
             check_succeed(requests.post(import_path, json=data, headers=self.admin_creds))
         with allure.step("Fail to update cluster/service imports"):
             check_failed(
-                requests.post(
-                    f"{base_url}{cluster_import_path}", json={}, headers=self.admin_creds
-                ),
+                requests.post(f"{base_url}{cluster_import_path}", json={}, headers=self.admin_creds),
                 exact_code=400,
             )
-            check_failed(
-                requests.post(import_path, json={}, headers=self.admin_creds), exact_code=400
-            )
+            check_failed(requests.post(import_path, json={}, headers=self.admin_creds), exact_code=400)
         with allure.step("Performed denied cluster/service imports updates"):
             check_failed(
-                requests.post(
-                    f"{base_url}{cluster_import_path}", json={}, headers=self.new_user_creds
-                ),
+                requests.post(f"{base_url}{cluster_import_path}", json={}, headers=self.new_user_creds),
                 exact_code=403,
             )
-            check_failed(
-                requests.post(import_path, json={}, headers=self.new_user_creds), exact_code=403
-            )
+            check_failed(requests.post(import_path, json={}, headers=self.new_user_creds), exact_code=403)
 
     def _perform_binds(self, clusters_url: str, import_cluster, export_cluster):
         export_service = export_cluster.service()
@@ -380,11 +348,7 @@ class TestImportAudit:
         bind = self._bind
         with allure.step("Bind cluster and service"):
             check_succeed(bind(cluster_bind_url, export_cluster.id, headers=self.admin_creds))
-            check_succeed(
-                bind(
-                    service_bind_url, export_cluster.id, export_service.id, headers=self.admin_creds
-                )
-            )
+            check_succeed(bind(service_bind_url, export_cluster.id, export_service.id, headers=self.admin_creds))
         with allure.step("Fail to bind cluster and service"):
             check_failed(bind(cluster_bind_url, None, headers=self.admin_creds), exact_code=400)
             check_failed(bind(service_bind_url, None, headers=self.admin_creds), exact_code=400)
@@ -412,12 +376,8 @@ class TestImportAudit:
             check_succeed(unbind(f"{cluster_bind_url}{cluster_bind_id}/", headers=self.admin_creds))
             check_succeed(unbind(f"{service_bind_url}{service_bind_id}/", headers=self.admin_creds))
         with allure.step("Fail to remove binds from cluster/service"):
-            check_failed(
-                unbind(f"{cluster_bind_url}411/", headers=self.admin_creds), exact_code=404
-            )
-            check_failed(
-                unbind(f"{service_bind_url}411/", headers=self.admin_creds), exact_code=404
-            )
+            check_failed(unbind(f"{cluster_bind_url}411/", headers=self.admin_creds), exact_code=404)
+            check_failed(unbind(f"{service_bind_url}411/", headers=self.admin_creds), exact_code=404)
 
     def _bind(
         self, url: str, cluster_id: Optional[int], service_id: Optional[int] = None, **kwargs
@@ -485,24 +445,18 @@ class TestObjectUpdates:
     def _update_cluster_object(self, cluster: Cluster, new_name: str, method: str):
         url = f'{self.client.url}/api/v1/cluster/{cluster.id}/'
         with allure.step(f'Deny updating cluster {method.upper()} {url}'):
-            check_failed(
-                getattr(requests, method)(url, headers=self.new_user_creds), exact_code=403
-            )
+            check_failed(getattr(requests, method)(url, headers=self.new_user_creds), exact_code=403)
         body = {"name": new_name, "description": f"Changed to {new_name}"}
         with allure.step(f'Update cluster via {method.upper()} {url} with body: {body}'):
             check_succeed(getattr(requests, method)(url, json=body, headers=self.admin_creds))
         body = {"name": "____"}
         with allure.step(f'Fail updating cluster via {method.upper()} {url} with body: {body}'):
-            check_failed(
-                getattr(requests, method)(url, json=body, headers=self.admin_creds), exact_code=400
-            )
+            check_failed(getattr(requests, method)(url, json=body, headers=self.admin_creds), exact_code=400)
 
     def _update_host_object(self, host: Host, new_fqdn: str, method: str):
         url = f'{self.client.url}/api/v1/host/{host.id}/'
         with allure.step(f'Deny updating host {method.upper()} {url}'):
-            check_failed(
-                getattr(requests, method)(url, headers=self.new_user_creds), exact_code=403
-            )
+            check_failed(getattr(requests, method)(url, headers=self.new_user_creds), exact_code=403)
         body = {
             "fqdn": new_fqdn,
             "description": f"Changed to {new_fqdn}",
@@ -520,16 +474,12 @@ class TestObjectUpdates:
             check_succeed(getattr(requests, method)(url, json=body, headers=self.admin_creds))
         body = {**body, "maintenance_mode": "on"}
         with allure.step(f'Fail updating host via {method.upper()} {url} with body: {body}'):
-            check_failed(
-                getattr(requests, method)(url, json=body, headers=self.admin_creds), exact_code=409
-            )
+            check_failed(getattr(requests, method)(url, json=body, headers=self.admin_creds), exact_code=409)
 
     def _update_host_in_cluster(self, host: Host, method: str):
         url = f'{self.client.url}/api/v1/cluster/{host.cluster_id}/host/{host.id}/'
         with allure.step(f'Deny updating host {method.upper()} {url}'):
-            check_failed(
-                getattr(requests, method)(url, headers=self.new_user_creds), exact_code=403
-            )
+            check_failed(getattr(requests, method)(url, headers=self.new_user_creds), exact_code=403)
         body = {
             "fqdn": host.fqdn,
             "description": host.description,
@@ -547,6 +497,4 @@ class TestObjectUpdates:
             check_succeed(getattr(requests, method)(url, json=body, headers=self.admin_creds))
         body = {**body, "fqdn": "hehehee"}
         with allure.step(f'Fail updating host via {method.upper()} {url} with body: {body}'):
-            check_failed(
-                getattr(requests, method)(url, json=body, headers=self.admin_creds), exact_code=409
-            )
+            check_failed(getattr(requests, method)(url, json=body, headers=self.admin_creds), exact_code=409)

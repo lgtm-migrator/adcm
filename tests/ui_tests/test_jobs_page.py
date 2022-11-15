@@ -165,9 +165,7 @@ class TestTaskPage:
         ],
         ids=['success_job', 'failed_job'],
     )
-    def test_finished_job_has_correct_info(
-        self, job_info: dict, cluster: Cluster, page: JobListPage
-    ):
+    def test_finished_job_has_correct_info(self, job_info: dict, cluster: Cluster, page: JobListPage):
         """Run action that finishes (success/failed) and check it is displayed correctly"""
         expected_info_in_popup = {**job_info}
         expected_status = expected_info_in_popup.get('status').value
@@ -190,13 +188,10 @@ class TestTaskPage:
             task = run_cluster_action_and_assert_result(cluster, action.name)
         page.expand_task_in_row(0)
         with allure.step('Check jobs info'):
-            expected_jobs = [
-                {'name': job['name'], 'status': JobStatus.SUCCESS} for job in action.subs
-            ]
+            expected_jobs = [{'name': job['name'], 'status': JobStatus.SUCCESS} for job in action.subs]
             jobs_info = page.get_all_jobs_info()
             assert (expected_amount := len(expected_jobs)) == (actual_amount := len(jobs_info)), (
-                'Amount of jobs is not correct: '
-                f'should be {expected_amount}, but {actual_amount} was found'
+                'Amount of jobs is not correct: ' f'should be {expected_amount}, but {actual_amount} was found'
             )
             for i in range(actual_amount):
                 assert (actual_info := asdict(jobs_info[i])) == (
@@ -215,14 +210,12 @@ class TestTaskPage:
             with page.table.wait_rows_change():
                 page.select_filter_failed_tab()
             assert (row_count := page.table.row_count) == params['failed'], (
-                f'Tab "Failed" should have {params["failed"]} rows, '
-                f'but {row_count} rows are presented'
+                f'Tab "Failed" should have {params["failed"]} rows, ' f'but {row_count} rows are presented'
             )
             with page.table.wait_rows_change():
                 page.select_filter_success_tab()
             assert (row_count := page.table.row_count) == params['success'], (
-                f'Tab "Success" should have {params["success"]}, '
-                f'but {row_count} rows are presented'
+                f'Tab "Success" should have {params["success"]}, ' f'but {row_count} rows are presented'
             )
         with allure.step('Check pagination'):
             with page.table.wait_rows_change():
@@ -335,9 +328,7 @@ class TestTaskHeaderPopup:
         open_filter()
         job_page = JobListPage(app_fs.driver, app_fs.adcm.url)
         job_page.wait_page_is_opened()
-        assert (
-            job_page.get_selected_filter() == job_filter
-        ), f"Jobs should be filtered by {job_filter}"
+        assert job_page.get_selected_filter() == job_filter, f"Jobs should be filtered by {job_filter}"
 
     @pytest.mark.smoke()
     @pytest.mark.include_firefox()
@@ -349,18 +340,10 @@ class TestTaskHeaderPopup:
         page.header.click_job_block_in_header()
         page.header.click_acknowledge_btn_in_job_popup()
         page.header.check_no_jobs_presented()
-        assert (
-            page.header.get_success_job_amount_from_header() == "0"
-        ), "Success job amount should be 0"
-        assert (
-            page.header.get_in_progress_job_amount_from_header() == "0"
-        ), "In progress job amount should be 0"
-        assert (
-            page.header.get_failed_job_amount_from_header() == "0"
-        ), "Failed job amount should be 0"
-        assert (
-            'background: transparent' in page.header.get_jobs_circle_color()
-        ), "Bell circle should be without color"
+        assert page.header.get_success_job_amount_from_header() == "0", "Success job amount should be 0"
+        assert page.header.get_in_progress_job_amount_from_header() == "0", "In progress job amount should be 0"
+        assert page.header.get_failed_job_amount_from_header() == "0", "Failed job amount should be 0"
+        assert 'background: transparent' in page.header.get_jobs_circle_color(), "Bell circle should be without color"
         page.header.check_acknowledge_btn_not_displayed()
 
     @pytest.mark.smoke()
@@ -435,8 +418,7 @@ class TestTaskHeaderPopup:
             cluster_page.header.get_success_job_amount_from_header() == job_info['success_jobs']
         ), f"Success job amount should be {job_info['success_jobs']}"
         assert (
-            cluster_page.header.get_in_progress_job_amount_from_header()
-            == job_info['in_progress_job_jobs']
+            cluster_page.header.get_in_progress_job_amount_from_header() == job_info['in_progress_job_jobs']
         ), f"In progress job amount should be {job_info['in_progress_job_jobs']}"
         assert (
             cluster_page.header.get_failed_job_amount_from_header() == job_info['failed_jobs']
@@ -477,9 +459,7 @@ class TestTaskHeaderPopup:
                 )
         cluster_page.header.click_job_block_in_header()
         with allure.step("Check that in popup 5 tasks"):
-            assert (
-                len(cluster_page.header.get_job_rows_from_popup()) == 5
-            ), "Popup should contain 5 tasks"
+            assert len(cluster_page.header.get_job_rows_from_popup()) == 5, "Popup should contain 5 tasks"
         cluster_page.header.click_all_link_in_job_popup()
 
         job_page = JobListPage(app_fs.driver, app_fs.adcm.url)
@@ -498,12 +478,8 @@ class TestTaskHeaderPopup:
         cluster_page.header.click_acknowledge_btn_in_job_popup()
 
         cluster_page.header.wait_success_job_amount_from_header(1)
-        assert (
-            cluster_page.header.get_in_progress_job_amount_from_header() == "0"
-        ), "In progress job amount should be 0"
-        assert (
-            cluster_page.header.get_failed_job_amount_from_header() == "0"
-        ), "Failed job amount should be 0"
+        assert cluster_page.header.get_in_progress_job_amount_from_header() == "0", "In progress job amount should be 0"
+        assert cluster_page.header.get_failed_job_amount_from_header() == "0", "Failed job amount should be 0"
 
     @pytest.mark.skip(reason="Test is only for https://arenadata.atlassian.net/browse/ADCM-2660")
     @pytest.mark.usefixtures("cluster_bundle")
@@ -512,10 +488,7 @@ class TestTaskHeaderPopup:
 
         page_timeout = 30
         with allure.step("Create objects and run actions"):
-            _ = [
-                provider.host_create(f"host-{i}").action(name=SUCCESS_ACTION_NAME).run()
-                for i in range(5000)
-            ]
+            _ = [provider.host_create(f"host-{i}").action(name=SUCCESS_ACTION_NAME).run() for i in range(5000)]
         login = LoginPage(app_fs.driver, app_fs.adcm.url).open()
         login.login_user(**adcm_credentials)
         with catch_failed(TimeoutError, f"Page did not load for {page_timeout} seconds"):
@@ -526,9 +499,7 @@ class TestTaskHeaderPopup:
 # !==== HELPERS =====!
 
 
-def _test_run_action(
-    page: JobListPage, action_owner: Union[Cluster, Service, Provider, Host], expected_link: str
-):
+def _test_run_action(page: JobListPage, action_owner: Union[Cluster, Service, Provider, Host], expected_link: str):
     """
     Run the "Long" action
     Check popup info
@@ -546,9 +517,7 @@ def _test_run_action(
     ), page.table.wait_rows_change():
         long_action = action_owner.action(display_name=LONG_ACTION_DISPLAY_NAME)
         long_action.run()
-    _check_job_info_in_popup(
-        page, {'status': expected_info['status'], 'action_name': expected_info['action_name']}
-    )
+    _check_job_info_in_popup(page, {'status': expected_info['status'], 'action_name': expected_info['action_name']})
     _check_running_job_info_in_table(page, expected_info)
     page.select_filter_running_tab()
     _check_running_job_info_in_table(page, expected_info)
@@ -586,12 +555,8 @@ def _run_actions_on_hosts(hosts: List[Host], success: int, failed: int):
     Run success and failed actions
     and then wait for all of them to be finished
     """
-    actions_distribution = [SUCCESS_ACTION_DISPLAY_NAME] * success + [
-        FAIL_ACTION_DISPLAY_NAME
-    ] * failed
-    task_list = [
-        host.action(display_name=actions_distribution[i]).run() for i, host in enumerate(hosts)
-    ]
+    actions_distribution = [SUCCESS_ACTION_DISPLAY_NAME] * success + [FAIL_ACTION_DISPLAY_NAME] * failed
+    task_list = [host.action(display_name=actions_distribution[i]).run() for i, host in enumerate(hosts)]
     for task in task_list:
         task.wait(timeout=60)
 

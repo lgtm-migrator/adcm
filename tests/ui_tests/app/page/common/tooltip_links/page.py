@@ -56,10 +56,7 @@ class CommonToolbar(BasePageObject):
         self.wait_element_visible(CommonToolbarLocators.admin_link)
         self.find_and_click(CommonToolbarLocators.adcm_action_btn)
         is_active = (
-            self.wait_element_visible(CommonToolbarLocators.Popup.item(action_name)).get_attribute(
-                'disabled'
-            )
-            == "true"
+            self.wait_element_visible(CommonToolbarLocators.Popup.item(action_name)).get_attribute('disabled') == "true"
         )
         self.find_and_click(CommonToolbarLocators.adcm_action_btn, is_js=True)
         return is_active
@@ -93,9 +90,7 @@ class CommonToolbar(BasePageObject):
         self.wait_element_visible(CommonToolbarLocators.admin_link)
         self.find_and_click(CommonToolbarLocators.warn_btn(tab_name.upper().strip("_")))
         self.wait_element_visible(CommonToolbarLocators.WarnPopup.popup_block)
-        warn_text_popup = [
-            item.text for item in self.find_elements(CommonToolbarLocators.WarnPopup.item)
-        ]
+        warn_text_popup = [item.text for item in self.find_elements(CommonToolbarLocators.WarnPopup.item)]
         assert (
             expected_warn_text == warn_text_popup
         ), f"Expected warning is {expected_warn_text}, but actual is {warn_text_popup}"
@@ -104,9 +99,7 @@ class CommonToolbar(BasePageObject):
     def check_no_warn_button(self, tab_name: str):
         """Check there are no warn button from toolbar"""
         self.wait_element_visible(CommonToolbarLocators.admin_link)
-        self.check_element_should_be_hidden(
-            CommonToolbarLocators.warn_btn(tab_name.upper().strip("_")), timeout=3
-        )
+        self.check_element_should_be_hidden(CommonToolbarLocators.warn_btn(tab_name.upper().strip("_")), timeout=3)
 
     def check_toolbar_elements(self, tab_names: [str]):
         self.assert_displayed_elements([CommonToolbarLocators.admin_link])

@@ -57,9 +57,9 @@ def prepare_put_body_data(request, adcm_api_fs: ADCMTestApiWrapper):
                     if prepared_field_values[field.name].unchanged_value is False:
                         current_field_value = full_item[field.name]
                         changed_field_value = changed_fields.get(field.name, None)
-                        test_data.request.data[field.name] = prepared_field_values[
-                            field.name
-                        ].return_value(dbfiller, current_field_value, changed_field_value)
+                        test_data.request.data[field.name] = prepared_field_values[field.name].return_value(
+                            dbfiller, current_field_value, changed_field_value
+                        )
 
                 else:
                     if field.name in test_data.request.data:
@@ -73,17 +73,13 @@ def prepare_put_body_data(request, adcm_api_fs: ADCMTestApiWrapper):
 
         test_data.request.object_id = valid_data["object_id"]
         if getattr(endpoint.data_class, 'dependable_fields_sync', None):
-            test_data.request.data = endpoint.data_class.dependable_fields_sync(
-                adcm_api_fs, test_data.request.data
-            )
+            test_data.request.data = endpoint.data_class.dependable_fields_sync(adcm_api_fs, test_data.request.data)
         final_test_data_list.append(TestDataWithPreparedBody(test_data, prepared_field_values))
 
     return adcm_api_fs, final_test_data_list
 
 
-@pytest.mark.parametrize(
-    "prepare_put_body_data", get_positive_data_for_put_body_check(), indirect=True
-)
+@pytest.mark.parametrize("prepare_put_body_data", get_positive_data_for_put_body_check(), indirect=True)
 def test_put_body_positive(prepare_put_body_data):
     """
     Positive cases of PUT request body testing
@@ -92,9 +88,7 @@ def test_put_body_positive(prepare_put_body_data):
     _test_patch_put_body_positive(prepare_put_body_data)
 
 
-@pytest.mark.parametrize(
-    "prepare_put_body_data", get_negative_data_for_put_body_check(), indirect=True
-)
+@pytest.mark.parametrize("prepare_put_body_data", get_negative_data_for_put_body_check(), indirect=True)
 def test_put_body_negative(prepare_put_body_data, flexible_assert_step):
     """
     Negative cases of PUT request body testing

@@ -51,9 +51,7 @@ def check_licence(lines: list, lic: list[str]) -> bool:
     """Return False in case of empty licence"""
     if len(lines) < 10:
         return False
-    if (lines[0] == lic[0] and lines[10] == lic[10]) or (
-        lines[1] == lic[0] and lines[11] == lic[10]
-    ):
+    if (lines[0] == lic[0] and lines[10] == lic[10]) or (lines[1] == lic[0] and lines[11] == lic[10]):
         return True
     return False
 
@@ -102,15 +100,12 @@ def main():
     args = parser.parse_args()
     number_of_fixed = number_of_skipped = 0
     for folder in args.folders:
-        number_of_fixed, number_of_skipped = check_and_fix_files(
-            number_of_fixed, number_of_skipped, args.fix, folder
-        )
+        number_of_fixed, number_of_skipped = check_and_fix_files(number_of_fixed, number_of_skipped, args.fix, folder)
     if number_of_fixed == number_of_skipped == 0:
         sys.stdout.write("Licence is present in all python and go files \n")
         sys.exit(0)
     sys.stdout.write(
-        f"Updating licence skipped in {number_of_skipped} files."
-        f" Licence was updated in {number_of_fixed} files \n"
+        f"Updating licence skipped in {number_of_skipped} files." f" Licence was updated in {number_of_fixed} files \n"
     )
     sys.exit(1)
 

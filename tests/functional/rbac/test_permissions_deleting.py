@@ -133,9 +133,7 @@ def test_change_child_role(user_sdk: ADCMClient, user, prepare_objects, sdk_clie
     is_denied(cluster, BusinessRoles.ViewClusterConfigurations, client=user_sdk)
 
 
-def test_remove_user_from_policy_but_still_in_group(
-    user_sdk: ADCMClient, user, prepare_objects, sdk_client_fs
-):
+def test_remove_user_from_policy_but_still_in_group(user_sdk: ADCMClient, user, prepare_objects, sdk_client_fs):
     """
     Test that user is still have access if user removed from policy but is in group
     """
@@ -155,9 +153,7 @@ def test_remove_user_from_policy_but_still_in_group(
     is_allowed(cluster, BusinessRoles.ViewClusterConfigurations)
 
 
-def test_remove_group_with_user_but_still_in_another_group(
-    user_sdk: ADCMClient, user, prepare_objects, sdk_client_fs
-):
+def test_remove_group_with_user_but_still_in_another_group(user_sdk: ADCMClient, user, prepare_objects, sdk_client_fs):
     """
     Test that user is still have access if removed group with user but user is in another group
     """
@@ -178,9 +174,7 @@ def test_remove_group_with_user_but_still_in_another_group(
     is_allowed(cluster, BusinessRoles.ViewClusterConfigurations)
 
 
-def test_remove_another_object_from_policy(
-    user_sdk: ADCMClient, user, prepare_objects, sdk_client_fs
-):
+def test_remove_another_object_from_policy(user_sdk: ADCMClient, user, prepare_objects, sdk_client_fs):
     """
     Test that user is still have access if object removed from policy but exists high-level object
     """
@@ -202,9 +196,7 @@ def test_remove_another_object_from_policy(
     is_allowed(service, BusinessRoles.ViewServiceConfigurations)
 
 
-def test_remove_policy_but_exists_same_policy(
-    user_sdk: ADCMClient, user, prepare_objects, sdk_client_fs
-):
+def test_remove_policy_but_exists_same_policy(user_sdk: ADCMClient, user, prepare_objects, sdk_client_fs):
     """
     Test that user is still have access if removed policy, but we still have another policy with the same rights
     """

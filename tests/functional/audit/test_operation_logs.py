@@ -60,9 +60,7 @@ def new_user_and_client(sdk_client_fs) -> Tuple[User, ADCMClient]:
     """Create new user and login under it"""
     credentials = dict(username=CONTEXT["simple_user"], password="n2ohvzikj(#*Fhxznc")
     user = sdk_client_fs.user_create(**credentials)
-    return user, ADCMClient(
-        url=sdk_client_fs.url, user=credentials["username"], password=credentials["password"]
-    )
+    return user, ADCMClient(url=sdk_client_fs.url, user=credentials["username"], password=credentials["password"])
 
 
 @pytest.mark.parametrize(
@@ -117,9 +115,7 @@ def test_no_audit_objects_duplication(adcm_fs, sdk_client_fs, adb_bundle, generi
     expected_objects = 16
     with allure.step(f"Check that amount of audit objects is {expected_objects}"):
         amount_of_objects = int(_exec_django_shell(container, "AuditObject.objects.count()"))
-        assert (
-            amount_of_objects == expected_objects
-        ), f"Incorrect amount of audit objects: {amount_of_objects}"
+        assert amount_of_objects == expected_objects, f"Incorrect amount of audit objects: {amount_of_objects}"
     with allure.step("Check that correct amount of audit objects are considered deleted"):
         template = "AuditObject.objects.filter({}).count()"
         total_deleted = int(_exec_django_shell(container, template.format("is_deleted=True")))
@@ -131,9 +127,7 @@ def test_no_audit_objects_duplication(adcm_fs, sdk_client_fs, adb_bundle, generi
         assert total_deleted == 5, "5 objects should be considered deleted"
         for object_type, expected_amount in (("cluster", 1), ("service", 2), ("component", 2)):
             actual_amount = int(
-                _exec_django_shell(
-                    container, template.format(f'is_deleted=True, object_type="{object_type}"')
-                )
+                _exec_django_shell(container, template.format(f'is_deleted=True, object_type="{object_type}"'))
             )
             assert actual_amount == expected_amount, (
                 f"Unexpected amount of deleted audit objects of type {object_type}\n"
@@ -148,8 +142,7 @@ def _exec_django_shell(container: Container, statement: str) -> str:
             [
                 "sh",
                 "-c",
-                ". /adcm/venv/default/bin/activate "
-                f"&& python /adcm/python/manage.py shell -c '{script}'",
+                ". /adcm/venv/default/bin/activate " f"&& python /adcm/python/manage.py shell -c '{script}'",
             ]
         )
         out = output.decode("utf-8").strip()

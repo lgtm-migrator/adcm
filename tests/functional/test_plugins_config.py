@@ -144,9 +144,7 @@ def test_host_from_provider(two_providers: Tuple[Provider, Provider], sdk_client
     with check_config_changed(sdk_client_fs, {host}), allure.step(
         f'Set config of {host_name} with action from {provider_name}'
     ):
-        run_provider_action_and_assert_result(
-            provider, 'change_host_from_provider', config={'host_id': host.id}
-        )
+        run_provider_action_and_assert_result(provider, 'change_host_from_provider', config={'host_id': host.id})
 
 
 def test_multijob(
@@ -212,9 +210,7 @@ def test_from_host_actions(
         field_name='Config',
     )
     with allure.step('Bind component to host'):
-        component = (service := (cluster := two_clusters[0]).service(name=name)).component(
-            name=name
-        )
+        component = (service := (cluster := two_clusters[0]).service(name=name)).component(name=name)
         host = two_providers[0].host_list()[0]
         cluster.host_add(host)
         cluster.hostcomponent_set((host, component))

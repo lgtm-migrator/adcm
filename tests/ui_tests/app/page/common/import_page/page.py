@@ -40,9 +40,7 @@ class ImportPage(BasePageObject):
 
     def is_chxb_in_item_checked(self, import_item: WebElement) -> bool:
         """Get checkbox element checked state"""
-        return "checked" in self.find_child(
-            import_item, ImportLocators.ImportItem.import_chbx
-        ).get_attribute("class")
+        return "checked" in self.find_child(import_item, ImportLocators.ImportItem.import_chbx).get_attribute("class")
 
     def click_save_btn(self):
         """Click on Save button"""

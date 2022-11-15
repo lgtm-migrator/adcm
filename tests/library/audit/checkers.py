@@ -54,9 +54,7 @@ class AuditLogChecker:
             'presence': _one_of_should_match,
         }.pop(expected_logs.settings.process_type, None)
         if obj.check_next is None:
-            raise KeyError(
-                f'No function specified for process-type option: "{expected_logs.settings.process_type}"'
-            )
+            raise KeyError(f'No function specified for process-type option: "{expected_logs.settings.process_type}"')
         return obj
 
     def __init__(self, expected_logs: ParsedAuditLog):
@@ -87,9 +85,7 @@ class AuditLogChecker:
         try:
             suitable_records = self.cut_to_start(first_expected_operation, sorted_audit_records)
         except AssertionError:
-            self._attach_all_operations_and_expected_one(
-                sorted_audit_records, first_expected_operation
-            )
+            self._attach_all_operations_and_expected_one(sorted_audit_records, first_expected_operation)
             raise
         last_found_ind = -1
         last_processed_operation = None
@@ -97,9 +93,7 @@ class AuditLogChecker:
             try:
                 suitable_records = self.check_next(expected_operation, suitable_records)
             except AssertionError:
-                self._attach_all_operations_and_expected_one(
-                    sorted_audit_records, expected_operation
-                )
+                self._attach_all_operations_and_expected_one(sorted_audit_records, expected_operation)
                 if last_processed_operation:
                     allure.attach(
                         pprint.pformat(last_processed_operation),
@@ -149,9 +143,7 @@ class AuditLogChecker:
                 raise TypeError('All values of `user_ids` should be integers (ids)')
             self._user_map = {**user_ids}
             return
-        raise RuntimeError(
-            'Either `client_`, `user_id_map_` or kwargs should be provided to populate user map'
-        )
+        raise RuntimeError('Either `client_`, `user_id_map_` or kwargs should be provided to populate user map')
 
     def _attach_all_operations_and_expected_one(
         self, audit_records: List[AuditOperation], expected_operation: Operation
@@ -159,11 +151,7 @@ class AuditLogChecker:
         allure.attach(
             '\n\n'.join(
                 f'{ind}\n'
-                + ',\n'.join(
-                    f'{f.name}={getattr(rec, f.name)}'
-                    for f in fields(Operation)
-                    if hasattr(rec, f.name)
-                )
+                + ',\n'.join(f'{f.name}={getattr(rec, f.name)}' for f in fields(Operation) if hasattr(rec, f.name))
                 for ind, rec in enumerate(audit_records)
             ),
             name='Audit records from API',
@@ -185,9 +173,7 @@ def _get_records_from_first_matched(
     raise AssertionError(f'None of records matched {expected_operation}')
 
 
-def _next_should_match(
-    expected_operation: Operation, actual_records: List[AuditOperation]
-) -> List[AuditOperation]:
+def _next_should_match(expected_operation: Operation, actual_records: List[AuditOperation]) -> List[AuditOperation]:
     record_to_check = actual_records[0]
     assert expected_operation.is_equal_to(record_to_check), (
         'Incorrect next element found when checking audit logs.\n\n'
@@ -206,9 +192,7 @@ def _following_should_match(
     raise AssertionError(f'Failed to find next element matching operation: {expected_operation}')
 
 
-def _one_of_should_match(
-    expected_operation: Operation, actual_records: List[AuditOperation]
-) -> List[AuditOperation]:
+def _one_of_should_match(expected_operation: Operation, actual_records: List[AuditOperation]) -> List[AuditOperation]:
     for ind, record in enumerate(actual_records):
         if expected_operation.is_equal_to(record):
             return actual_records[0:ind] + actual_records[ind + 1 :]

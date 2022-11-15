@@ -39,9 +39,7 @@ from rbac.viewsets import DjangoOnlyObjectPermissions
 
 
 def check_service(user, kwargs):
-    service = get_object_for_user(
-        user, "cm.view_clusterobject", ClusterObject, id=kwargs["service_id"]
-    )
+    service = get_object_for_user(user, "cm.view_clusterobject", ClusterObject, id=kwargs["service_id"])
     if "cluster_id" in kwargs:
         get_object_for_user(user, "cm.view_cluster", Cluster, id=kwargs["cluster_id"])
     return service
@@ -62,9 +60,7 @@ class ServiceListView(PermissionListMixin, PaginatedView):
         """
         queryset = self.get_queryset()
         if "cluster_id" in kwargs:
-            cluster = get_object_for_user(
-                request.user, "cm.view_cluster", Cluster, id=kwargs["cluster_id"]
-            )
+            cluster = get_object_for_user(request.user, "cm.view_cluster", Cluster, id=kwargs["cluster_id"])
             queryset = queryset.filter(cluster=cluster).select_related("config")
         return self.get_page(self.filter_queryset(queryset), request)
 
@@ -76,13 +72,9 @@ class ServiceListView(PermissionListMixin, PaginatedView):
         serializer_class = self.serializer_class
         if "cluster_id" in kwargs:
             serializer_class = self.serializer_class_cluster
-            cluster = get_object_for_user(
-                request.user, "cm.view_cluster", Cluster, id=kwargs["cluster_id"]
-            )
+            cluster = get_object_for_user(request.user, "cm.view_cluster", Cluster, id=kwargs["cluster_id"])
         else:
-            cluster = get_object_for_user(
-                request.user, "cm.view_cluster", Cluster, id=request.data["cluster_id"]
-            )
+            cluster = get_object_for_user(request.user, "cm.view_cluster", Cluster, id=request.data["cluster_id"])
         check_custom_perm(request.user, "add_service_to", "cluster", cluster)
         serializer = serializer_class(
             data=request.data,
@@ -103,9 +95,7 @@ class ServiceDetailView(PermissionListMixin, DetailView):
     def get_queryset(self, *args, **kwargs):
         queryset = super().get_queryset(*args, **kwargs)
         if "cluster_id" in self.kwargs:
-            cluster = get_object_for_user(
-                self.request.user, "cm.view_cluster", Cluster, id=self.kwargs["cluster_id"]
-            )
+            cluster = get_object_for_user(self.request.user, "cm.view_cluster", Cluster, id=self.kwargs["cluster_id"])
             queryset = queryset.filter(cluster=cluster)
         return queryset
 
@@ -133,9 +123,7 @@ class ServiceImportView(GenericUIView):
         List all imports available for specified service
         """
         service = check_service(request.user, kwargs)
-        check_custom_perm(
-            request.user, "view_import_of", "clusterobject", service, "view_clusterbind"
-        )
+        check_custom_perm(request.user, "view_import_of", "clusterobject", service, "view_clusterbind")
         cluster = service.cluster
         return Response(get_import(cluster, service))
 
@@ -163,9 +151,7 @@ class ServiceBindView(GenericUIView):
         List all binds of service
         """
         service = check_service(request.user, kwargs)
-        check_custom_perm(
-            request.user, "view_import_of", "clusterobject", service, "view_clusterbind"
-        )
+        check_custom_perm(request.user, "view_import_of", "clusterobject", service, "view_clusterbind")
         binds = self.get_queryset().filter(service=service)
         serializer = self.get_serializer(binds, many=True)
         return Response(serializer.data)
@@ -197,9 +183,7 @@ class ServiceBindDetailView(GenericUIView):
         Show specified bind of service
         """
         service, bind = self.get_obj(kwargs, kwargs["bind_id"])
-        check_custom_perm(
-            request.user, "view_import_of", "clusterobject", service, "view_clusterbind"
-        )
+        check_custom_perm(request.user, "view_import_of", "clusterobject", service, "view_clusterbind")
         serializer = self.get_serializer(bind)
         return Response(serializer.data)
 

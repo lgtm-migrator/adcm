@@ -200,14 +200,18 @@ def test_before_upgrade_state(old_bundle):
         cluster = old_bundle.cluster_create(name='Test Cluster')
         assert (
             actual_state := cluster.before_upgrade['state']
-        ) == BEFORE_UPGRADE_DEFAULT_STATE, f'Expected before_upgrade state was {BEFORE_UPGRADE_DEFAULT_STATE}, but {actual_state} was found'
+        ) == BEFORE_UPGRADE_DEFAULT_STATE, (
+            f'Expected before_upgrade state was {BEFORE_UPGRADE_DEFAULT_STATE}, but {actual_state} was found'
+        )
     with allure.step('Check `before_upgrade` field is correct after upgrade'):
         state_before_upgrade = cluster.state
         cluster.upgrade().do()
         cluster.reread()
         assert (
             actual_state := cluster.before_upgrade['state']
-        ) == state_before_upgrade, f'Expected before_upgrade state was {state_before_upgrade}, but {actual_state} was found'
+        ) == state_before_upgrade, (
+            f'Expected before_upgrade state was {state_before_upgrade}, but {actual_state} was found'
+        )
 
 
 class TestUpgradeWithComponent:
@@ -251,9 +255,7 @@ class TestUpgradeWithComponent:
     def check_new_component_config_exists(self, service: Service):
         """Check that component appeared in new version has config"""
         component = service.component(name='new_component')
-        with catch_failed(
-            ErrorMessage, f'Config of {get_object_represent(component)} should be available'
-        ):
+        with catch_failed(ErrorMessage, f'Config of {get_object_represent(component)} should be available'):
             config = component.config()
         self._check_config(config, self._GEN_CONFIG)
 
@@ -264,9 +266,7 @@ class TestUpgradeWithComponent:
 
         with allure.step('Check that config was created for component that has no config before'):
             component = service.component(name=no_config_in_old_version)
-            with catch_failed(
-                ErrorMessage, f'Config of {get_object_represent(component)} should be available'
-            ):
+            with catch_failed(ErrorMessage, f'Config of {get_object_represent(component)} should be available'):
                 config = component.config()
             self._check_config(config, self._GEN_CONFIG)
 

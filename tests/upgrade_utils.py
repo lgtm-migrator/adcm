@@ -29,9 +29,7 @@ def check_adcm_version_changed(before: str, after: str) -> None:
 
 
 @allure.step("Upgrade ADCM to new version")
-def upgrade_adcm_version(
-    adcm: ADCM, sdk: ADCMClient, credentials: dict, target: Tuple[str, str]
-) -> None:
+def upgrade_adcm_version(adcm: ADCM, sdk: ADCMClient, credentials: dict, target: Tuple[str, str]) -> None:
     """
     Upgrade ADCM via ADCMClient (stop running container, launch container with new version)
     and check that version has changed

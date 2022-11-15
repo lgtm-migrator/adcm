@@ -55,9 +55,7 @@ check_objects_multi_state_changed = build_objects_checker(
     changed=['ifeelgood!'],
     extractor=(_multi_state_extractor := lambda obj: sorted(obj.multi_state)),
 )
-check_multi_state_was_unset = build_objects_checker(
-    field_name=FIELD_NAME, changed=[], extractor=_multi_state_extractor
-)
+check_multi_state_was_unset = build_objects_checker(field_name=FIELD_NAME, changed=[], extractor=_multi_state_extractor)
 
 # !===== Fixtures =====!
 
@@ -134,9 +132,7 @@ def test_provider_related_objects(
 
 
 @pytest.mark.parametrize("two_clusters", ["cluster_double_call"], indirect=True)
-def test_double_call_to_multi_state_set(
-    two_clusters: Tuple[Cluster, Cluster], sdk_client_fs: ADCMClient
-):
+def test_double_call_to_multi_state_set(two_clusters: Tuple[Cluster, Cluster], sdk_client_fs: ADCMClient):
     """Test that double call to plugin from two files doesn't fail"""
     check_multi_state_after_set = build_objects_checker(
         sorted(['much', 'better', 'actually']),
@@ -165,16 +161,12 @@ def test_host_from_provider(two_providers: Tuple[Provider, Provider], sdk_client
         with check_objects_multi_state_changed(sdk_client_fs, {host}), allure.step(
             f'Set multi state of {host_name} with action from {provider_name}'
         ):
-            run_provider_action_and_assert_result(
-                provider, 'set_host_from_provider', config={'host_id': host.id}
-            )
+            run_provider_action_and_assert_result(provider, 'set_host_from_provider', config={'host_id': host.id})
     with allure.step(UNSET_STEP_TITLE):
         with check_multi_state_was_unset(sdk_client_fs, {host}), allure.step(
             f'Unset multi state of {host_name} with action from {provider_name}'
         ):
-            run_provider_action_and_assert_result(
-                provider, 'unset_host_from_provider', config={'host_id': host.id}
-            )
+            run_provider_action_and_assert_result(provider, 'unset_host_from_provider', config={'host_id': host.id})
 
 
 @pytest.mark.usefixtures('two_clusters', 'two_providers')
@@ -234,9 +226,7 @@ def test_missing_ok_multi_state_unset(
         with check_objects_multi_state_changed(sdk_client_fs):
             run_component_action_and_assert_result(component, 'unset_component', status='failed')
 
-    with allure.step(
-        'Check job succeed with "missing_ok: true" without changing multi_state of any object'
-    ):
+    with allure.step('Check job succeed with "missing_ok: true" without changing multi_state of any object'):
         for allowed_action in ('unset_provider_missing', 'unset_host_missing'):
             with check_objects_multi_state_changed(sdk_client_fs):
                 run_host_action_and_assert_result(host, allowed_action)
@@ -260,9 +250,7 @@ def test_multi_state_set_from_host_actions(
     """Test that host actions actually change multi state"""
     name = "first"
     with allure.step('Bind component to host'):
-        component = (service := (cluster := two_clusters[0]).service(name=name)).component(
-            name=name
-        )
+        component = (service := (cluster := two_clusters[0]).service(name=name)).component(name=name)
         host = two_providers[0].host_list()[0]
         cluster.host_add(host)
         cluster.hostcomponent_set((host, component))
@@ -276,9 +264,7 @@ def test_multi_state_set_from_host_actions(
             run_host_action_and_assert_result(host, f'set_{classname.lower()}_host_action')
 
 
-def test_multi_state_set_unset_from_different_objects(
-    two_clusters: Tuple[Cluster, Cluster], sdk_client_fs: ADCMClient
-):
+def test_multi_state_set_unset_from_different_objects(two_clusters: Tuple[Cluster, Cluster], sdk_client_fs: ADCMClient):
     """
     Check that one object change multi-state of another object
         and another object can unset this multi-state
@@ -347,6 +333,4 @@ def _test_successful_multi_state_set_unset(
         with check_multi_state_was_unset(sdk_client_fs, {object_to_be_changed}), allure.step(
             f'Unset multi state of {changed_object_name} with action from {action_owner_name}'
         ):
-            run_successful_task(
-                action_owner_object.action(name=f'un{set_action_name}'), action_owner_name
-            )
+            run_successful_task(action_owner_object.action(name=f'un{set_action_name}'), action_owner_name)

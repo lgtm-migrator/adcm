@@ -49,9 +49,7 @@ class TestComponent(BaseTestCase):
             type="service",
             display_name="test_service",
         )
-        self.service = ClusterObject.objects.create(
-            prototype=service_prototype, cluster=self.cluster
-        )
+        self.service = ClusterObject.objects.create(prototype=service_prototype, cluster=self.cluster)
         self.component_prototype = Prototype.objects.create(
             bundle=bundle,
             type="component",

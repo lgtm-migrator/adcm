@@ -42,9 +42,7 @@ def test_login_no_group_base(sdk_client_fs, ldap_user, ldap_user_in_group, ldap_
     """
     Test that users with or without LDAP group can log in and their groups are created
     """
-    login_should_succeed(
-        "login as ldap user not in group", sdk_client_fs, ldap_user["name"], ldap_user["password"]
-    )
+    login_should_succeed("login as ldap user not in group", sdk_client_fs, ldap_user["name"], ldap_user["password"])
     check_existing_users(sdk_client_fs, [ldap_user["name"]])
     check_existing_groups(sdk_client_fs)
     login_should_succeed(
@@ -62,9 +60,7 @@ def test_sync_no_group_base(sdk_client_fs, ldap_user, ldap_user_in_group, ldap_g
     Test that sync without specified LDAP group_search_base works correctly:
     users are synced and only their groups are created in ADCM
     """
-    wait_for_task_and_assert_result(
-        sdk_client_fs.adcm().action(name=SYNC_ACTION_NAME).run(), "success"
-    )
+    wait_for_task_and_assert_result(sdk_client_fs.adcm().action(name=SYNC_ACTION_NAME).run(), "success")
     _check_correct_objects_came_from_ldap(sdk_client_fs, ldap_user, ldap_user_in_group, ldap_group)
 
 
@@ -77,6 +73,4 @@ def _check_correct_objects_came_from_ldap(sdk_client_fs, ldap_user, ldap_user_in
         assert len(users_in_group) == 1, "Exactly 1 user should be in group from ldap"
         assert (
             actual := users_in_group[0].username
-        ) == user_in_group_name, (
-            f"Incorrect username in group.\nExpected: {user_in_group_name}\nActual: {actual}"
-        )
+        ) == user_in_group_name, f"Incorrect username in group.\nExpected: {user_in_group_name}\nActual: {actual}"

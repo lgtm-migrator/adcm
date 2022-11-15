@@ -83,17 +83,13 @@ class TestHeader:
         with wait_for_new_window(app_fs.driver):
             header.click_ask_link_in_help_popup()
         with allure.step(f"Check new opened page: {params['help_link']}"):
-            BasePageObject(app_fs.driver, app_fs.adcm.url).wait_url_contains_path(
-                params["help_link"]
-            )
+            BasePageObject(app_fs.driver, app_fs.adcm.url).wait_url_contains_path(params["help_link"])
             close_current_tab(app_fs.driver)
         header.click_help_button_in_header()
         with wait_for_new_window(app_fs.driver):
             header.click_doc_link_in_help_popup()
         with allure.step(f"Check new opened page: {params['docs_link']}"):
-            BasePageObject(app_fs.driver, app_fs.adcm.url).wait_url_contains_path(
-                params["docs_link"]
-            )
+            BasePageObject(app_fs.driver, app_fs.adcm.url).wait_url_contains_path(params["docs_link"])
 
     def test_check_header_user_settings_for_authorised_user(self, app_fs):
         """Test header user settings buttons for authorised user"""

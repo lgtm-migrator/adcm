@@ -352,8 +352,7 @@ def cluster_case(
             )
 
         case (
-            ["cluster", cluster_pk, "config", "history"]
-            | ["cluster", cluster_pk, "config", "history", _, "restore"]
+            ["cluster", cluster_pk, "config", "history"] | ["cluster", cluster_pk, "config", "history", _, "restore"]
         ):
             audit_operation, audit_object = obj_pk_case(
                 obj_type=AuditObjectType.Cluster,
