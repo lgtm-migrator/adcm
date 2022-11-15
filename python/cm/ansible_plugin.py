@@ -75,7 +75,7 @@ MSG_MANDATORY_ARGS = "Arguments {} are mandatory. Bad Dobby!"
 MSG_NO_ROUTE = "Incorrect combination of args. Bad Dobby!"
 MSG_NO_SERVICE_NAME = "You must specify service name in arguments."
 MSG_NO_MULTI_STATE_TO_DELETE = (
-    "You try to delete absent multi_state. You should define missing_ok as True " "or choose an existing multi_state"
+    "You try to delete absent multi_state. You should define missing_ok as True or choose an existing multi_state"
 )
 
 

@@ -656,7 +656,7 @@ def validate_name(value, err_msg):
     if not isinstance(value, str):
         err("WRONG_NAME", f"{err_msg} should be string")
     p = re.compile(NAME_REGEX)
-    msg1 = "{} is incorrect. Only latin characters, digits," " dots (.), dashes (-), and underscores (_) are allowed."
+    msg1 = "{} is incorrect. Only latin characters, digits, dots (.), dashes (-), and underscores (_) are allowed."
     if p.fullmatch(value) is None:
         err("WRONG_NAME", msg1.format(err_msg))
     return value
