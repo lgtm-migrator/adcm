@@ -244,7 +244,7 @@ class PrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     def license(request: Request, *args, **kwargs) -> Response:
         prototype = check_obj(Prototype, kwargs["prototype_pk"], "PROTOTYPE_NOT_FOUND")
         body = get_license(prototype)
-        url = reverse(path="accept-license", kwargs={"prototype_pk": prototype.pk}, request=request)
+        url = reverse(viewname="accept-license", kwargs={"prototype_pk": prototype.pk}, request=request)
 
         return Response({"license": prototype.license, "accept": url, "text": body})
 
