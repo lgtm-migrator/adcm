@@ -130,6 +130,9 @@ class ServiceDetailView(PermissionListMixin, DetailView):
         if instance.has_another_service_requires:
             raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} has another service requires host components")
 
+        if instance.prototype.required:
+            raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} is required")
+
         delete_action = Action.objects.filter(
             prototype=instance.prototype, name=settings.ADCM_DELETE_SERVICE_ACTION_NAME
         ).first()

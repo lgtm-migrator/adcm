@@ -270,3 +270,14 @@ class TestServiceAPI(BaseTestCase):
         response: Response = self.client.delete(path=reverse("service-details", kwargs={"service_id": service_1.pk}))
 
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
+
+    def test_delete_required_fail(self):
+        self.service.prototype.required = True
+        self.service.prototype.save(update_fields=["required"])
+
+        with patch("api.service.views.delete_service"):
+            response: Response = self.client.delete(
+                path=reverse("service-details", kwargs={"service_id": self.service.pk})
+            )
+
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
