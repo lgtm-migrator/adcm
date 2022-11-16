@@ -22,6 +22,14 @@
     so it can't be deleted
   required: true
 
+  actions: &actions
+    adcm_remove_service: &action
+      type: job
+      script_type: ansible
+      script: ./remove.yaml
+      states:
+        available: any
+
 - type: service
   version: 1
   name: with_component
@@ -33,6 +41,8 @@
     - name: param
       default: 12
       type: integer
+
+  actions: *actions
 
   export:
     - param
@@ -55,9 +65,13 @@
         on_fail: failed
         on_success: succeed
 
+    adcm_remove_service: *action
+
 - type: service
   version: 1
   name: with_dependent_component
+
+  actions: *actions
 
   components:
     component:

@@ -16,7 +16,7 @@ import allure
 from adcm_client.objects import ADCMClient, Cluster, Provider
 from adcm_pytest_plugin.utils import get_data_dir
 
-from tests.library.assertions import expect_api_error
+from tests.library.assertions import expect_api_error, expect_no_api_error
 from tests.library.errorcodes import SERVICE_CONFLICT, SERVICE_DELETE_ERROR
 
 
@@ -64,3 +64,61 @@ def test_forbid_service_deletion_no_action(sdk_client_fs: ADCMClient, generic_pr
         service.reread()
         assert service.state != "created"
         expect_api_error("delete service not in 'created' state", operation=service.delete, err_=SERVICE_DELETE_ERROR)
+
+
+def test_service_deletion_with_action(sdk_client_fs: ADCMClient, generic_provider: Provider) -> None:
+    cluster = sdk_client_fs.upload_from_fs(get_data_dir(__file__, "with_action")).cluster_create(
+        "Cluster with service remove actions"
+    )
+
+    with allure.step("Check service required for cluster can't be deleted"):
+        service = cluster.service_add(name="required_service")
+        expect_api_error("delete required service", operation=service.delete, err_=SERVICE_DELETE_ERROR)
+        _check_actions_amount(sdk_client_fs, 0)
+
+    with allure.step("Check unmapped service with bonded action can be simply deleted"):
+        service = cluster.service_add(name="with_component")
+        service.delete()
+        _check_actions_amount(sdk_client_fs, 0)
+
+    with allure.step("Check unmapped service not in 'created' state can be deleted with action"):
+        service = cluster.service_add(name="state_change")
+        service.action(name="change_state").run().wait()
+        expect_no_api_error("Delete service with 'remove' action", operation=service.delete)
+        _wait_all_tasks_succeed(sdk_client_fs, 2)
+
+    with allure.step("Check that service that others depend on can't be deleted"):
+        service_with_component = cluster.service_add(name="with_component")
+        dependent_service = cluster.service_add(name="with_dependent_component")
+        host = cluster.host_add(generic_provider.host_create("some-fqdn"))
+        cluster.hostcomponent_set((host, service_with_component.component()), (host, dependent_service.component()))
+        expect_api_error(
+            "delete service with 'requires' component", operation=service_with_component.delete, err_=SERVICE_CONFLICT
+        )
+
+    with allure.step("Check that delete dependant service first is allowed"):
+        expect_no_api_error("delete dependant service", operation=dependent_service.delete)
+        _wait_all_tasks_succeed(sdk_client_fs, 3)
+        expect_no_api_error("delete mapped service", operation=service_with_component.delete)
+        _wait_all_tasks_succeed(sdk_client_fs, 4)
+
+    with allure.step("Check that imported service can't be deleted even with action"):
+        importer: Cluster = sdk_client_fs.upload_from_fs(get_data_dir(__file__, "with_import")).cluster_create(
+            "Importer Cluster"
+        )
+        service = cluster.service_add(name="with_component")
+        importer.bind(service)
+        expect_api_error("delete service with export", operation=service.delete, err_=SERVICE_CONFLICT)
+
+
+@allure.step("Check amount of jobs is {expected_amount} and all tasks finish successfully")
+def _wait_all_tasks_succeed(client: ADCMClient, expected_amount: int):
+    jobs = client.job_list()
+    assert _check_actions_amount(client, expected_amount)
+    assert all(job.task().wait() == "success" for job in jobs)
+
+
+def _check_actions_amount(client: ADCMClient, expected_amount: int) -> None:
+    assert (
+        actual := len(client.job_list())
+    ) == expected_amount, f"Expected jobs amount should be {expected_amount}.\nActual: {actual}"
