@@ -7,7 +7,8 @@ include:
 Linters:
   script:
     - apk update && apk upgrade && apk add build-base linux-headers openssl libc6-compat openldap-dev python3-dev py3-pip
-    - pip install -r requirements-test.txt -r requirements-venv-2.9.txt
+    - pip install -r requirements-venv-2.9.txt
+    - pip install autoflake black isort
     - black --check license_checker.py python tests
     - autoflake --check --quiet -r --remove-all-unused-imports --exclude apps.py,python/ansible/plugins,python/init_db.py,python/task_runner.py,python/backupdb.py,python/job_runner.py,python/drf_docs.py license_checker.py python tests
     - isort --check license_checker.py python tests

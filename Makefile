@@ -26,7 +26,7 @@ build: describe buildss buildjs build_base
 
 unittests: build_base
 	docker run -e DJANGO_SETTINGS_MODULE=adcm.settings -i --rm -v $(CURDIR)/data:/adcm/data $(APP_IMAGE):$(APP_TAG) \
-	sh -c "pip install --no-cache -r /adcm/requirements-test.txt && /adcm/python/manage.py test /adcm/python -v 2"
+	sh -c "pip install --no-cache -r /adcm/requirements.txt && /adcm/python/manage.py test /adcm/python -v 2"
 
 pytest:
 	docker pull hub.adsw.io/library/functest:3.10.6.slim.buster-x64
