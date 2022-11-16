@@ -118,11 +118,16 @@ class ServiceDetailView(PermissionListMixin, DetailView):
     @audit
     def delete(self, request, *args, **kwargs):
         instance: ClusterObject = self.get_object()
-        if instance.state != "created":
-            raise_adcm_ex("SERVICE_DELETE_ERROR")
+        delete_action = Action.objects.filter(
+            prototype=instance.prototype, name=settings.ADCM_DELETE_SERVICE_ACTION_NAME
+        ).first()
 
-        if HostComponent.objects.filter(cluster=instance.cluster, service=instance).exists():
-            raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} has component(s) on host(s)")
+        if not delete_action:
+            if instance.state != "created":
+                raise_adcm_ex("SERVICE_DELETE_ERROR")
+
+            if HostComponent.objects.filter(cluster=instance.cluster, service=instance).exists():
+                raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} has component(s) on host(s)")
 
         if ClusterBind.objects.filter(source_service=instance).exists():
             raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} has exports(s)")
