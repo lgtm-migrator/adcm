@@ -16,14 +16,14 @@ RUN apk update && \
         logrotate
 COPY requirements*.txt /adcm/
 RUN pip install --upgrade pip &&  \
-    pip install --no-cache-dir -r /adcm/requirements.txt && \
+    pip install --no-cache-dir -r /adcm/requirements-venv-default.txt && \
     python -m venv /adcm/venv/2.9 && \
     . /adcm/venv/2.9/bin/activate && \
     pip install --no-cache-dir -r /adcm/requirements-venv-2.9.txt && \
     deactivate && \
     python -m venv /adcm/venv/default &&  \
     . /adcm/venv/default/bin/activate && \
-    pip install --no-cache-dir -r /adcm/requirements.txt && \
+    pip install --no-cache-dir -r /adcm/requirements-venv-default.txt && \
     deactivate
 RUN apk del .build-deps
 COPY . /adcm
