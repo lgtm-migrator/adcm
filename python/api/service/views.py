@@ -133,6 +133,9 @@ class ServiceDetailView(PermissionListMixin, DetailView):
         if instance.prototype.required:
             raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} is required")
 
+        if ClusterBind.objects.filter(service=instance).exists():
+            raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} has bind")
+
         delete_action = Action.objects.filter(
             prototype=instance.prototype, name=settings.ADCM_DELETE_SERVICE_ACTION_NAME
         ).first()
