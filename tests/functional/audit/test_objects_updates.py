@@ -91,7 +91,7 @@ class TestClusterUpdates:
 
     @pytest.mark.parametrize(
         "parse_with_context", ["plain_service_add.yaml"], indirect=True
-    )  # pylint: disable-next=too-many-arguments
+    )
     def test_plain_service_add(self, import_bundle, parse_with_context, post, delete, new_user_client):
         """Test adding service from /api/v1/service/"""
         new_user = self.client.user(id=new_user_client.me().id)
@@ -127,7 +127,7 @@ class TestClusterUpdates:
 
     @pytest.mark.parametrize(
         "parse_with_context", ["cluster_updates.yaml"], indirect=True
-    )  # pylint: disable-next=too-many-arguments
+    )
     def test_cluster_service_updates(
         self,
         bundle_with_license,
@@ -410,7 +410,7 @@ class TestObjectUpdates:
         self.new_user_creds = unauthorized_creds
 
     @parametrize_audit_scenario_parsing("objects_update.yaml", NEW_USER)
-    @pytest.mark.parametrize("method", ["put", "patch"])  # pylint: disable-next=too-many-arguments
+    @pytest.mark.parametrize("method", ["put", "patch"])
     def test_update_objects(
         self,
         method: str,

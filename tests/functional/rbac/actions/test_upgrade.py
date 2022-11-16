@@ -115,7 +115,7 @@ class TestActionRolesOnUpgrade:
     @pytest.mark.usefixtures("new_bundle", "old_cluster_actions_policies")
     def test_upgrade(
         self, clients, user, old_cluster, all_business_roles, old_cluster_objects_map
-    ):  # pylint: disable=too-many-arguments
+    ):
         """
         Test that upgrade works correctly considering permissions on actions:
         1. Actions with same name and display name are still available after upgrade if permissions were granted.

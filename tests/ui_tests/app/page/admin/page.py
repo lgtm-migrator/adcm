@@ -237,7 +237,7 @@ class AdminUsersPage(GeneralAdminPage):
     @allure.step('Create new user "{username}" with password "{password}"')
     def create_user(
         self, username: str, password: str, first_name: str, last_name: str, email: str
-    ):  # pylint: disable-next=too-many-arguments
+    ):
         """Create new user via add user popup"""
         self.find_and_click(AdminUsersLocators.create_user_button)
         self.wait_element_visible(AdminUsersLocators.AddUserPopup.block)
@@ -259,7 +259,7 @@ class AdminUsersPage(GeneralAdminPage):
         last_name: Optional[str] = None,
         email: Optional[str] = None,
         group: Optional[str] = None,
-    ):  # pylint: disable-next=too-many-arguments
+    ):
         """Update some of fields for user"""
         if not (password or first_name or last_name or email or group):
             raise ValueError("You should provide at least one field's value to make an update")
@@ -705,7 +705,7 @@ class AdminPoliciesPage(GeneralAdminPage):
         self.wait_element_visible(AdminPoliciesLocators.AddPolicyPopup.block)
 
     @allure.step('Fill first step in new policy')
-    def fill_first_step_in_policy_popup(  # pylint: disable=too-many-arguments
+    def fill_first_step_in_policy_popup(
         self,
         policy_name: str,
         description: Optional[str],
@@ -760,7 +760,7 @@ class AdminPoliciesPage(GeneralAdminPage):
                 raise AssertionError(f"There are no item {item} in select popup")
 
     @allure.step('Fill second step in new policy')
-    def fill_second_step_in_policy_popup(  # pylint: disable=too-many-arguments
+    def fill_second_step_in_policy_popup(
         self,
         clusters: Optional[str] = None,
         services: Optional[str] = None,
@@ -822,7 +822,7 @@ class AdminPoliciesPage(GeneralAdminPage):
         self.wait_element_hide(AdminPoliciesLocators.AddPolicyPopup.block)
 
     @allure.step('Create new policy')
-    def create_policy(  # pylint: disable=too-many-arguments
+    def create_policy(
         self,
         policy_name: str,
         description: Optional[str],

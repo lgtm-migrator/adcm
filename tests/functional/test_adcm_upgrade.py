@@ -12,7 +12,7 @@
 
 """Tests for ADCM upgrade"""
 
-# pylint:disable=redefined-outer-name, too-many-arguments
+# pylint:disable=redefined-outer-name
 
 import random
 from contextlib import contextmanager

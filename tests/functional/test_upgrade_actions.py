@@ -276,8 +276,8 @@ class TestSuccessfulUpgrade:
         for job_name in ('before_switch', 'after_switch'):
             job = next(
                 filter(
-                    lambda x: x.display_name == job_name,
-                    sdk_client_fs.job_list(),  # pylint: disable=cell-var-from-loop
+                    lambda x: x.display_name == job_name,  # pylint: disable=cell-var-from-loop
+                    sdk_client_fs.job_list(),
                 )
             )
             assert expected_message in job.log().content, f'"{expected_message}" should be in log'
@@ -371,7 +371,6 @@ class TestSuccessfulUpgrade:
             self._check_host_is_in_group(host_1, second_component_group, groups)
             self._check_host_is_in_group(host_1, some_component_group, groups)
 
-    # pylint: disable=too-many-arguments
     def _upgrade_to_newly_uploaded_version(
         self,
         client,
@@ -408,7 +407,6 @@ class TestSuccessfulUpgrade:
         ), f'Host {host.fqdn} should be in group {group_name}, but not found in: {hosts}'
 
 
-# pylint: disable-next=too-few-public-methods
 class FailedUploadMixin:
     """Useful methods for upload failures tests"""
 
@@ -559,7 +557,6 @@ class TestUpgradeWithHCFailures(FailedUploadMixin):
         sets_are_equal(actual_hc, expected_hc, 'The hostcomponent from before the upgrade was expected')
 
 
-# pylint: disable-next=too-few-public-methods
 class TestUpgradeActionRelations:
     """Test cases when upgrade action"""
 
@@ -680,7 +677,7 @@ class TestConstraintsChangeAfterUpgrade:
             ]
         }
 
-    @pytest.fixture()  # pylint: disable-next=too-many-arguments
+    @pytest.fixture()
     def upload_bundles(
         self, request, sdk_client_fs, tmpdir, with_hc_in_upgrade, hc_acl_block, dummy_action_content
     ) -> Tuple[Bundle, Bundle]:

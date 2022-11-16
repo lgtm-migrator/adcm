@@ -84,7 +84,7 @@ def two_adcm_groups(sdk_client_fs) -> Tuple[Group, Group]:
 
 @pytest.mark.usefixtures(
     'configure_adcm_ldap_ad', 'two_ldap_users'
-)  # pylint: disable-next=too-many-arguments, too-many-locals, too-many-statements
+)  # pylint: disable-next=too-many-locals,too-many-statements
 def test_users_in_groups_sync(
     sdk_client_fs,
     ldap_ad,

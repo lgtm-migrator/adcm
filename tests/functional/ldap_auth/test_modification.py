@@ -92,7 +92,6 @@ def test_ldap_group_manual_modification_is_forbidden(sdk_client_fs, ldap_group):
         _check_change_is_forbidden(group, attr)
 
 
-# pylint: disable-next=too-many-arguments
 def test_membership(
     sdk_client_fs,
     local_user,

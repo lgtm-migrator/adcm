@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=redefined-outer-name, unused-argument, too-many-lines
+# pylint: disable=redefined-outer-name,too-many-lines
 
 """UI tests for /admin page"""
 
@@ -711,7 +711,6 @@ class TestAdminPolicyPage:
         )
         policies_page.delete_all_policies()
 
-    # pylint: disable=too-many-arguments
     @pytest.mark.usefixtures("_login_to_adcm_over_api")
     @pytest.mark.parametrize(
         ("clusters", "services", "providers", "hosts", "parents", "role_name"),

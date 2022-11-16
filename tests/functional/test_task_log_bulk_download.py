@@ -267,7 +267,7 @@ class TestArchiveNaming:
     """Test task logs archive naming"""
 
     @only_clean_adcm
-    @pytest.mark.usefixtures("_prepare_cluster_and_provider")  # pylint: disable-next=too-many-arguments
+    @pytest.mark.usefixtures("_prepare_cluster_and_provider")
     def test_naming(self, cluster, provider, adcm_fs, sdk_client_fs, tmpdir):
         """Test naming of task's archive and its contents"""
         self._test_archiving_adcm_task(sdk_client_fs.adcm(), tmpdir)

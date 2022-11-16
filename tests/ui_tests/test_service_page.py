@@ -57,7 +57,7 @@ BUNDLE_DEFAULT_FIELDS = "cluster_and_service_with_default_string"
 BUNDLE_WITH_DESCRIPTION_FIELDS = "service_with_all_config_params"
 
 
-# pylint: disable=redefined-outer-name,unused-argument,too-many-locals
+# pylint: disable=redefined-outer-name,too-many-locals
 pytestmark = pytest.mark.usefixtures("_login_to_adcm_over_api")
 
 

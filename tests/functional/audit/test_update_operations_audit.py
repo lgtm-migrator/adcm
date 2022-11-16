@@ -219,7 +219,7 @@ def test_update_config_of_group_config(group_configs, audit_log_checker, sdk_cli
 @parametrize_audit_scenario_parsing(
     "add_delete_host_group_config.yaml", {"username": NEW_USER["username"], "host": FQDN}
 )
-@pytest.mark.usefixtures("_grant_view_config_permissions_on_adcm_objects")  # pylint: disable-next=too-many-arguments
+@pytest.mark.usefixtures("_grant_view_config_permissions_on_adcm_objects")
 def test_add_remove_hosts_from_group_config(
     group_configs, basic_objects, audit_log_checker, sdk_client_fs, post, delete, unauthorized_creds
 ):

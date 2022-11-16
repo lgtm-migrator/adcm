@@ -31,7 +31,6 @@ pytestmark = [
 ]
 
 
-# pylint: disable-next=too-few-public-methods
 class TestLDAPEntitiesRelationsInADCM:
     """Test that relations from LDAP are correctly integrated to ADCM"""
 

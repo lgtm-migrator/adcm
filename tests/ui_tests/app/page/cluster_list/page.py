@@ -174,7 +174,7 @@ class ClusterListPage(BasePageObject):  # pylint: disable=too-many-public-method
         dialog.wait_opened()
         return dialog
 
-    @allure.step("Run upgrade {upgrade_name} for cluster from row")  # pylint: disable-next=too-many-arguments
+    @allure.step("Run upgrade {upgrade_name} for cluster from row")
     def run_upgrade_in_cluster_row(
         self,
         row: WebElement,

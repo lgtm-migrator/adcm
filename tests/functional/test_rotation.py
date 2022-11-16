@@ -266,7 +266,6 @@ def test_remove_only_expired_config_logs(sdk_client_fs, adcm_fs, adcm_db, separa
     _check_config_groups_exists(objects)
 
 
-# pylint: disable-next=too-many-arguments
 def test_logrotate_command_target_job(sdk_client_fs, adcm_fs, adcm_db, simple_tasks, separated_configs, objects):
     """
     Check that "logrotate --target job" deletes only configs, but not the jobs
@@ -286,7 +285,6 @@ def test_logrotate_command_target_job(sdk_client_fs, adcm_fs, adcm_db, simple_ta
     _check_config_groups_exists(objects)
 
 
-# pylint: disable-next=too-many-arguments
 def test_logrotate_command_target_config(sdk_client_fs, adcm_fs, adcm_db, simple_tasks, separated_configs, objects):
     """
     Check that "logrotate --target config" deletes only configs, but not the jobs

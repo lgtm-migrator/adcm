@@ -396,7 +396,6 @@ ASSERT_TYPE = {
 }
 
 
-# pylint: disable=too-many-arguments
 def assert_config_type(path, config_type, entities, is_required, is_default, sent_value_type):
     """
     Running test scenario for cluster, service, provider and host

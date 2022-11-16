@@ -33,7 +33,7 @@ from tests.ui_tests.app.page.cluster.page import (
 )
 from tests.ui_tests.utils import prepare_cluster_and_open_config_page
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-boolean-expressions, too-many-statements
+# pylint: disable=too-many-locals,too-many-boolean-expressions, too-many-statements
 
 pytestmark = [
     pytest.mark.usefixtures("_cleanup_browser_logs", "_attach_debug_info_on_ui_test_fail", "_login_over_api_ms")

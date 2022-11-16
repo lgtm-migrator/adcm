@@ -129,7 +129,6 @@ class TestLDAPSyncAction:
         """Test that LDAP sync action pulls users and groups from LDAP"""
         self._simple_sync(sdk_client_fs, ldap_group, ldap_user_in_group, DEFAULT_LOCAL_USERS)
 
-    # pylint: disable-next=too-many-arguments
     def test_access_to_tasks(
         self,
         adcm_user_client,
@@ -203,7 +202,6 @@ class TestLDAPSyncAction:
         check_existing_users(sdk_client_fs, expected_local=expected_local_users)
         check_existing_groups(sdk_client_fs, expected_ldap=[ldap_group["name"]], expected_local=[group_name])
 
-    # pylint: disable-next=too-many-arguments
     def test_ldap_group_removed(self, sdk_client_fs, ldap_ad, ldap_group, ldap_user_in_group):
         """Test LDAP group removed from ADCM after it's removed from LDAP"""
         sync_adcm_with_ldap(sdk_client_fs)
@@ -215,7 +213,6 @@ class TestLDAPSyncAction:
         check_existing_users(sdk_client_fs, {ldap_user_in_group["name"]})
         check_existing_groups(sdk_client_fs)
 
-    # pylint: disable-next=too-many-arguments
     def test_user_removed_from_group(self, sdk_client_fs, ldap_ad, ldap_group, ldap_user_in_group):
         """Test that when user is removed from group in AD, it is also removed in ADCM's LDAP group"""
         another_group: Group = sdk_client_fs.group_create("Another group")

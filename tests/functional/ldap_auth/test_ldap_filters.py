@@ -101,7 +101,7 @@ def check_sync_with_filters(
 
 
 @pytest.mark.usefixtures('configure_adcm_ldap_ad')
-# pylint: disable-next=too-many-arguments, too-many-locals, too-many-statements
+# pylint: disable-next=too-many-locals,too-many-statements
 def test_search_filters_users(sdk_client_fs, two_ldap_groups_with_users):
     """Check LDAP filters for users"""
     turn_off_periodic_ldap_sync(client=sdk_client_fs)
@@ -248,7 +248,7 @@ def test_search_filters_groups(sdk_client_fs, two_adcm_groups_with_users, two_ld
 
 
 @pytest.mark.usefixtures('configure_adcm_ldap_ad')
-# pylint: disable-next=too-many-arguments, too-many-locals, too-many-statements
+# pylint: disable-next=too-many-locals,too-many-statements
 def test_search_filters_groups_with_symbols(sdk_client_fs, two_adcm_groups_with_users, two_ldap_groups_with_users):
     """Check LDAP filters for users and groups"""
     turn_off_periodic_ldap_sync(client=sdk_client_fs)
