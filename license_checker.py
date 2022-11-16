@@ -11,7 +11,6 @@
 # limitations under the License.
 
 import argparse
-import os
 import sys
 from pathlib import Path
 from typing import TextIO
@@ -49,35 +48,45 @@ APACHE_LICENCE_GO = [
 
 def check_licence(lines: list, lic: list[str]) -> bool:
     """Return False in case of empty licence"""
+
     if len(lines) < 10:
         return False
+
     if (lines[0] == lic[0] and lines[10] == lic[10]) or (lines[1] == lic[0] and lines[11] == lic[10]):
         return True
+
     return False
 
 
-def check_and_fix_files(fixed: int, skipped: int, fix: bool, root: str = "") -> tuple[int, int]:
-    root_path = Path(root)
-    for path in os.listdir(root_path):
+def check_and_fix_files(fixed: int, skipped: int, fix: bool, root: Path | None = None) -> tuple[int, int]:
+    for path in root.iterdir():
         lic = None
-        path = os.path.join(root_path, path)
-        if os.path.isdir(path):
+
+        if path.is_dir():
+            if path.name.startswith("__"):
+                continue
+
             fixed, skipped = check_and_fix_files(fixed, skipped, fix, path)
-        if os.path.isfile(path):
-            if path.endswith(".py"):
-                lic = APACHE_LICENCE_PY
-            elif path.endswith(".go") or path.endswith("go.mod"):
-                lic = APACHE_LICENCE_GO
-            if lic:
-                with open(path, "r+", encoding="utf-8") as f:
-                    lines = f.readlines()
-                    if not check_licence(lines, lic):
-                        sys.stdout.write(f"{path} has no license\n")
-                        if fix:
-                            update_files(f, lines, lic)
-                            fixed += 1
-                        else:
-                            skipped += 1
+
+        if path.suffix == ".py":
+            lic = APACHE_LICENCE_PY
+        elif path.suffix == ".go" or path.name == "go.mod":
+            lic = APACHE_LICENCE_GO
+
+        if not lic:
+            continue
+
+        with open(path, "r+", encoding="utf-8") as f:
+            lines = f.readlines()
+            if not check_licence(lines, lic):
+                sys.stdout.write(f"{path} has no license\n")
+
+                if fix:
+                    update_files(f, lines, lic)
+                    fixed += 1
+                else:
+                    skipped += 1
+
     return fixed, skipped
 
 
@@ -97,17 +106,27 @@ def main():
         help="Flag to fix absent license in file (default will only find it)",
     )
     parser.add_argument("--folders", nargs="+", help="Folders to check")
+
     args = parser.parse_args()
     number_of_fixed = number_of_skipped = 0
+
     for folder in args.folders:
-        number_of_fixed, number_of_skipped = check_and_fix_files(number_of_fixed, number_of_skipped, args.fix, folder)
+        number_of_fixed, number_of_skipped = check_and_fix_files(
+            number_of_fixed, number_of_skipped, args.fix, Path(folder)
+        )
+
     if number_of_fixed == number_of_skipped == 0:
         sys.stdout.write("Licence is present in all python and go files \n")
         sys.exit(0)
+
     sys.stdout.write(
         f"Updating licence skipped in {number_of_skipped} files." f" Licence was updated in {number_of_fixed} files \n"
     )
-    sys.exit(1)
+
+    if args.fix:
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
