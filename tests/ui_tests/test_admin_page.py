@@ -16,39 +16,29 @@
 
 import os
 from copy import deepcopy
-from typing import (
-    Tuple,
-)
+from typing import Tuple
 
 import allure
 import pytest
-from adcm_client.objects import (
-    Bundle,
-    Cluster,
-    ADCMClient,
-    Host,
-    Service,
-    Provider,
-)
+from adcm_client.objects import ADCMClient, Bundle, Cluster, Host, Provider, Service
 from adcm_pytest_plugin import utils
 from adcm_pytest_plugin.steps.actions import wait_for_task_and_assert_result
 from adcm_pytest_plugin.utils import random_string
-
 from tests.ui_tests.app.app import ADCMTest
 from tests.ui_tests.app.page.admin.page import (
-    AdminIntroPage,
-    AdminUsersPage,
-    AdminSettingsPage,
-    AdminRolesPage,
-    AdminGroupsPage,
-    AdminRoleInfo,
     AdminGroupInfo,
+    AdminGroupsPage,
+    AdminIntroPage,
     AdminPoliciesPage,
     AdminPolicyInfo,
+    AdminRoleInfo,
+    AdminRolesPage,
+    AdminSettingsPage,
+    AdminUsersPage,
 )
 from tests.ui_tests.app.page.cluster.page import (
-    ClusterConfigPage,
     ClusterComponentsPage,
+    ClusterConfigPage,
 )
 from tests.ui_tests.app.page.cluster_list.page import ClusterListPage
 from tests.ui_tests.app.page.component.page import ComponentConfigPage
@@ -1000,6 +990,7 @@ class TestAdminPolicyPage:
             ), "There are no permission hint"
 
     # pylint: enable=too-many-locals
+    @pytest.mark.xfail(reason="https://tracker.yandex.ru/ADCM-3264")
     @pytest.mark.usefixtures("_login_to_adcm_over_api")
     def test_policy_with_maintenance_mode(self, sdk_client_fs, app_fs, another_user, create_cluster_with_component):
         """Test create a group on /admin/policies"""

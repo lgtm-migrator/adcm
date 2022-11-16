@@ -19,7 +19,6 @@ import allure
 from adcm_pytest_plugin.utils import wait_until_step_succeeds
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.remote.webelement import WebElement
-
 from tests.ui_tests.app.helpers.locator import Locator
 from tests.ui_tests.app.page.admin.locators import (
     AdminGroupsLocators,
@@ -29,7 +28,11 @@ from tests.ui_tests.app.page.admin.locators import (
     AdminSettingsLocators,
     AdminUsersLocators,
 )
-from tests.ui_tests.app.page.common.base_page import BasePageObject, PageFooter, PageHeader
+from tests.ui_tests.app.page.common.base_page import (
+    BasePageObject,
+    PageFooter,
+    PageHeader,
+)
 from tests.ui_tests.app.page.common.common_locators import ObjectPageMenuLocators
 from tests.ui_tests.app.page.common.configuration.page import CommonConfigMenuObj
 from tests.ui_tests.app.page.common.dialogs.locators import DeleteDialog
@@ -572,7 +575,7 @@ class AdminRolesPage(GeneralAdminPage):
                 description='',
                 permissions='Create host, Upload bundle, Edit cluster configurations, Edit host configurations, '
                 'Add service, Remove service, Remove hosts, Map hosts, Unmap hosts, Edit host-components, '
-                'Upgrade cluster bundle, Remove bundle, Service Administrator, Manage Maintenance mode',
+                'Upgrade cluster bundle, Remove bundle, Service Administrator',
             ),
             AdminRoleInfo(
                 name='Provider Administrator',

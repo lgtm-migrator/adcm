@@ -22,10 +22,10 @@ from adcm_client.objects import ADCM, ADCMClient, Group, User
 from adcm_pytest_plugin.steps.actions import wait_for_task_and_assert_result
 from adcm_pytest_plugin.utils import random_string, wait_until_step_succeeds
 from coreapi.exceptions import ErrorMessage
-
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.ldap_auth.utils import (
     DEFAULT_LOCAL_USERS,
+    LDAP_ACTION_CAN_NOT_START_REASON,
     SYNC_ACTION_NAME,
     TEST_CONNECTION_ACTION,
     check_existing_groups,
@@ -35,8 +35,16 @@ from tests.functional.ldap_auth.utils import (
     login_should_fail,
 )
 from tests.functional.rbac.conftest import BusinessRoles, RbacRoles
-from tests.library.assertions import expect_api_error, expect_no_api_error, sets_are_equal
-from tests.library.ldap_interactions import LDAPTestConfig, configure_adcm_for_ldap, sync_adcm_with_ldap
+from tests.library.assertions import (
+    expect_api_error,
+    expect_no_api_error,
+    sets_are_equal,
+)
+from tests.library.ldap_interactions import (
+    LDAPTestConfig,
+    configure_adcm_for_ldap,
+    sync_adcm_with_ldap,
+)
 
 # pylint: disable=redefined-outer-name
 
@@ -77,30 +85,33 @@ def adcm_superuser_client(sdk_client_fs) -> ADCMClient:
 class TestDisablingCause:
     """Test LDAP-related ADCM actions have correct disabling cause"""
 
-    DISABLING_CAUSE = "no_ldap_settings"
-
     def test_ldap_connection_test_disabling_cause(self, sdk_client_fs, ad_config, ldap_basic_ous):
         """Test that disabling cause is set right for "test_ldap_connection" action"""
         adcm = sdk_client_fs.adcm()
 
         with allure.step("Check that with default settings disabling cause is set"):
-            self._check_disabling_cause(adcm, self.DISABLING_CAUSE)
+            self._check_disabling_cause(adcm, LDAP_ACTION_CAN_NOT_START_REASON)
         with allure.step("Set correct LDAP settings and check disabling cause is None"):
             self._set_ldap_settings(sdk_client_fs, ad_config, ldap_basic_ous)
             self._check_disabling_cause(adcm, None)
         with allure.step("Disable LDAP settings and check disabling cause is set"):
             adcm.config_set_diff({"attr": {"ldap_integration": {"active": False}}})
-            self._check_disabling_cause(adcm, self.DISABLING_CAUSE)
+            self._check_disabling_cause(adcm, LDAP_ACTION_CAN_NOT_START_REASON)
 
     def _check_disabling_cause(self, adcm: ADCM, expected: Optional[str]):
         # retrieve each time to avoid rereading
         sync = adcm.action(name=SYNC_ACTION_NAME)
         test_connection = adcm.action(name=TEST_CONNECTION_ACTION)
         assert (
-            sync.disabling_cause == expected
-        ), f"Sync action has incorrect disabling cause: {sync.disabling_cause}.\nExpected: {expected}"
-        assert test_connection.disabling_cause == expected, (
-            f"Test connection action has incorrect disabling cause: {test_connection.disabling_cause}.\n"
+            expected in sync.start_impossible_reason if expected is not None else sync.start_impossible_reason is None
+        ), f"Sync action has incorrect disabling cause: {sync.start_impossible_reason}.\nExpected: {expected}"
+        assert (
+            expected in test_connection.start_impossible_reason
+            if expected is not None
+            else test_connection.start_impossible_reason is None
+        ), (
+            "Test connection action has incorrect disabling cause: "
+            f"{test_connection.start_impossible_reason}.\n"
             f"Expected: {expected}"
         )
 

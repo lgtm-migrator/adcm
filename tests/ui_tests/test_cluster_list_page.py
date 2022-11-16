@@ -21,9 +21,11 @@ from adcm_client.objects import ADCMClient, Bundle, Cluster, Host, Provider
 from adcm_pytest_plugin import params, utils
 from adcm_pytest_plugin.utils import get_data_dir, parametrize_by_data_subdirs
 from selenium.common.exceptions import TimeoutException
-
 from tests.library.status import ADCMObjectStatusChanger
-from tests.ui_tests.app.helpers.configs_generator import generate_configs, prepare_config
+from tests.ui_tests.app.helpers.configs_generator import (
+    generate_configs,
+    prepare_config,
+)
 from tests.ui_tests.app.page.admin.page import AdminIntroPage
 from tests.ui_tests.app.page.cluster.page import (
     ClusterComponentsPage,
@@ -42,14 +44,23 @@ from tests.ui_tests.app.page.common.configuration.page import CONFIG_ITEMS
 from tests.ui_tests.app.page.common.group_config_list.page import GroupConfigRowInfo
 from tests.ui_tests.app.page.common.host_components.page import ComponentsHostRowInfo
 from tests.ui_tests.app.page.common.import_page.page import ImportItemInfo
-from tests.ui_tests.app.page.common.status.page import NEGATIVE_COLOR, SUCCESS_COLOR, StatusRowInfo
+from tests.ui_tests.app.page.common.status.page import (
+    NEGATIVE_COLOR,
+    SUCCESS_COLOR,
+    StatusRowInfo,
+)
 from tests.ui_tests.app.page.host.page import HostConfigPage, HostMainPage
-from tests.ui_tests.app.page.service.page import ServiceConfigPage, ServiceImportPage, ServiceMainPage
+from tests.ui_tests.app.page.service.page import (
+    ServiceConfigPage,
+    ServiceImportPage,
+    ServiceMainPage,
+)
 from tests.ui_tests.utils import (
     check_host_value,
     prepare_cluster_and_open_config_page,
     wait_and_assert_ui_info,
     wrap_in_dict,
+    create_few_groups,
 )
 
 RANGE_VALUES = [
@@ -717,6 +728,7 @@ class TestClusterHostPage:
         cluster_host_page.table.check_pagination(1)
         cluster_host_page.check_cluster_toolbar(CLUSTER_NAME)
 
+    @pytest.mark.xfail(reason="https://tracker.yandex.ru/ADCM-3264")
     @pytest.mark.smoke()
     def test_maintenance_mode_from_cluster_host_page(self, app_fs, create_community_cluster_with_host):
         """Test turn on and off maintenance mode on cluster/{}/host page"""
@@ -1193,7 +1205,7 @@ class TestClusterGroupConfigPage:
         """Test pagination on cluster/{}/group_config page"""
 
         group_conf_page = ClusterGroupConfigPage(app_fs.driver, app_fs.adcm.url, create_community_cluster.id).open()
-        group_conf_page.group_config.create_few_groups(11)
+        create_few_groups(group_conf_page.group_config)
         group_conf_page.table.check_pagination(second_page_item_amount=1)
 
     # pylint: disable=too-many-locals, undefined-loop-variable, too-many-statements

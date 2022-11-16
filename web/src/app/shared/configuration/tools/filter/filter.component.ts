@@ -124,11 +124,15 @@ export class FilterComponent extends BaseDirective implements OnInit, OnDestroy 
   applyFilters() {
     const filters = this.filterForm.value;
 
-    Object.keys(filters).forEach((f) => {
+    if (Object.keys(filters).filter((f) => {
       if (filters[f] === '' || filters[f] === undefined) {
         delete filters[f];
-      }
-    });
+        return false;
+      } else return true;
+    }).length === 0) {
+      this.innerData.next(this.backupData);
+      return;
+    }
 
     let data = this.backupData?.results?.filter((item) => {
       for (let key in filters) {
@@ -142,37 +146,34 @@ export class FilterComponent extends BaseDirective implements OnInit, OnDestroy 
       return true;
     });
 
-    if (this.filters.some((f) => f.filter_type === 'input')) {
+    if (this.filters.some((f) => f.filter_type === 'input' && filters[f.filter_field])) {
       data = data.filter((item) => {
-        for (let key in filters) {
-          if (this.filtersByType[key] === 'input') {
-            if (key.includes('/')) {
-              let nestedKey = key.split('/');
+        return Object.keys(filters).filter((f) => this.filtersByType[f] === 'input').every((i) => {
+          if (i.includes('/')) {
+            let nestedKey = i.split('/');
 
-              if (item[nestedKey[0]][nestedKey[1]] !== undefined &&
-                  item[nestedKey[0]][nestedKey[1]] !== null &&
-                  item[nestedKey[0]][nestedKey[1]].toLowerCase().includes(filters[key].toLowerCase())) {
-                return true;
-              }
-            } else {
-              if (item[key] !== undefined && item[key] !== null && item[key].toLowerCase().includes(filters[key].toLowerCase())) {
-                return true;
-              }
+            if (item[nestedKey[0]][nestedKey[1]] !== undefined &&
+              item[nestedKey[0]][nestedKey[1]] !== null &&
+              item[nestedKey[0]][nestedKey[1]] !== '' &&
+              item[nestedKey[0]][nestedKey[1]].toLowerCase().includes(filters[i].toLowerCase())) {
+              return true;
+            }
+          } else {
+            if (item[i] !== undefined && item[i] !== null && item[i] !== '' && item[i].toLowerCase().includes(filters[i].toLowerCase())) {
+              return true;
             }
           }
-        }
+        })
       })
     }
 
     if (this.filters.some((f) => f.filter_type === 'datepicker' && filters[f.filter_field].end)) {
       data = data.filter((item) => {
-        for (let key in filters) {
-          if (this.filtersByType[key] === 'datepicker') {
-            if (item[key] !== undefined && item[key] !== null && (filters[key].start < new Date(item[key]) && new Date(item[key]) < filters[key].end)) {
-              return true;
-            }
+        return Object.keys(filters).filter((f) => this.filtersByType[f] === 'datepicker').every((i) => {
+          if (item[i] !== undefined && item[i] !== null && (filters[i].start < new Date(item[i]) && new Date(item[i]) < filters[i].end)) {
+            return true;
           }
-        }
+        })
       })
     }
 

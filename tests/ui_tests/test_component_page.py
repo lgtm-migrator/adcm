@@ -15,39 +15,30 @@
 """UI tests for /cluster page"""
 
 import os
-from typing import (
-    Tuple,
-)
+from typing import Tuple
 
 import allure
 import pytest
-from adcm_client.objects import ADCMClient
-from adcm_client.objects import (
-    Cluster,
-    Service,
-    Host,
-)
+from adcm_client.objects import ADCMClient, Cluster, Host, Service
 from adcm_pytest_plugin import utils
-
 from tests.library.status import ADCMObjectStatusChanger
 from tests.ui_tests.app.page.admin.page import AdminIntroPage
 from tests.ui_tests.app.page.common.configuration.page import CONFIG_ITEMS
 from tests.ui_tests.app.page.common.group_config_list.page import GroupConfigRowInfo
 from tests.ui_tests.app.page.common.status.page import (
-    SUCCESS_COLOR,
     NEGATIVE_COLOR,
+    SUCCESS_COLOR,
+    StatusRowInfo,
 )
-from tests.ui_tests.app.page.common.status.page import StatusRowInfo
 from tests.ui_tests.app.page.component.page import (
-    ComponentMainPage,
     ComponentConfigPage,
     ComponentGroupConfigPage,
+    ComponentMainPage,
     ComponentStatusPage,
 )
-from tests.ui_tests.app.page.host.page import (
-    HostStatusPage,
-)
+from tests.ui_tests.app.page.host.page import HostStatusPage
 from tests.ui_tests.app.page.service.page import ServiceComponentPage
+from tests.ui_tests.utils import create_few_groups
 
 BUNDLE_COMMUNITY = "cluster_community"
 COMPONENT_WITH_REQUIRED_FIELDS = "component_with_required_string"
@@ -358,7 +349,7 @@ class TestComponentGroupConfigPage:
         group_conf_page = ComponentGroupConfigPage(
             app_fs.driver, app_fs.adcm.url, cluster.id, service.id, component.id
         ).open()
-        group_conf_page.group_config.create_few_groups(11)
+        create_few_groups(group_conf_page.group_config)
         group_conf_page.table.check_pagination(second_page_item_amount=1)
 
 
