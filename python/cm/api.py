@@ -146,7 +146,6 @@ def load_service_map():
         "host": hosts,
     }
     api_request("post", "/servicemap/", m)
-    load_host_map()
     load_mm_objects()
 
 
