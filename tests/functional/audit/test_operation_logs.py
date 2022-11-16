@@ -62,9 +62,7 @@ def new_user_and_client(sdk_client_fs) -> Tuple[User, ADCMClient]:
     return user, ADCMClient(url=sdk_client_fs.url, user=credentials["username"], password=credentials["password"])
 
 
-@pytest.mark.parametrize(
-    "parsed_audit_log", [ScenarioArg("simple.yaml", CONTEXT)], indirect=True
-)
+@pytest.mark.parametrize("parsed_audit_log", [ScenarioArg("simple.yaml", CONTEXT)], indirect=True)
 def test_simple_flow(sdk_client_fs, audit_log_checker, adb_bundle, dummy_host, new_user_and_client):
     """Test simple from with cluster objects manipulations"""
     config = {"just_string": "hoho"}

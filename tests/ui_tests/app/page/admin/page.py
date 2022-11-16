@@ -235,9 +235,7 @@ class AdminUsersPage(GeneralAdminPage):
         return "inactive" in row.get_attribute("class")
 
     @allure.step('Create new user "{username}" with password "{password}"')
-    def create_user(
-        self, username: str, password: str, first_name: str, last_name: str, email: str
-    ):
+    def create_user(self, username: str, password: str, first_name: str, last_name: str, email: str):
         """Create new user via add user popup"""
         self.find_and_click(AdminUsersLocators.create_user_button)
         self.wait_element_visible(AdminUsersLocators.AddUserPopup.block)

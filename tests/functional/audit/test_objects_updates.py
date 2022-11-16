@@ -89,9 +89,7 @@ class TestClusterUpdates:
         self.admin_creds = make_auth_header(sdk_client_fs)
         self.new_user_creds = unauthorized_creds
 
-    @pytest.mark.parametrize(
-        "parse_with_context", ["plain_service_add.yaml"], indirect=True
-    )
+    @pytest.mark.parametrize("parse_with_context", ["plain_service_add.yaml"], indirect=True)
     def test_plain_service_add(self, import_bundle, parse_with_context, post, delete, new_user_client):
         """Test adding service from /api/v1/service/"""
         new_user = self.client.user(id=new_user_client.me().id)
@@ -125,9 +123,7 @@ class TestClusterUpdates:
         checker.set_user_map(self.client)
         checker.check(self.client.audit_operation_list())
 
-    @pytest.mark.parametrize(
-        "parse_with_context", ["cluster_updates.yaml"], indirect=True
-    )
+    @pytest.mark.parametrize("parse_with_context", ["cluster_updates.yaml"], indirect=True)
     def test_cluster_service_updates(
         self,
         bundle_with_license,

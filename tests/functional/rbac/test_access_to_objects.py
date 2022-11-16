@@ -306,9 +306,7 @@ class TestAccessForJobsAndLogs:
         raise ValueError('param should be either "user" or "group"')
 
     # pylint: disable-next=too-many-locals
-    def test_access_to_tasks(
-        self, user_or_group: dict, clients, cluster, provider, finished_tasks
-    ):
+    def test_access_to_tasks(self, user_or_group: dict, clients, cluster, provider, finished_tasks):
         """
         Test that user:
         1. Have no access to task objects that were launched before user got permission to run action
