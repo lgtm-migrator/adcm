@@ -102,7 +102,6 @@ def _post_event(action, module, name, obj_pk):
 @receiver(post_save, sender=Policy)
 @receiver(post_save, sender=Role)
 @receiver(post_save, sender=GroupConfig)
-@receiver(post_save, sender=ADCMEntity.concerns.through)
 def model_change(sender, **kwargs):
     """post_save handler"""
     name, module, obj = get_names(sender, **kwargs)
@@ -122,7 +121,6 @@ def model_change(sender, **kwargs):
 @receiver(post_delete, sender=Policy)
 @receiver(post_delete, sender=Role)
 @receiver(post_delete, sender=GroupConfig)
-@receiver(post_delete, sender=ADCMEntity.concerns.through)
 def model_delete(sender, **kwargs):
     """post_delete handler"""
     name, module, obj = get_names(sender, **kwargs)
