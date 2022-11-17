@@ -14,6 +14,15 @@
   name: dependencies
   version: 1
 
+  actions:
+    long:
+      type: job
+      script_type: ansible
+      script: ./long.yaml
+      display_name: "Long action"
+      states:
+        available: any
+
 - type: service
   version: 2
   name: required_service
@@ -55,11 +64,10 @@
   name: state_change
 
   actions:
-    change_state:
+    change_state: &job
       type: job
       script_type: ansible
       script: ./actions.yaml
-      display_name: "Long action"
       states:
         available: any
         on_fail: failed
@@ -78,3 +86,31 @@
       requires:
         - service: with_component
           component: component
+
+- type: service
+  version: 1
+  name: with_concern
+
+  config:
+    - name: param
+      type: integer
+
+  actions: *actions
+
+  components:
+    component:
+      config:
+        - name: param
+          type: integer
+
+- type: service
+  version: 3
+  name: with_long_remove
+
+  actions:
+    adcm_delete_service:
+      <<: *action
+      script: ./long_remove.yaml
+
+  components:
+    component:
