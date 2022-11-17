@@ -619,7 +619,7 @@ class TestMMRoles(RBACBaseTestCase):
     def test_no_roles(self):
         for view_name, url_kwarg_name, obj in (
             ("host-details", "host_id", self.host),
-            ("component-details", "component_id", self.component),
+            ("component-detail", "component_id", self.component),
             ("service-details", "service_id", self.service),
         ):
             url = reverse(view_name, kwargs={url_kwarg_name: obj.pk})

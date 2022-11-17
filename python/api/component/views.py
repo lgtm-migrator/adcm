@@ -14,14 +14,13 @@ from guardian.mixins import PermissionListMixin
 from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 
-from api.base_view import DetailView, GenericUIView, PaginatedView
+from api.base_view import GenericUIView, GenericUIViewSet
 from api.component.serializers import (
     ComponentChangeMaintenanceModeSerializer,
     ComponentDetailSerializer,
     ComponentDetailUISerializer,
-    ComponentSerializer,
-    ComponentUISerializer,
     StatusSerializer,
 )
 from api.utils import (
@@ -48,33 +47,22 @@ def get_component_queryset(queryset, user, kwargs):
     return queryset
 
 
-class ComponentListView(PermissionListMixin, PaginatedView):
-    queryset = ServiceComponent.objects.all()
-    serializer_class = ComponentSerializer
-    serializer_class_ui = ComponentUISerializer
-    filterset_fields = ("cluster_id", "service_id")
-    ordering_fields = ("state", "prototype__display_name", "prototype__version_order")
-    permission_required = ["cm.view_servicecomponent"]
-
-    def get_queryset(self, *args, **kwargs):
-        queryset = super().get_queryset(*args, **kwargs)
-
-        return get_component_queryset(queryset, self.request.user, self.kwargs)
-
-
-class ComponentDetailView(PermissionListMixin, DetailView):
+# pylint: disable=too-many-ancestors
+class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
     queryset = ServiceComponent.objects.all()
     serializer_class = ComponentDetailSerializer
-    serializer_class_ui = ComponentDetailUISerializer
+    lookup_url_kwarg = "component_id"
     permission_classes = (DjangoOnlyObjectPermissions,)
     permission_required = ["cm.view_servicecomponent"]
-    lookup_url_kwarg = "component_id"
-    error_code = ServiceComponent.__error_code__
 
     def get_queryset(self, *args, **kwargs):
         queryset = super().get_queryset(*args, **kwargs)
-
         return get_component_queryset(queryset, self.request.user, self.kwargs)
+
+    def get_serializer_class(self):
+        if self.is_for_ui():
+            return ComponentDetailUISerializer
+        return super().get_serializer_class()
 
 
 class ComponentMaintenanceModeView(GenericUIView):
