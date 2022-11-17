@@ -193,9 +193,9 @@ export class BaseListDirective {
     }
   }
 
-  refresh(id?: number) {
+  refresh(id?: number, filter_params?: ParamMap) {
     if (id) this.parent.current = { id };
-    this.service.getList(this.listParams, this.typeName).subscribe((list: IListResult<Entities>) => {
+    this.service.getList(filter_params || this.listParams, this.typeName).subscribe((list: IListResult<Entities>) => {
       if (this.reload) {
         this.reload(list);
       }
