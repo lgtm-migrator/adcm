@@ -36,8 +36,6 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
     }).length === 0) {
       return;
     }
-
-    this.sendRequestHandler();
   }
 
 }
