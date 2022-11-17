@@ -23,7 +23,7 @@
   required: true
 
   actions: &actions
-    adcm_remove_service: &action
+    adcm_delete_service: &action
       type: job
       script_type: ansible
       script: ./remove.yaml
@@ -65,7 +65,7 @@
         on_fail: failed
         on_success: succeed
 
-    adcm_remove_service: *action
+    adcm_delete_service: *action
 
 - type: service
   version: 1
