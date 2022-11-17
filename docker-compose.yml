@@ -1,0 +1,16 @@
+services:
+  adcm:
+    build:
+      context: .
+    restart: always
+    volumes:
+      - ${DATA_DIR}:/adcm/data
+    ports:
+      - 8000:8000
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: ${PGDATA}
