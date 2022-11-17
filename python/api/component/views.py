@@ -54,6 +54,8 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
     lookup_url_kwarg = "component_id"
     permission_classes = (DjangoOnlyObjectPermissions,)
     permission_required = ["cm.view_servicecomponent"]
+    filterset_fields = ("cluster_id", "service_id")
+    ordering_fields = ("state", "prototype__display_name", "prototype__version_order")
 
     def get_queryset(self, *args, **kwargs):
         queryset = super().get_queryset(*args, **kwargs)
