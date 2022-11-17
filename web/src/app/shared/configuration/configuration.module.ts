@@ -83,7 +83,7 @@ import { ServerFilterComponent } from './tools/server-filter/server-filter.compo
       }
     }),
   ],
-  exports: [ConfigComponent, ConfigFieldsComponent, FilterComponent, FilterListComponent],
+  exports: [ConfigComponent, ConfigFieldsComponent, FilterComponent, FilterListComponent, ServerFilterComponent],
   providers: [FieldService, YspecService, SchemeService, ConfigService],
 })
 export class ConfigurationModule {
