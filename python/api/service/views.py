@@ -141,9 +141,6 @@ class ServiceDetailView(PermissionListMixin, DetailView):
         if ClusterBind.objects.filter(service=instance).exists():
             raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} has bind")
 
-        delete_action = Action.objects.filter(
-            prototype=instance.prototype, name=settings.ADCM_DELETE_SERVICE_ACTION_NAME
-        ).first()
         if TaskLog.objects.filter(action=delete_action, status=JobStatus.RUNNING).exists():
             raise_adcm_ex("SERVICE_DELETE_ERROR", "Service is deleting now")
 
