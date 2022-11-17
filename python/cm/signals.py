@@ -101,8 +101,8 @@ def _post_event(action, module, name, obj_pk):
 @receiver(post_save, sender=Group)
 @receiver(post_save, sender=Policy)
 @receiver(post_save, sender=Role)
-@receiver(m2m_changed, sender=GroupConfig)
-@receiver(m2m_changed, sender=ADCMEntity.concerns.through)
+@receiver(post_save, sender=GroupConfig)
+@receiver(post_save, sender=ADCMEntity.concerns.through)
 def model_change(sender, **kwargs):
     """post_save handler"""
     name, module, obj = get_names(sender, **kwargs)
@@ -121,8 +121,8 @@ def model_change(sender, **kwargs):
 @receiver(post_delete, sender=Group)
 @receiver(post_delete, sender=Policy)
 @receiver(post_delete, sender=Role)
-@receiver(m2m_changed, sender=GroupConfig)
-@receiver(m2m_changed, sender=ADCMEntity.concerns.through)
+@receiver(post_delete, sender=GroupConfig)
+@receiver(post_delete, sender=ADCMEntity.concerns.through)
 def model_delete(sender, **kwargs):
     """post_delete handler"""
     name, module, obj = get_names(sender, **kwargs)
@@ -139,8 +139,8 @@ def model_delete(sender, **kwargs):
 @receiver(m2m_changed, sender=ADCMEntity.concerns.through)
 @receiver(m2m_changed, sender=Policy)
 @receiver(m2m_changed, sender=Role)
-@receiver(post_delete, sender=User)
-@receiver(post_delete, sender=Group)
+@receiver(m2m_changed, sender=User)
+@receiver(m2m_changed, sender=Group)
 def m2m_change(sender, **kwargs):
     """m2m_changed handler"""
     name, module, obj = get_names(sender, **kwargs)
