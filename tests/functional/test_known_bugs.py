@@ -14,11 +14,10 @@
 
 import allure
 import pytest
-from adcm_client.objects import Cluster, Provider, Bundle
+from adcm_client.objects import Bundle, Cluster, Provider
 from adcm_pytest_plugin.steps.actions import run_service_action_and_assert_result
-from adcm_pytest_plugin.utils import get_data_dir, catch_failed
+from adcm_pytest_plugin.utils import catch_failed, get_data_dir
 from coreapi.exceptions import ErrorMessage
-
 from tests.functional.conftest import only_clean_adcm
 
 # pylint: disable=redefined-outer-name
@@ -99,6 +98,9 @@ def test_launch_action_with_activatable_config_group(sdk_client_fs):
         with allure.step(f"Try to set active status of {param_1=} and {param_2=}"):
             with catch_failed(ErrorMessage, "Running cluster action should not raise exception"):
                 cluster.action(name="enable_something").run(
-                    config={"param_1": {"somethingtwo": "jjj"}, "param_2": {"somethingone": ["ololo"]}},
+                    config={
+                        "param_1": {"somethingtwo": "jjj"},
+                        "param_2": {"somethingone": ["ololo"]},
+                    },
                     attr={"param_1": {"active": param_1}, "param_2": {"active": param_2}},
                 ).wait()

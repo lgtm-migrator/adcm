@@ -15,7 +15,6 @@
 import allure
 import pytest
 from adcm_pytest_plugin.steps.actions import wait_for_task_and_assert_result
-
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.ldap_auth.utils import (
     SYNC_ACTION_NAME,
@@ -46,7 +45,10 @@ def test_login_no_group_base(sdk_client_fs, ldap_user, ldap_user_in_group, ldap_
     check_existing_users(sdk_client_fs, [ldap_user["name"]])
     check_existing_groups(sdk_client_fs)
     login_should_succeed(
-        "login as ldap user in group", sdk_client_fs, ldap_user_in_group["name"], ldap_user_in_group["password"]
+        "login as ldap user in group",
+        sdk_client_fs,
+        ldap_user_in_group["name"],
+        ldap_user_in_group["password"],
     )
     _check_correct_objects_came_from_ldap(sdk_client_fs, ldap_user, ldap_user_in_group, ldap_group)
 

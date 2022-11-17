@@ -20,7 +20,6 @@ import requests
 from adcm_client.audit import AuditOperation, ObjectType, OperationResult, OperationType
 from adcm_client.objects import ADCMClient, Bundle, Cluster, Job, Provider, Task
 from adcm_pytest_plugin.utils import wait_until_step_succeeds
-
 from tests.functional.audit.conftest import (
     BUNDLES_DIR,
     NEW_USER,
@@ -318,7 +317,11 @@ class TestADCMActions:
             check_404(requests.post(url, headers=make_auth_header(new_user_client)))
         with allure.step("Fail to run action"):
             check_400(
-                requests.post(url, json={"config": {"i": "doesnotexist"}}, headers=make_auth_header(sdk_client_fs))
+                requests.post(
+                    url,
+                    json={"config": {"i": "doesnotexist"}},
+                    headers=make_auth_header(sdk_client_fs),
+                )
             )
         with allure.step("Run action successfuly"):
             check_succeed(requests.post(url, headers=make_auth_header(sdk_client_fs)))

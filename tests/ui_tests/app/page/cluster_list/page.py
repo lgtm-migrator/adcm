@@ -18,16 +18,22 @@ import allure
 from adcm_pytest_plugin.utils import wait_until_step_succeeds
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.remote.webdriver import WebElement
-
 from tests.ui_tests.app.page.cluster.locators import ClusterComponentsLocators
 from tests.ui_tests.app.page.cluster_list.locators import ClusterListLocators
-from tests.ui_tests.app.page.common.base_page import BasePageObject, PageFooter, PageHeader
+from tests.ui_tests.app.page.common.base_page import (
+    BasePageObject,
+    PageFooter,
+    PageHeader,
+)
 from tests.ui_tests.app.page.common.configuration.locators import CommonConfigMenu
 from tests.ui_tests.app.page.common.configuration.page import CommonConfigMenuObj
 from tests.ui_tests.app.page.common.dialogs.locators import ActionDialog, DeleteDialog
 from tests.ui_tests.app.page.common.dialogs.rename import RenameDialog
 from tests.ui_tests.app.page.common.host_components.page import HostComponentsPage
-from tests.ui_tests.app.page.common.popups.locator import HostCreationLocators, ListConcernPopupLocators
+from tests.ui_tests.app.page.common.popups.locator import (
+    HostCreationLocators,
+    ListConcernPopupLocators,
+)
 from tests.ui_tests.app.page.common.popups.page import HostCreatePopupObj
 from tests.ui_tests.app.page.common.table.page import CommonTableObj
 
@@ -168,7 +174,7 @@ class ClusterListPage(BasePageObject):  # pylint: disable=too-many-public-method
         dialog.wait_opened()
         return dialog
 
-    @allure.step("Run upgrade {upgrade_name} for cluster from row")  # pylint: disable-next=too-many-arguments
+    @allure.step("Run upgrade {upgrade_name} for cluster from row")
     def run_upgrade_in_cluster_row(
         self,
         row: WebElement,
@@ -217,7 +223,8 @@ class ClusterListPage(BasePageObject):  # pylint: disable=too-many-public-method
                 self.wait_element_visible(comp_row_name)
                 comp_row_name.click()
             self.find_child(
-                self.find_elements(ClusterComponentsLocators.host_row)[0], ClusterComponentsLocators.Row.name
+                self.find_elements(ClusterComponentsLocators.host_row)[0],
+                ClusterComponentsLocators.Row.name,
             ).click()
         self.find_and_click(ActionDialog.run)
         self.wait_element_hide(ActionDialog.body)

@@ -20,10 +20,11 @@ import allure
 from adcm_pytest_plugin.utils import wait_until_step_succeeds
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.remote.webdriver import WebElement
-
 from tests.ui_tests.app.page.common.base_page import BasePageObject
 from tests.ui_tests.app.page.common.dialogs.locators import DeleteDialog
-from tests.ui_tests.app.page.common.group_config_list.locators import GroupConfigListLocators
+from tests.ui_tests.app.page.common.group_config_list.locators import (
+    GroupConfigListLocators,
+)
 
 
 @dataclass
@@ -66,7 +67,9 @@ class GroupConfigList(BasePageObject):
         self.wait_element_visible(GroupConfigListLocators.CreateGroupPopup.block)
         self.send_text_to_element(GroupConfigListLocators.CreateGroupPopup.name_input, name, clean_input=True)
         self.send_text_to_element(
-            GroupConfigListLocators.CreateGroupPopup.description_input, description, clean_input=True
+            GroupConfigListLocators.CreateGroupPopup.description_input,
+            description,
+            clean_input=True,
         )
         self.find_and_click(GroupConfigListLocators.CreateGroupPopup.create_btn)
         self.wait_element_hide(GroupConfigListLocators.CreateGroupPopup.block)
@@ -94,9 +97,3 @@ class GroupConfigList(BasePageObject):
         self.wait_element_visible(DeleteDialog.body)
         self.find_and_click(DeleteDialog.yes)
         self.wait_element_hide(DeleteDialog.body)
-
-    @allure.step("Create {group_amount} groups")
-    def create_few_groups(self, group_amount: int):
-        for i in range(group_amount):
-            with self.wait_rows_change():
-                self.create_group(name=f"Test name_{i}", description='Test description')
