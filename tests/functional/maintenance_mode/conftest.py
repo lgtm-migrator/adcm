@@ -244,3 +244,30 @@ def check_no_concerns_on_objects(*adcm_object):
     if not report:
         return
     raise AssertionError(f"{', '.join(obj for obj in report)}")
+
+
+def check_actions_availability(
+    adcm_object: AnyADCMObject, expected_enabled: set[str], expected_disabled: set[str]
+) -> None:
+    """Method to check actual enabled and disabled actions with expected"""
+    representation = get_object_represent(adcm_object)
+    actual_enabled = get_enabled_actions_names(adcm_object)
+    actual_disabled = get_disabled_actions_names(adcm_object)
+
+    with allure.step(f"Compare actual enabled actions with expected enabled actions on object {representation}"):
+        sets_are_equal(
+            actual_enabled,
+            expected_enabled,
+            f"Incorrect actions are enabled on object {representation}\n"
+            f"Actual enabled actions: {actual_enabled}\n"
+            f"Expected enabled actions: {expected_enabled}",
+        )
+
+    with allure.step(f"Compare actual disabled actions with expected disabled actions on object {representation}"):
+        sets_are_equal(
+            actual_disabled,
+            expected_disabled,
+            f"Incorrect actions are disabled on object {representation}\n"
+            f"Actual disabled actions: {actual_disabled}\n"
+            f"Expected disabled actions: {expected_disabled}",
+        )
