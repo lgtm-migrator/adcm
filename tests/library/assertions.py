@@ -12,7 +12,6 @@
 
 """Various "rich" checks for common assertions"""
 import json
-import pprint
 from typing import Callable, Collection, Optional, TypeVar, Union
 
 import allure

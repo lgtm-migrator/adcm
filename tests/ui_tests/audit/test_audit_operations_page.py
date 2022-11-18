@@ -17,12 +17,22 @@ import allure
 import pytest
 import requests
 from adcm_client.audit import AuditOperation, ObjectType, OperationResult, OperationType
-from adcm_client.objects import ADCMClient, Cluster, Component, Group, Host, Policy, Provider, Role, Service, User
-from selenium.webdriver.remote.webelement import WebElement
-
+from adcm_client.objects import (
+    ADCMClient,
+    Cluster,
+    Component,
+    Group,
+    Host,
+    Policy,
+    Provider,
+    Role,
+    Service,
+    User,
+)
 from tests.library.assertions import are_equal, tuples_are_equal
 from tests.ui_tests.app.page.admin.page import OperationRowInfo, OperationsAuditPage
 from tests.ui_tests.app.page.common.dialogs.operation_changes import ChangesRow
+from tests.ui_tests.audit.utils import add_filter
 
 # pylint: disable=redefined-outer-name
 
@@ -142,8 +152,8 @@ def _test_filters_one_by_one(client: ADCMClient, page: OperationsAuditPage):
 
 def _test_two_filters(client: ADCMClient, page: OperationsAuditPage):
     with allure.step("Add two filters and check records"):
-        object_type_filter = _add_filter(page=page, filter_menu_name="Object type")
-        operation_type_filter = _add_filter(page=page, filter_menu_name="Operation type")
+        object_type_filter = add_filter(page=page, filter_menu_name="Object type")
+        operation_type_filter = add_filter(page=page, filter_menu_name="Operation type")
 
         with page.table.wait_rows_change():
             page.pick_filter_value(filter_input=object_type_filter, value_to_pick="User")
@@ -188,7 +198,7 @@ def _test_object_changes(page: OperationsAuditPage):
 
 @allure.step("Check 'Username' filter")
 def _check_username_filter(client: ADCMClient, page: OperationsAuditPage):
-    filter_input = _add_filter(page=page, filter_menu_name="Username")
+    filter_input = add_filter(page=page, filter_menu_name="Username")
 
     with page.table.wait_rows_change():
         filter_input.send_keys(USER["username"])
@@ -206,7 +216,7 @@ def _check_object_name_filter(client: ADCMClient, page: OperationsAuditPage):
     provider_name = client.provider().name
     component: Component = client.component()
     component_full_name = f"{component.cluster().name}/{client.service(id=component.service_id).name}/{component.name}"
-    filter_input = _add_filter(page=page, filter_menu_name="Object name")
+    filter_input = add_filter(page=page, filter_menu_name="Object name")
 
     for (value_to_type, filter_) in (
         (provider_name, lambda rec: rec.object_name == provider_name),
@@ -224,7 +234,7 @@ def _check_object_name_filter(client: ADCMClient, page: OperationsAuditPage):
 
 @allure.step("Check 'Object type' filter")
 def _check_object_type_filter(client: ADCMClient, page: OperationsAuditPage):
-    filter_input = _add_filter(page=page, filter_menu_name="Object type")
+    filter_input = add_filter(page=page, filter_menu_name="Object type")
 
     for (value_to_pick, filter_) in (
         ("Host", lambda rec: rec.object_type == ObjectType.HOST),
@@ -239,7 +249,7 @@ def _check_object_type_filter(client: ADCMClient, page: OperationsAuditPage):
 
 @allure.step("Check 'Operation type' filter")
 def _check_operation_type_filter(client: ADCMClient, page: OperationsAuditPage):
-    filter_input = _add_filter(page=page, filter_menu_name="Operation type")
+    filter_input = add_filter(page=page, filter_menu_name="Operation type")
 
     page.pick_filter_value(filter_input=filter_input, value_to_pick="Delete")
     _check_records(client=client, page=page, filters=(lambda rec: rec.operation_type == OperationType.DELETE,))
@@ -265,7 +275,7 @@ def _check_operation_type_filter(client: ADCMClient, page: OperationsAuditPage):
 
 @allure.step("Check 'Operation result' filter")
 def _check_operation_result_filter(client: ADCMClient, page: OperationsAuditPage):
-    filter_input = _add_filter(page=page, filter_menu_name="Operation result")
+    filter_input = add_filter(page=page, filter_menu_name="Operation result")
 
     page.pick_filter_value(filter_input=filter_input, value_to_pick="Denied")
     _check_records(client=client, page=page, filters=(lambda rec: rec.operation_result == OperationResult.DENIED,))
@@ -282,13 +292,6 @@ def _check_records(client: ADCMClient, page: OperationsAuditPage, filters: list[
         expected=page.get_info_from_all_rows(),
         message="Incorrect rows were filtered",
     )
-
-
-def _add_filter(page: OperationsAuditPage, filter_menu_name: str) -> WebElement:
-    filter_name = filter_menu_name.replace(" ", "_").lower()
-    page.add_filter(filter_menu_name=filter_menu_name)
-    assert page.is_filter_visible(filter_name=filter_name), f"Filter for {filter_menu_name} should be visible"
-    return page.get_filter_input(filter_name=filter_name)
 
 
 def _convert_to_expected_audit_row_record(
