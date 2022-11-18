@@ -19,8 +19,8 @@ from rest_framework.viewsets import ModelViewSet
 from api.base_view import GenericUIView, GenericUIViewSet
 from api.component.serializers import (
     ComponentChangeMaintenanceModeSerializer,
-    ComponentDetailSerializer,
-    ComponentDetailUISerializer,
+    ServiceComponentSerializer,
+    ServiceComponentUISerializer,
     StatusSerializer,
 )
 from api.utils import (
@@ -50,7 +50,7 @@ def get_component_queryset(queryset, user, kwargs):
 # pylint: disable=too-many-ancestors
 class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
     queryset = ServiceComponent.objects.all()
-    serializer_class = ComponentDetailSerializer
+    serializer_class = ServiceComponentSerializer
     lookup_url_kwarg = "component_id"
     permission_classes = (DjangoOnlyObjectPermissions,)
     permission_required = ["cm.view_servicecomponent"]
@@ -63,7 +63,7 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
 
     def get_serializer_class(self):
         if self.is_for_ui():
-            return ComponentDetailUISerializer
+            return ServiceComponentUISerializer
         return super().get_serializer_class()
 
 
