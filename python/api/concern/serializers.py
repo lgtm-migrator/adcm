@@ -38,7 +38,7 @@ class ConcernItemDetailSerializer(ConcernItemUISerializer):
     def get_related_objects(self, item):
         result = []
         for obj in item.related_objects:
-            view_postfix = self._proto_type_view_postfix_map.get("obj.prototype.type", "-details")
+            view_postfix = self._proto_type_view_postfix_map.get(obj.prototype.type, "-details")
             view_name = f"{obj.prototype.type}{view_postfix}"
             request = self.context.get("request", None)
             kwargs = get_api_url_kwargs(obj, request, no_obj_type=True)
@@ -54,7 +54,7 @@ class ConcernItemDetailSerializer(ConcernItemUISerializer):
     def get_owner(self, item):
         request = self.context.get("request", None)
         kwargs = get_api_url_kwargs(item.owner, request, no_obj_type=True)
-        view_postfix = self._proto_type_view_postfix_map.get("obj.prototype.type", "-details")
+        view_postfix = self._proto_type_view_postfix_map.get(item.owner.prototype.type, "-details")
         return {
             "type": item.owner.prototype.type,
             "id": item.owner.pk,
