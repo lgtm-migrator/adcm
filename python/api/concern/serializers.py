@@ -29,7 +29,7 @@ class ConcernItemUISerializer(ConcernItemSerializer):
 
 
 class ConcernItemDetailSerializer(ConcernItemUISerializer):
-    _proto_type_view_postfix_map = {"component": "-details"}
+    _proto_type_view_postfix_map = {"component": "-detail"}
 
     name = serializers.CharField()
     related_objects = serializers.SerializerMethodField()
