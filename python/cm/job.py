@@ -210,16 +210,7 @@ def check_action_state(action: Action, task_object: ADCMEntity, cluster: Cluster
         obj = task_object
 
     locks = obj.concerns.filter(type=ConcernType.Lock)
-    if action.name != settings.ADCM_DELETE_SERVICE_ACTION_NAME:
-        if locks.exists():
-            raise_adcm_ex("LOCK_ERROR", f"object {obj} is locked")
-
-        if (
-            obj.concerns.filter(type=ConcernType.Issue).exists()
-            and action.name not in settings.ADCM_SERVICE_ACTION_NAMES_SET
-        ):
-            raise_adcm_ex("ISSUE_INTEGRITY_ERROR", f"object {obj} has issues")
-    else:
+    if action.name == settings.ADCM_DELETE_SERVICE_ACTION_NAME:
         non_task_locks = []
         for lock in locks:
             if isinstance(lock.owner, TaskLog):
@@ -229,6 +220,15 @@ def check_action_state(action: Action, task_object: ADCMEntity, cluster: Cluster
 
         if non_task_locks:
             raise_adcm_ex("LOCK_ERROR", f"object {obj} is locked")
+    else:
+        if locks.exists():
+            raise_adcm_ex("LOCK_ERROR", f"object {obj} is locked")
+
+        if (
+            obj.concerns.filter(type=ConcernType.Issue).exists()
+            and action.name not in settings.ADCM_SERVICE_ACTION_NAMES_SET
+        ):
+            raise_adcm_ex("ISSUE_INTEGRITY_ERROR", f"object {obj} has issues")
 
     if action.allowed(obj):
         return
