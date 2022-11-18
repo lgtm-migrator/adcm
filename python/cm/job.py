@@ -52,7 +52,6 @@ from cm.issue import (
     check_bound_components,
     check_component_constraint,
     check_component_requires,
-    check_object_concern,
     update_hierarchy_issues,
 )
 from cm.logger import logger
@@ -63,6 +62,7 @@ from cm.models import (
     ADCMEntity,
     Cluster,
     ClusterObject,
+    ConcernType,
     ConfigLog,
     DummyData,
     Host,
@@ -209,7 +209,12 @@ def check_action_state(action: Action, task_object: ADCMEntity, cluster: Cluster
     else:
         obj = task_object
 
-    check_object_concern(obj)
+    if action.name != settings.ADCM_DELETE_SERVICE_ACTION_NAME:
+        if obj.concerns.filter(type=ConcernType.Lock).exists():
+            raise_adcm_ex("LOCK_ERROR", f"object {obj} is locked")
+
+        if obj.concerns.filter(type=ConcernType.Issue).exists():
+            raise_adcm_ex("ISSUE_INTEGRITY_ERROR", f"object {obj} has issues")
 
     if action.allowed(obj):
         return
@@ -319,7 +324,11 @@ def check_hostcomponentmap(cluster: Cluster, action: Action, new_hc: List[dict])
     for host_comp in new_hc:
         if not hasattr(action, "upgrade"):
             host = Host.obj.get(id=host_comp.get("host_id", 0))
-            check_object_concern(host)
+            if host.concerns.filter(type=ConcernType.Lock).exists():
+                raise_adcm_ex("LOCK_ERROR", f"object {host} is locked")
+
+            if host.concerns.filter(type=ConcernType.Issue).exists():
+                raise_adcm_ex("ISSUE_INTEGRITY_ERROR", f"object {host} has issues")
 
     post_upgrade_hc, clear_hc = check_upgrade_hc(action, new_hc)
 
