@@ -57,7 +57,7 @@ from api.stack.serializers import (
 )
 from api.utils import check_obj
 from audit.utils import audit
-from cm.api import accept_license, get_license, load_host_map, load_service_map
+from cm.api import accept_license, get_license, load_service_map
 from cm.bundle import delete_bundle, load_bundle, update_bundle
 from cm.models import (
     Action,
@@ -80,16 +80,6 @@ def load_servicemap_view(request: Request) -> HttpResponse:
     return HttpResponse(status=HTTP_200_OK)
 
 
-@csrf_exempt
-def load_hostmap_view(request: Request) -> HttpResponse:
-    if request.method != "PUT":
-        return HttpResponse(status=HTTP_405_METHOD_NOT_ALLOWED)
-
-    load_host_map()
-
-    return HttpResponse(status=HTTP_200_OK)
-
-
 class PrototypeRetrieveViewSet(RetrieveModelMixin, GenericUIViewSet):
     def get_object(self):
         instance = super().get_object()
@@ -108,7 +98,7 @@ class PrototypeRetrieveViewSet(RetrieveModelMixin, GenericUIViewSet):
 
         return instance
 
-    def retrieve(self, request: Request, *args, **kwargs):
+    def retrieve(self, request: Request, *args, **kwargs) -> Response:
         instance = self.get_object()
         serializer = self.get_serializer(instance)
 
@@ -153,9 +143,7 @@ class LoadBundleView(CreateModelMixin, GenericUIViewSet):
             return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
         return Response(
-            BundleSerializer(
-                load_bundle(serializer.validated_data["bundle_file"]), context={"request": request}
-            ).data,
+            BundleSerializer(load_bundle(serializer.validated_data["bundle_file"]), context={"request": request}).data,
         )
 
 
@@ -181,7 +169,7 @@ class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors
         return super().get_queryset()
 
     @audit
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs) -> Response:
         bundle = self.get_object()
         delete_bundle(bundle)
 
@@ -189,7 +177,7 @@ class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors
 
     @audit
     @action(methods=["put"], detail=True)
-    def update_bundle(self, request, *args, **kwargs):
+    def update_bundle(self, request, *args, **kwargs) -> Response:
         bundle = check_obj(Bundle, kwargs["bundle_pk"], "BUNDLE_NOT_FOUND")
         update_bundle(bundle)
         serializer = self.get_serializer(bundle)
@@ -198,20 +186,21 @@ class BundleViewSet(ModelViewSet):  # pylint: disable=too-many-ancestors
 
     @staticmethod
     @action(methods=["get"], detail=True)
-    def license(request, *args, **kwargs):
+    def license(request, *args, **kwargs) -> Response:
         bundle = check_obj(Bundle, kwargs["bundle_pk"], "BUNDLE_NOT_FOUND")
-        body = get_license(bundle)
-        url = reverse("accept-license", kwargs={"bundle_pk": bundle.id}, request=request)
-
-        return Response({"license": bundle.license, "accept": url, "text": body})
+        proto = Prototype.objects.filter(bundle=bundle, name=bundle.name).first()
+        body = get_license(proto)
+        url = reverse(viewname="accept-license", kwargs={"prototype_pk": proto.pk}, request=request)
+        return Response({"license": proto.license, "accept": url, "text": body})
 
     @audit
     @action(methods=["put"], detail=True)
-    def accept_license(self, request, *args, **kwargs):
+    def accept_license(self, request: Request, *args, **kwargs) -> Response:
         # self is necessary for audit
 
         bundle = check_obj(Bundle, kwargs["bundle_pk"], "BUNDLE_NOT_FOUND")
-        accept_license(bundle)
+        proto = Prototype.objects.filter(bundle=bundle, name=bundle.name).first()
+        accept_license(proto)
 
         return Response()
 
@@ -224,6 +213,14 @@ class PrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
     ordering_fields = ("display_name", "version_order")
     lookup_url_kwarg = "prototype_pk"
 
+    def get_permissions(self):
+        if self.action == "list":
+            permission_classes = (IsAuthenticated,)
+        else:
+            permission_classes = (ModelPermOrReadOnlyForAuth,)
+
+        return [permission() for permission in permission_classes]
+
     def get_serializer_class(self):
         if self.is_for_ui():
             return PrototypeUISerializer
@@ -232,13 +229,32 @@ class PrototypeViewSet(ListModelMixin, PrototypeRetrieveViewSet):
 
         return super().get_serializer_class()
 
+    @staticmethod
+    @action(methods=["get"], detail=True)
+    def license(request: Request, *args, **kwargs) -> Response:
+        prototype = check_obj(Prototype, kwargs["prototype_pk"], "PROTOTYPE_NOT_FOUND")
+        body = get_license(prototype)
+        url = reverse(viewname="accept-license", kwargs={"prototype_pk": prototype.pk}, request=request)
+
+        return Response({"license": prototype.license, "accept": url, "text": body})
+
+    @audit
+    @action(methods=["put"], detail=True)
+    def accept_license(self, request: Request, *args, **kwargs) -> Response:
+        # self is necessary for audit
+
+        prototype = check_obj(Prototype, kwargs["prototype_pk"], "PROTOTYPE_NOT_FOUND")
+        accept_license(prototype)
+
+        return Response()
+
 
 class ProtoActionViewSet(RetrieveModelMixin, GenericUIViewSet):
     queryset = Action.objects.all()
     serializer_class = StackActionSerializer
     lookup_url_kwarg = "action_pk"
 
-    def retrieve(self, request: Request, *args, **kwargs):
+    def retrieve(self, request: Request, *args, **kwargs) -> Response:
         obj = check_obj(Action, kwargs["action_pk"], "ACTION_NOT_FOUND")
         serializer = self.get_serializer(obj)
 
@@ -261,15 +277,11 @@ class ServicePrototypeViewSet(ListModelMixin, RetrieveModelMixin, GenericUIViewS
 
         return super().get_serializer_class()
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request, *args, **kwargs) -> Response:
         instance = self.get_object()
-        instance.actions = Action.objects.filter(
-            prototype__type="service", prototype__id=instance.id
-        )
+        instance.actions = Action.objects.filter(prototype__type="service", prototype__pk=instance.pk)
         instance.components = Prototype.objects.filter(parent=instance, type="component")
-        instance.config = PrototypeConfig.objects.filter(prototype=instance, action=None).order_by(
-            "id"
-        )
+        instance.config = PrototypeConfig.objects.filter(prototype=instance, action=None).order_by("id")
         instance.exports = PrototypeExport.objects.filter(prototype=instance)
         instance.imports = PrototypeImport.objects.filter(prototype=instance)
         serializer = self.get_serializer(instance)

@@ -28,11 +28,16 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver, WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait as WDW
-
 from tests.ui_tests.app.helpers.locator import Locator
-from tests.ui_tests.app.page.common.common_locators import CommonLocators, ObjectPageLocators
+from tests.ui_tests.app.page.common.common_locators import (
+    CommonLocators,
+    ObjectPageLocators,
+)
 from tests.ui_tests.app.page.common.footer_locators import CommonFooterLocators
-from tests.ui_tests.app.page.common.header_locators import AuthorizedHeaderLocators, CommonHeaderLocators
+from tests.ui_tests.app.page.common.header_locators import (
+    AuthorizedHeaderLocators,
+    CommonHeaderLocators,
+)
 from tests.ui_tests.app.page.common.popups.locator import CommonPopupLocators
 from tests.ui_tests.app.page.common.tooltip_links.locator import CommonToolbarLocators
 from tests.ui_tests.utils import assert_enough_rows
@@ -328,7 +333,11 @@ class BasePageObject:
 
     @allure.step('Write text to input element: "{text}"')
     def send_text_to_element(
-        self, element: Union[Locator, WebElement], text: str, clean_input: bool = True, timeout: Optional[int] = None
+        self,
+        element: Union[Locator, WebElement],
+        text: str,
+        clean_input: bool = True,
+        timeout: Optional[int] = None,
     ):
         """
         Writes text to input element found by locator

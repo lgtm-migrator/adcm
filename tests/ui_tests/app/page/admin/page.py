@@ -19,7 +19,6 @@ import allure
 from adcm_pytest_plugin.utils import wait_until_step_succeeds
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.remote.webelement import WebElement
-
 from tests.ui_tests.app.helpers.locator import Locator
 from tests.ui_tests.app.page.admin.locators import (
     AdminGroupsLocators,
@@ -30,7 +29,11 @@ from tests.ui_tests.app.page.admin.locators import (
     AdminUsersLocators,
     OperationsAuditLocators,
 )
-from tests.ui_tests.app.page.common.base_page import BasePageObject, PageFooter, PageHeader
+from tests.ui_tests.app.page.common.base_page import (
+    BasePageObject,
+    PageFooter,
+    PageHeader,
+)
 from tests.ui_tests.app.page.common.common_locators import ObjectPageMenuLocators
 from tests.ui_tests.app.page.common.configuration.page import CommonConfigMenuObj
 from tests.ui_tests.app.page.common.dialogs.locators import DeleteDialog
@@ -241,9 +244,7 @@ class AdminUsersPage(GeneralAdminPage):
         return "inactive" in row.get_attribute("class")
 
     @allure.step('Create new user "{username}" with password "{password}"')
-    def create_user(
-        self, username: str, password: str, first_name: str, last_name: str, email: str
-    ):  # pylint: disable-next=too-many-arguments
+    def create_user(self, username: str, password: str, first_name: str, last_name: str, email: str):
         """Create new user via add user popup"""
         self.find_and_click(AdminUsersLocators.create_user_button)
         self.wait_element_visible(AdminUsersLocators.AddUserPopup.block)
@@ -265,7 +266,7 @@ class AdminUsersPage(GeneralAdminPage):
         last_name: Optional[str] = None,
         email: Optional[str] = None,
         group: Optional[str] = None,
-    ):  # pylint: disable-next=too-many-arguments
+    ):
         """Update some of fields for user"""
         if not (password or first_name or last_name or email or group):
             raise ValueError("You should provide at least one field's value to make an update")
@@ -454,7 +455,11 @@ class AdminGroupsPage(GeneralAdminPage):
 
     @allure.step('Update group {name}')
     def update_group(
-        self, name: str, new_name: Optional[str] = None, description: Optional[str] = None, users: Optional[str] = None
+        self,
+        name: str,
+        new_name: Optional[str] = None,
+        description: Optional[str] = None,
+        users: Optional[str] = None,
     ):
         self.get_group_by_name(name).click()
         if new_name:
@@ -581,7 +586,7 @@ class AdminRolesPage(GeneralAdminPage):
                 description='',
                 permissions='Create host, Upload bundle, Edit cluster configurations, Edit host configurations, '
                 'Add service, Remove service, Remove hosts, Map hosts, Unmap hosts, Edit host-components, '
-                'Upgrade cluster bundle, Remove bundle, Service Administrator, Manage Maintenance mode',
+                'Upgrade cluster bundle, Remove bundle, Service Administrator',
             ),
             AdminRoleInfo(
                 name='Provider Administrator',
@@ -660,7 +665,8 @@ class AdminRolesPage(GeneralAdminPage):
                 for permission in selected_permission:
                     if permission_to_remove in permission.text:
                         self.find_child(
-                            permission, AdminRolesLocators.AddRolePopup.PermissionItemsBlock.PermissionItem.delete_btn
+                            permission,
+                            AdminRolesLocators.AddRolePopup.PermissionItemsBlock.PermissionItem.delete_btn,
                         ).click()
                         break
 
@@ -706,8 +712,13 @@ class AdminPoliciesPage(GeneralAdminPage):
         self.wait_element_visible(AdminPoliciesLocators.AddPolicyPopup.block)
 
     @allure.step('Fill first step in new policy')
-    def fill_first_step_in_policy_popup(  # pylint: disable=too-many-arguments
-        self, policy_name: str, description: Optional[str], role: str, users: Optional[str], groups: Optional[str]
+    def fill_first_step_in_policy_popup(
+        self,
+        policy_name: str,
+        description: Optional[str],
+        role: str,
+        users: Optional[str],
+        groups: Optional[str],
     ):
         if not (users or groups):
             raise ValueError("There are should be users or groups in the policy")
@@ -756,7 +767,7 @@ class AdminPoliciesPage(GeneralAdminPage):
                 raise AssertionError(f"There are no item {item} in select popup")
 
     @allure.step('Fill second step in new policy')
-    def fill_second_step_in_policy_popup(  # pylint: disable=too-many-arguments
+    def fill_second_step_in_policy_popup(
         self,
         clusters: Optional[str] = None,
         services: Optional[str] = None,
@@ -775,7 +786,9 @@ class AdminPoliciesPage(GeneralAdminPage):
 
         if clusters:
             fill_select(
-                AdminPoliciesLocators.AddPolicyPopup.SecondStep.cluster_select, AdminPoliciesLocators.item, clusters
+                AdminPoliciesLocators.AddPolicyPopup.SecondStep.cluster_select,
+                AdminPoliciesLocators.item,
+                clusters,
             )
             self.find_and_click(AdminPoliciesLocators.AddPolicyPopup.SecondStep.cluster_select)
         if services:
@@ -787,16 +800,24 @@ class AdminPoliciesPage(GeneralAdminPage):
                 services,
             )
             fill_select(
-                AdminPoliciesLocators.AddPolicyPopup.SecondStep.parent_select, AdminPoliciesLocators.item, parent
+                AdminPoliciesLocators.AddPolicyPopup.SecondStep.parent_select,
+                AdminPoliciesLocators.item,
+                parent,
             )
             self.find_and_click(AdminPoliciesLocators.AddPolicyPopup.SecondStep.parent_select)
 
         if hosts:
-            fill_select(AdminPoliciesLocators.AddPolicyPopup.SecondStep.hosts_select, AdminPoliciesLocators.item, hosts)
+            fill_select(
+                AdminPoliciesLocators.AddPolicyPopup.SecondStep.hosts_select,
+                AdminPoliciesLocators.item,
+                hosts,
+            )
             self.find_and_click(AdminPoliciesLocators.AddPolicyPopup.SecondStep.hosts_select)
         if providers:
             fill_select(
-                AdminPoliciesLocators.AddPolicyPopup.SecondStep.provider_select, AdminPoliciesLocators.item, providers
+                AdminPoliciesLocators.AddPolicyPopup.SecondStep.provider_select,
+                AdminPoliciesLocators.item,
+                providers,
             )
             self.find_and_click(AdminPoliciesLocators.AddPolicyPopup.SecondStep.provider_select)
         self.find_and_click(AdminPoliciesLocators.AddPolicyPopup.SecondStep.next_btn_second)
@@ -808,7 +829,7 @@ class AdminPoliciesPage(GeneralAdminPage):
         self.wait_element_hide(AdminPoliciesLocators.AddPolicyPopup.block)
 
     @allure.step('Create new policy')
-    def create_policy(  # pylint: disable=too-many-arguments
+    def create_policy(
         self,
         policy_name: str,
         description: Optional[str],

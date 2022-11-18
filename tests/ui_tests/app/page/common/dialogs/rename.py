@@ -12,7 +12,6 @@
 
 import allure
 from selenium.common import TimeoutException
-
 from tests.ui_tests.app.page.common.base_page import BasePageObject
 from tests.ui_tests.app.page.common.dialogs.locators import RenameDialogLocators
 

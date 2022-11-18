@@ -13,11 +13,10 @@
 """Cluster page locators"""
 
 from selenium.webdriver.common.by import By
-
-from tests.ui_tests.app.helpers.locator import (
-    Locator,
+from tests.ui_tests.app.helpers.locator import Locator
+from tests.ui_tests.app.page.common.host_components.locators import (
+    HostComponentsLocators,
 )
-from tests.ui_tests.app.page.common.host_components.locators import HostComponentsLocators
 from tests.ui_tests.app.page.host_list.locators import HostListLocators
 
 
@@ -67,13 +66,9 @@ class ClusterHostLocators:
     class HostTable(HostListLocators.HostTable):
         """Cluster host page host table elements locators"""
 
-        ...
-
 
 class ClusterComponentsLocators(HostComponentsLocators):
     """Cluster components page elements locators"""
-
-    pass
 
 
 class ClusterActionLocators:

@@ -10,45 +10,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=redefined-outer-name, unused-argument, too-many-lines
+# pylint: disable=redefined-outer-name,too-many-lines
 
 """UI tests for /admin page"""
 
 import os
 from copy import deepcopy
-from typing import (
-    Tuple,
-)
+from typing import Tuple
 
 import allure
 import pytest
-from adcm_client.objects import (
-    Bundle,
-    Cluster,
-    ADCMClient,
-    Host,
-    Service,
-    Provider,
-)
+from adcm_client.objects import ADCMClient, Bundle, Cluster, Host, Provider, Service
 from adcm_pytest_plugin import utils
 from adcm_pytest_plugin.steps.actions import wait_for_task_and_assert_result
 from adcm_pytest_plugin.utils import random_string
-
 from tests.ui_tests.app.app import ADCMTest
 from tests.ui_tests.app.page.admin.page import (
-    AdminIntroPage,
-    AdminUsersPage,
-    AdminSettingsPage,
-    AdminRolesPage,
-    AdminGroupsPage,
-    AdminRoleInfo,
     AdminGroupInfo,
+    AdminGroupsPage,
+    AdminIntroPage,
     AdminPoliciesPage,
     AdminPolicyInfo,
+    AdminRoleInfo,
+    AdminRolesPage,
+    AdminSettingsPage,
+    AdminUsersPage,
 )
 from tests.ui_tests.app.page.cluster.page import (
-    ClusterConfigPage,
     ClusterComponentsPage,
+    ClusterConfigPage,
 )
 from tests.ui_tests.app.page.cluster_list.page import ClusterListPage
 from tests.ui_tests.app.page.component.page import ComponentConfigPage
@@ -193,7 +183,11 @@ class TestAdminSettingsPage:
     @pytest.mark.full()
     def test_save_settings_with_different_name(self, settings_page: AdminSettingsPage):
         """Save settings with different name"""
-        params = {"new_name": "test_settings", "field_display_name": "client_id", "field_value": "123"}
+        params = {
+            "new_name": "test_settings",
+            "field_display_name": "client_id",
+            "field_value": "123",
+        }
         settings_page.config.set_description(params["new_name"])
         with allure.step(f'Change value of field {params["field_display_name"]} to {params["field_value"]}'):
             config_field_row = settings_page.config.get_config_row(params["field_display_name"])
@@ -213,8 +207,16 @@ class TestAdminSettingsPage:
     def test_negative_values_in_adcm_config(self, settings_page: AdminSettingsPage):
         """Put negative numbers in the fields of ADCM settings"""
         params = (
-            ("Log rotation from file system", -1, "Field [Log rotation from file system] value cannot be less than 0!"),
-            ("Log rotation from database", -1, "Field [Log rotation from database] value cannot be less than 0!"),
+            (
+                "Log rotation from file system",
+                -1,
+                "Field [Log rotation from file system] value cannot be less than 0!",
+            ),
+            (
+                "Log rotation from database",
+                -1,
+                "Field [Log rotation from database] value cannot be less than 0!",
+            ),
             ("Forks", 0, "Field [Forks] value cannot be less than 1!"),
         )
 
@@ -246,7 +248,11 @@ class TestAdminSettingsPage:
     @pytest.mark.ldap()
     def test_ldap_config(self, settings_page: AdminSettingsPage):
         """Test ldap"""
-        params = {"test_action": "Test LDAP connection", "connect_action": "Run LDAP sync", "test_value": "test"}
+        params = {
+            "test_action": "Test LDAP connection",
+            "connect_action": "Run LDAP sync",
+            "test_value": "test",
+        }
         with allure.step("Check ldap actions are disabled"):
             assert settings_page.toolbar.is_adcm_action_inactive(
                 action_name=params["connect_action"]
@@ -307,7 +313,11 @@ class TestAdminUsersPage:
             "email": "priv@et.ru",
         }
         users_page.create_user(
-            params["username"], params["password"], params["first_name"], params["last_name"], params["email"]
+            params["username"],
+            params["password"],
+            params["first_name"],
+            params["last_name"],
+            params["email"],
         )
         with allure.step(f'Check user {params["username"]} is listed in users list'):
             assert users_page.is_user_presented(params["username"]), f'User {params["username"]} was not created'
@@ -574,7 +584,11 @@ class TestAdminGroupsPage:
         with allure.step("Check that there are 1 custom group and 1 ldap"):
             assert len(current_groups) == 2, "There should be 2 group on the page"
             assert (
-                AdminGroupInfo(name="Test_group", description="Test description", users=ldap_user_in_group["name"])
+                AdminGroupInfo(
+                    name="Test_group",
+                    description="Test description",
+                    users=ldap_user_in_group["name"],
+                )
                 in current_groups
             ), "Created group should be on the page"
 
@@ -697,7 +711,6 @@ class TestAdminPolicyPage:
         )
         policies_page.delete_all_policies()
 
-    # pylint: disable=too-many-arguments
     @pytest.mark.usefixtures("_login_to_adcm_over_api")
     @pytest.mark.parametrize(
         ("clusters", "services", "providers", "hosts", "parents", "role_name"),
@@ -707,7 +720,14 @@ class TestAdminPolicyPage:
             (None, None, PROVIDER_NAME, None, None, "View provider configurations"),
             (None, None, None, HOST_NAME, None, "View host configurations"),
             (None, SERVICE_NAME, None, None, CLUSTER_NAME, "View component configurations"),
-            (CLUSTER_NAME, None, None, None, None, "View cluster configurations, View service configurations"),
+            (
+                CLUSTER_NAME,
+                None,
+                None,
+                None,
+                None,
+                "View cluster configurations, View service configurations",
+            ),
             (
                 None,
                 SERVICE_NAME,
@@ -717,8 +737,22 @@ class TestAdminPolicyPage:
                 "View cluster configurations, View service configurations, View component configurations, "
                 "View host configurations",
             ),
-            (None, None, PROVIDER_NAME, None, None, "View provider configurations, View host configurations"),
-            (None, None, None, HOST_NAME, None, "View provider configurations, View host configurations"),
+            (
+                None,
+                None,
+                PROVIDER_NAME,
+                None,
+                None,
+                "View provider configurations, View host configurations",
+            ),
+            (
+                None,
+                None,
+                None,
+                HOST_NAME,
+                None,
+                "View provider configurations, View host configurations",
+            ),
         ],
     )
     @pytest.mark.usefixtures("parents", "create_cluster_with_component")
@@ -847,7 +881,8 @@ class TestAdminPolicyPage:
         with allure.step("Create second component"):
             second_service = cluster.service_add(name="test_service_2")
             cluster.hostcomponent_set(
-                (host, service.component(name=FIRST_COMPONENT_NAME)), (host, second_service.component(name="second"))
+                (host, service.component(name=FIRST_COMPONENT_NAME)),
+                (host, second_service.component(name="second")),
             )
         login_page = LoginPage(app_fs.driver, app_fs.adcm.url).open()
         login_page.login_user(**another_user)
@@ -1000,6 +1035,7 @@ class TestAdminPolicyPage:
             ), "There are no permission hint"
 
     # pylint: enable=too-many-locals
+    @pytest.mark.xfail(reason="https://tracker.yandex.ru/ADCM-3264")
     @pytest.mark.usefixtures("_login_to_adcm_over_api")
     def test_policy_with_maintenance_mode(self, sdk_client_fs, app_fs, another_user, create_cluster_with_component):
         """Test create a group on /admin/policies"""

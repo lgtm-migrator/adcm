@@ -12,15 +12,13 @@
 
 """Various "rich" checks for common assertions"""
 import json
-from pprint import pformat
-from itertools import zip_longest
+import pprint
 from typing import Callable, Collection, Optional, TypeVar, Union
 
 import allure
 from adcm_client.wrappers.api import ADCMApiError
 from adcm_pytest_plugin.utils import catch_failed
 from coreapi.exceptions import ErrorMessage
-
 from tests.library.errorcodes import ADCMError
 
 T = TypeVar("T")

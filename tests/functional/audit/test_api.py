@@ -22,7 +22,6 @@ import requests
 from adcm_client.audit import LoginResult, ObjectType, OperationResult, OperationType
 from adcm_client.objects import ADCMClient, Group, Policy, Role, User
 from coreapi.exceptions import ErrorMessage
-
 from tests.functional.audit.conftest import check_failed, make_auth_header
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.rbac.conftest import BusinessRoles
@@ -36,7 +35,6 @@ BUNDLES_DIR = Path(__file__).parent / "bundles"
 NOT_EXISTING_USER = "nosuchuser"
 
 
-# pylint: disable-next=too-many-arguments
 def _check_audit_logs(
     endpoint: str,
     operation: Callable,

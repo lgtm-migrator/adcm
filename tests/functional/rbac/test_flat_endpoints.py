@@ -18,9 +18,8 @@ import itertools
 import allure
 import pytest
 import requests
-from adcm_client.objects import Cluster, Host, ADCMClient, ADCM
+from adcm_client.objects import ADCM, ADCMClient, Cluster, Host
 from adcm_pytest_plugin.utils import random_string
-
 from tests.functional.rbac.conftest import RbacRoles
 from tests.library.assertions import sets_are_equal
 from tests.library.utils import lower_class_name
@@ -55,7 +54,15 @@ def test_flat_endpoints(user, clients, prepare_objects, second_objects):
       config/
     """
     cluster, service, component, provider, host = prepare_objects
-    all_objects = [*second_objects, cluster, service, provider, host, *service.component_list(), clients.admin.adcm()]
+    all_objects = [
+        *second_objects,
+        cluster,
+        service,
+        provider,
+        host,
+        *service.component_list(),
+        clients.admin.adcm(),
+    ]
 
     clients.admin.policy_create(
         name=f'Service administrator of {service.name}',
@@ -118,7 +125,10 @@ def check_configs(client: ADCMClient, objects):
 @allure.step(f'Check tasks at "{GROUP_CONFIG_EP}/" endpoint based on object type, object_id and config_id')
 def _check_group_config_endpoint(client, objects):
     objects_with_group_config = tuple(
-        filter(lambda x: not isinstance(x, Host) and not isinstance(x, ADCM) and x.group_config(), objects)
+        filter(
+            lambda x: not isinstance(x, Host) and not isinstance(x, ADCM) and x.group_config(),
+            objects,
+        )
     )
     expected_group_configs = {
         (lower_class_name(obj), obj.id, obj.group_config()[0].config_id) for obj in objects_with_group_config
@@ -164,7 +174,9 @@ def _check_configs_endpoint(client, expected_config_logs):
     }
     actual_configs = {config['id'] for config in _query_flat_endpoint(client, CONFIG_EP)}
     sets_are_equal(
-        actual_configs, expected_configs, f'Configs at flat endpoint "{CONFIG_EP}/" are not the same as expected'
+        actual_configs,
+        expected_configs,
+        f'Configs at flat endpoint "{CONFIG_EP}/" are not the same as expected',
     )
 
 
@@ -190,7 +202,10 @@ def _query_flat_endpoint(client: ADCMClient, endpoint: str):
 def _prepare_group_config(adcm_object: Cluster):
     group = adcm_object.group_config_create(f'{adcm_object.name} group {random_string(4)}')
     group.config_set_diff(
-        {'config': {'boolean': True}, 'attr': {'group_keys': {'boolean': True}, 'custom_group_keys': {'boolean': True}}}
+        {
+            'config': {'boolean': True},
+            'attr': {'group_keys': {'boolean': True}, 'custom_group_keys': {'boolean': True}},
+        }
     )
 
 

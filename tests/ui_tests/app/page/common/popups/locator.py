@@ -13,11 +13,7 @@
 """Popup page locators"""
 
 from selenium.webdriver.common.by import By
-
-from tests.ui_tests.app.helpers.locator import (
-    Locator,
-    TemplateLocator,
-)
+from tests.ui_tests.app.helpers.locator import Locator, TemplateLocator
 
 
 class CommonPopupLocators:
@@ -70,7 +66,9 @@ class HostAddPopupLocators:
     """Host add popup locators"""
 
     add_new_host_btn = Locator(
-        By.CSS_SELECTOR, "div[class*='actions'] button[cdk-describedby-host]", "Button to open popup for host creating"
+        By.CSS_SELECTOR,
+        "div[class*='actions'] button[cdk-describedby-host]",
+        "Button to open popup for host creating",
     )
 
 

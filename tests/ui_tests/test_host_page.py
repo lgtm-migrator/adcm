@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=redefined-outer-name,unused-argument,too-many-arguments
+# pylint: disable=redefined-outer-name
 
 """UI tests for /host page"""
 
@@ -23,16 +23,23 @@ from _pytest.fixtures import SubRequest
 from adcm_client.objects import ADCMClient, Bundle, Cluster, Host, Provider
 from adcm_pytest_plugin import utils
 from selenium.common import StaleElementReferenceException
-
 from tests.library.retry import RetryFromCheckpoint, Step
 from tests.library.status import ADCMObjectStatusChanger
 from tests.ui_tests.app.app import ADCMTest
 from tests.ui_tests.app.page.admin.page import AdminIntroPage
 from tests.ui_tests.app.page.common.configuration.locators import CommonConfigMenu
 from tests.ui_tests.app.page.common.configuration.page import CONFIG_ITEMS
-from tests.ui_tests.app.page.common.status.page import NEGATIVE_COLOR, SUCCESS_COLOR, StatusRowInfo
+from tests.ui_tests.app.page.common.status.page import (
+    NEGATIVE_COLOR,
+    SUCCESS_COLOR,
+    StatusRowInfo,
+)
 from tests.ui_tests.app.page.host.locators import HostLocators
-from tests.ui_tests.app.page.host.page import HostConfigPage, HostMainPage, HostStatusPage
+from tests.ui_tests.app.page.host.page import (
+    HostConfigPage,
+    HostMainPage,
+    HostStatusPage,
+)
 from tests.ui_tests.app.page.host_list.locators import HostListLocators
 from tests.ui_tests.app.page.host_list.page import HostListPage
 from tests.ui_tests.utils import expect_rows_amount_change, wait_and_assert_ui_info
@@ -117,7 +124,6 @@ def upload_and_create_cluster(cluster_bundle: Bundle) -> Tuple[Bundle, Cluster]:
 
 @pytest.fixture()
 @allure.title("Open /host page")
-# pylint: disable-next=unused-argument
 def page(app_fs: ADCMTest, _login_to_adcm_over_api) -> HostListPage:
     """Open host page"""
     return HostListPage(app_fs.driver, app_fs.adcm.url).open()
@@ -319,6 +325,7 @@ class TestHostListPage:
         page.run_action(0, INIT_ACTION)
         page.assert_host_state(0, 'running')
 
+    @pytest.mark.xfail(reason="https://tracker.yandex.ru/ADCM-3264")
     @pytest.mark.smoke()
     def test_maintenance_mode_on_host_page(self, page: HostListPage, create_bonded_host):
         """Test maintenance mode on host page"""
@@ -338,6 +345,7 @@ class TestHostListPage:
             page.driver.refresh()
             page.assert_maintenance_mode_state(0, None)
 
+    @pytest.mark.xfail(reason="https://tracker.yandex.ru/ADCM-3264")
     @pytest.mark.smoke()
     def test_action_with_maintenance_mode_on_host_page(self, page: HostListPage, create_bonded_host):
         """Test maintenance mode on host page"""
