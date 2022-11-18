@@ -335,15 +335,6 @@ def check_hostcomponentmap(cluster: Cluster, action: Action, new_hc: List[dict])
     if not cluster:
         raise_adcm_ex("TASK_ERROR", "Only cluster objects can have action with hostcomponentmap")
 
-    for host_comp in new_hc:
-        if not hasattr(action, "upgrade"):
-            host = Host.obj.get(id=host_comp.get("host_id", 0))
-            if host.concerns.filter(type=ConcernType.Lock).exists():
-                raise_adcm_ex("LOCK_ERROR", f"object {host} is locked")
-
-            if host.concerns.filter(type=ConcernType.Issue).exists():
-                raise_adcm_ex("ISSUE_INTEGRITY_ERROR", f"object {host} has issues")
-
     post_upgrade_hc, clear_hc = check_upgrade_hc(action, new_hc)
 
     old_hc = get_old_hc(get_hc(cluster))
