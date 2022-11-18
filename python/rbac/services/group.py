@@ -26,7 +26,7 @@ def _update_users(group: models.Group, users: [Empty, List[dict]]) -> None:
     if users is Empty:
         return
     if group.type == models.OriginType.LDAP:
-        raise_adcm_ex("GROUP_UPDATE_ERROR", msg="You can\'t change users in LDAP group")
+        raise_adcm_ex("GROUP_CONFLICT", msg="You can\'t change users in LDAP group")
     group_users = {u.id: u for u in group.user_set.all()}
     new_users = [u["id"] for u in users]
 
@@ -74,12 +74,12 @@ def update(
 ) -> models.Group:
     """Full or partial Group object update"""
     if group.type == models.OriginType.LDAP:
-        raise_adcm_ex("GROUP_UPDATE_ERROR", msg="You cannot change LDAP type group")
+        raise_adcm_ex("GROUP_CONFLICT", msg="You cannot change LDAP type group")
     set_not_empty_attr(group, partial, "name", name_to_display)
     set_not_empty_attr(group, partial, "description", description, "")
     try:
         group.save()
     except IntegrityError as exc:
-        raise_adcm_ex("GROUP_UPDATE_ERROR", msg=f"Group update failed with error {exc}")
+        raise_adcm_ex("GROUP_CONFLICT", msg=f"Group update failed with error {exc}")
     _update_users(group, user_set)
     return group

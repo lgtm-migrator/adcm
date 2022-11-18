@@ -57,7 +57,7 @@ def _update_groups(user: models.User, groups: [Empty, List[dict]]) -> None:
             msg = f"Group with ID {group_id} was not found"
             raise_adcm_ex("USER_UPDATE_ERROR", msg=msg)
         if group.type == models.OriginType.LDAP:
-            raise_adcm_ex("USER_UPDATE_ERROR", msg="You cannot add user to LDAP group")
+            raise_adcm_ex("USER_CONFLICT", msg="You cannot add user to LDAP group")
         user.groups.add(group)
         user_groups[group_id] = group
 
@@ -65,7 +65,7 @@ def _update_groups(user: models.User, groups: [Empty, List[dict]]) -> None:
         if group_id in new_groups:
             continue
         if group.type == models.OriginType.LDAP:
-            raise_adcm_ex("USER_UPDATE_ERROR", msg="You cannot remove user from original LDAP group")
+            raise_adcm_ex("USER_CONFLICT", msg="You cannot remove user from original LDAP group")
         user.groups.remove(group)
 
 
@@ -95,7 +95,7 @@ def update(
     # pylint: disable=too-many-locals
     """Full or partial User update"""
     if (username is not Empty) and (username != user.username):
-        raise_adcm_ex("USER_UPDATE_ERROR", msg="Username could not be changed")
+        raise_adcm_ex("USER_CONFLICT", msg="Username could not be changed")
 
     args = (username, first_name, last_name, email, is_superuser, is_active)
     if not partial and not all((arg is not Empty for arg in args)):
@@ -105,7 +105,7 @@ def update(
     if user_exist and (email != ""):
         email_user = models.User.objects.get(email=email)
         if email_user != user:
-            raise_adcm_ex("USER_UPDATE_ERROR", msg="User with the same email already exist")
+            raise_adcm_ex("USER_CONFLICT", msg="User with the same email already exist")
     names = {
         "username": username,
         "first_name": first_name,
@@ -118,7 +118,7 @@ def update(
     if user.type == models.OriginType.LDAP and any(
         (value is not Empty and getattr(user, key) != value) for key, value in names.items()
     ):
-        raise_adcm_ex("USER_UPDATE_ERROR", msg="You cannot change LDAP type user")
+        raise_adcm_ex("USER_CONFLICT", msg="You cannot change LDAP type user")
     set_not_empty_attr(user, partial, "first_name", first_name, "")
     set_not_empty_attr(user, partial, "last_name", last_name, "")
     set_not_empty_attr(user, partial, "email", email, "")
