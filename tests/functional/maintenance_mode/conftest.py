@@ -39,6 +39,8 @@ MM_NOT_ALLOWED = False
 START_IMPOSSIBLE_REASONS = {
     "The Action is not available. One or more hosts in 'Maintenance mode'",
     "The Action is not available. Host in 'Maintenance mode'",
+    "The Action is not available. Service in 'Maintenance mode'",
+    "The Action is not available. Component in 'Maintenance mode'"
 }
 
 PROVIDER_NAME = 'Test Default Provider'
