@@ -10,23 +10,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from social_core.backends.google import GoogleOAuth2
-from social_core.backends.yandex import YandexOAuth2
 
-from adcm.utils import get_google_oauth, get_yandex_oauth
-
-
-class CustomYandexOAuth2(YandexOAuth2):
-    def auth_html(self):
-        pass  # not necessary
-
-    def get_key_and_secret(self) -> tuple[str, str]:
-        return get_yandex_oauth()
+- type: cluster
+  name: maintenance_mode_allowed_cluster
+  version: 5.4
+  allow_maintenance_mode: true
+  config: &config_issue
+    - name: some_param_cluster
+      type: integer
 
 
-class CustomGoogleOAuth2(GoogleOAuth2):
-    def auth_html(self):
-        pass  # not necessary
+- type: service
+  name: first_service
+  version: 4.3
+  config: *config_issue
 
-    def get_key_and_secret(self) -> tuple[str, str]:
-        return get_google_oauth()
+  components:
+    first_component:
+      config:
+        - name: some_param_cluster
+          type: integer
+          default: 12
+
+    second_component:
+      config: *config_issue
