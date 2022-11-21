@@ -20,7 +20,6 @@ from tests.functional.maintenance_mode.conftest import (
     BUNDLES_DIR,
     MM_IS_OFF,
     MM_IS_ON,
-    MM_IS_OFF,
     add_hosts_to_cluster,
     check_concerns_on_object,
     check_mm_is,
@@ -32,6 +31,7 @@ from tests.functional.maintenance_mode.conftest import (
 # pylint: disable=redefined-outer-name
 
 pytestmark = [only_clean_adcm]
+DEFAULT_CLUSTER_PARAM = 12
 
 
 @pytest.fixture()
@@ -316,8 +316,9 @@ def test_mm_concern_action(api_client, sdk_client_fs, cluster_actions, hosts):
 
     with allure.step("Switch seervice and component with concern and action to MM 'OFF'"):
         api_client.service.change_maintenance_mode(first_service.id, MM_IS_OFF).check_code(200)
-        api_client.component.change_maintenance_mode(second_component.id, MM_IS_OFF).check_code(200)
         _wait_all_tasks_succeed(sdk_client_fs, 3)
+        api_client.component.change_maintenance_mode(second_component.id, MM_IS_OFF).check_code(200)
+        _wait_all_tasks_succeed(sdk_client_fs, 4)
         check_mm_is(MM_IS_OFF, first_service, first_component, second_component, first_host, second_host)
 
         for obj in (cluster, first_service, second_component, second_host):
@@ -327,10 +328,10 @@ def test_mm_concern_action(api_client, sdk_client_fs, cluster_actions, hosts):
 
     with allure.step(f"Fix concern on {first_service.name} and {second_component.name}"):
         service_config = first_service.config()
-        service_config["some_param_cluster"] = 12
+        service_config["some_param_cluster"] = DEFAULT_CLUSTER_PARAM
         first_service.config_set(service_config)
         second_component_config = second_component.config()
-        second_component_config["some_param_cluster"] = 12
+        second_component_config["some_param_cluster"] = DEFAULT_CLUSTER_PARAM
         second_component.config_set(second_component_config)
 
     with allure.step("Start simple cluster action and switch component to MM 'ON'"):
