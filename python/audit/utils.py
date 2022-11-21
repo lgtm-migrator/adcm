@@ -183,7 +183,7 @@ def _get_obj_changes_data(view: GenericAPIView | ModelViewSet) -> tuple[dict | N
         elif view.__class__.__name__ == "HostMaintenanceModeView":
             serializer_class = HostAuditSerializer
             pk = view.kwargs["host_id"]
-        elif view.__class__.__name__ == "ComponentMaintenanceModeView":
+        elif view.__class__.__name__ == "ComponentViewSet" and view.action == "maintenance_mode":
             serializer_class = ComponentAuditSerializer
             pk = view.kwargs["component_id"]
 

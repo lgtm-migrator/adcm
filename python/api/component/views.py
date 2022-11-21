@@ -72,8 +72,10 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
     @update_mm_objects
     @audit
     @action(detail=True, methods=["post"], url_path="maintenance-mode", url_name="maintenance-mode")
-    def maintenance_mode(self, request: Request, component_id=None) -> Response:
-        component = get_object_for_user(request.user, "cm.view_servicecomponent", ServiceComponent, id=component_id)
+    def maintenance_mode(self, request: Request, **kwargs) -> Response:
+        component = get_object_for_user(
+            request.user, "cm.view_servicecomponent", ServiceComponent, id=kwargs["component_id"]
+        )
         # pylint: disable=protected-access
         check_custom_perm(request.user, "change_maintenance_mode", component._meta.model_name, component)
         serializer = self.get_serializer(instance=component, data=request.data)
