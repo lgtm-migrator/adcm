@@ -619,7 +619,7 @@ class TestMMRoles(RBACBaseTestCase):
     def test_no_roles(self):
         for view_name, url_kwarg_name, obj in (
             ("host-details", "host_id", self.host),
-            ("component-detail", "component_id", self.component),
+            ("component-detail", "component_pk", self.component),
             ("service-details", "service_id", self.service),
         ):
             url = reverse(view_name, kwargs={url_kwarg_name: obj.pk})
@@ -666,7 +666,7 @@ class TestMMRoles(RBACBaseTestCase):
         self.assertEqual(response.status_code, 200)
 
         response = self.client.post(
-            path=reverse("component-maintenance-mode", kwargs={'component_id': self.component.pk}),
+            path=reverse("component-maintenance-mode", kwargs={'component_pk': self.component.pk}),
             data={"maintenance_mode": MaintenanceMode.ON},
             format="json",
             content_type=APPLICATION_JSON,
@@ -706,7 +706,7 @@ class TestMMRoles(RBACBaseTestCase):
         self.assertEqual(response.status_code, 200)
 
         response = self.client.post(
-            path=reverse("component-maintenance-mode", kwargs={'component_id': self.component.pk}),
+            path=reverse("component-maintenance-mode", kwargs={'component_pk': self.component.pk}),
             data={"maintenance_mode": MaintenanceMode.ON},
             format="json",
             content_type=APPLICATION_JSON,

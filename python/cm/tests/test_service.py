@@ -136,7 +136,7 @@ class TestService(BaseTestCase):
         self.assertEqual(self.service.maintenance_mode, MaintenanceMode.ON)
 
         self.client.post(
-            path=reverse("component-maintenance-mode", kwargs={"component_id": component_2.pk}),
+            path=reverse("component-maintenance-mode", kwargs={"component_pk": component_2.pk}),
             data={"maintenance_mode": MaintenanceMode.OFF},
             content_type=APPLICATION_JSON,
         )

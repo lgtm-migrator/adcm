@@ -17,7 +17,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from api.base_view import GenericUIView, GenericUIViewSet
+from api.base_view import GenericUIViewSet
 from api.component.serializers import (
     ComponentChangeMaintenanceModeSerializer,
     ServiceComponentSerializer,
@@ -52,13 +52,28 @@ def get_component_queryset(queryset, user, kwargs):
 class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
     queryset = ServiceComponent.objects.all()
     serializer_class = ServiceComponentSerializer
-    lookup_url_kwarg = "component_id"
+    lookup_url_kwarg = "component_pk"
     permission_classes = (DjangoOnlyObjectPermissions,)
     permission_required = ["cm.view_servicecomponent"]
     filterset_fields = ("cluster_id", "service_id")
     ordering_fields = ("state", "prototype__display_name", "prototype__version_order")
 
+    def get_permissions(self):
+        if self.action == "status":
+            permission_classes = (permissions.IsAuthenticated,)
+            return [permission() for permission in permission_classes]
+        else:
+            return super().get_permissions()
+
+    def get_required_permissions(self, request=None):
+        if self.action == "status":
+            return []
+        else:
+            return super().get_required_permissions(request)
+
     def get_queryset(self, *args, **kwargs):
+        if self.action == "status":
+            return HostComponent.objects.all()
         queryset = super().get_queryset(*args, **kwargs)
         return get_component_queryset(queryset, self.request.user, self.kwargs)
 
@@ -67,6 +82,8 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
             return ServiceComponentUISerializer
         if self.action == "maintenance_mode":
             return ComponentChangeMaintenanceModeSerializer
+        elif self.action == "status":
+            return StatusSerializer
         return super().get_serializer_class()
 
     @update_mm_objects
@@ -74,7 +91,7 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
     @action(detail=True, methods=["post"], url_path="maintenance-mode", url_name="maintenance-mode")
     def maintenance_mode(self, request: Request, **kwargs) -> Response:
         component = get_object_for_user(
-            request.user, "cm.view_servicecomponent", ServiceComponent, id=kwargs["component_id"]
+            request.user, "cm.view_servicecomponent", ServiceComponent, id=kwargs["component_pk"]
         )
         # pylint: disable=protected-access
         check_custom_perm(request.user, "change_maintenance_mode", component._meta.model_name, component)
@@ -83,15 +100,10 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
 
         return get_maintenance_mode_response(obj=component, serializer=serializer)
 
-
-class StatusList(GenericUIView):
-    queryset = HostComponent.objects.all()
-    permission_classes = (permissions.IsAuthenticated,)
-    serializer_class = StatusSerializer
-
-    def get(self, request, *args, **kwargs):
+    @action(detail=False, methods=["get"], url_path="status", url_name="component-status")
+    def status(self, request, *args, **kwargs):
         queryset = get_component_queryset(ServiceComponent.objects.all(), request.user, kwargs)
-        component = get_object_for_user(request.user, "cm.view_servicecomponent", queryset, id=kwargs["component_id"])
+        component = get_object_for_user(request.user, "cm.view_servicecomponent", queryset, id=kwargs["component_pk"])
         if self._is_for_ui():
             host_components = self.get_queryset().filter(component=component)
 

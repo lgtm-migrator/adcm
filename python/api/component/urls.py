@@ -14,7 +14,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from api.component.views import ComponentViewSet, StatusList
+from api.component.views import ComponentViewSet
 
 router = DefaultRouter()
 router.register(r"", ComponentViewSet, basename="component")
@@ -22,10 +22,9 @@ router.register(r"", ComponentViewSet, basename="component")
 urlpatterns = [
     *router.urls,
     path(
-        "<int:component_id>/config/", include("api.config.urls"), {"object_type": "component"}, name="component-config"
+        "<int:component_pk>/config/", include("api.config.urls"), {"object_type": "component"}, name="component-config"
     ),
     path(
-        "<int:component_id>/action/", include("api.action.urls"), {"object_type": "component"}, name="component-action"
+        "<int:component_pk>/action/", include("api.action.urls"), {"object_type": "component"}, name="component-action"
     ),
-    path("<int:component_id>/status/", StatusList.as_view(), name="component-status"),
 ]

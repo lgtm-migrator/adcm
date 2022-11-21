@@ -182,7 +182,7 @@ class TestAction(BaseTestCase):
                     kwargs={
                         "cluster_id": cluster.pk,
                         "service_id": service.pk,
-                        "component_id": component.pk,
+                        "component_pk": component.pk,
                         "action_id": self.action.pk,
                     },
                 )
@@ -212,7 +212,7 @@ class TestAction(BaseTestCase):
                     kwargs={
                         "cluster_id": cluster.pk,
                         "service_id": service.pk,
-                        "component_id": component.pk,
+                        "component_pk": component.pk,
                         "action_id": self.action.pk,
                     },
                 )
@@ -261,12 +261,12 @@ class TestAction(BaseTestCase):
             reverse("run-task", kwargs={"adcm_pk": self.adcm.pk, "action_id": self.action.pk}),
             reverse("run-task", kwargs={"cluster_id": cluster.pk, "action_id": self.action.pk}),
             reverse("run-task", kwargs={"host_id": host.pk, "action_id": self.action.pk}),
-            reverse("run-task", kwargs={"component_id": component.pk, "action_id": self.action.pk}),
+            reverse("run-task", kwargs={"component_pk": component.pk, "action_id": self.action.pk}),
             reverse(
                 "run-task",
                 kwargs={
                     "service_id": service.pk,
-                    "component_id": component.pk,
+                    "component_pk": component.pk,
                     "action_id": self.action.pk,
                 },
             ),
@@ -275,7 +275,7 @@ class TestAction(BaseTestCase):
                 kwargs={
                     "cluster_id": cluster.pk,
                     "service_id": service.pk,
-                    "component_id": component.pk,
+                    "component_pk": component.pk,
                     "action_id": self.action.pk,
                 },
             ),
