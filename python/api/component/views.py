@@ -100,11 +100,11 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
 
         return get_maintenance_mode_response(obj=component, serializer=serializer)
 
-    @action(detail=False, methods=["get"], url_path="status", url_name="component-status")
+    @action(detail=True, methods=["get"], url_path="status", url_name="status")
     def status(self, request, *args, **kwargs):
         queryset = get_component_queryset(ServiceComponent.objects.all(), request.user, kwargs)
         component = get_object_for_user(request.user, "cm.view_servicecomponent", queryset, id=kwargs["component_pk"])
-        if self._is_for_ui():
+        if self.is_for_ui():
             host_components = self.get_queryset().filter(component=component)
 
             return Response(make_ui_component_status(component, host_components))
