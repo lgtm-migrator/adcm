@@ -24,14 +24,15 @@ from tests.functional.maintenance_mode.conftest import (
     check_concerns_on_object,
     check_mm_is,
     check_no_concerns_on_objects,
-    check_response_data_code,
     set_maintenance_mode,
 )
+from tests.library.api.core import RequestResult
 
 # pylint: disable=redefined-outer-name
 
 pytestmark = [only_clean_adcm]
 DEFAULT_CLUSTER_PARAM = 12
+EXPECTED_ERROR = "LOCK_ERROR"
 
 
 @pytest.fixture()
@@ -336,14 +337,22 @@ def test_mm_concern_action(api_client, sdk_client_fs, cluster_actions, hosts):
 
     with allure.step("Start simple cluster action and switch component to MM 'ON'"):
         cluster.action(name="cluster_action").run()
-        check_response_data_code(
+        check_response_error(
             response=api_client.component.change_maintenance_mode(second_component.id, MM_IS_ON),
-            expected_data_code="LOCK_ERROR",
+            expected_error=EXPECTED_ERROR,
         )
 
 
-@allure.step("Check amount of jobs is {expected_amount} and all tasks finish successfully")
+@allure.step("Check amount of jobs and all tasks finish successfully")
 def _wait_all_tasks_succeed(client: ADCMClient, expected_amount: int):
     jobs = client.job_list()
     assert len(jobs) == expected_amount
     assert all(job.task().wait() == "success" for job in jobs)
+
+
+@allure.step("Check response contain correct error")
+def check_response_error(response: RequestResult, expected_error: str) -> None:
+    """Method to check error message in response"""
+    assert (
+        response.data["code"] == expected_error
+    ), f"Incorrect request data code.\nActual: {response.data['code']}\nExpected: {expected_error}"

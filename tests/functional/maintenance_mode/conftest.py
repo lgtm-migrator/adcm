@@ -25,7 +25,6 @@ import pytest
 from adcm_client.objects import ADCMClient, Cluster, Component, Host, Provider, Service
 from tests.functional.tools import AnyADCMObject, get_object_represent
 from tests.library.api.client import APIClient
-from tests.library.api.core import RequestResult
 from tests.library.assertions import sets_are_equal
 from tests.library.utils import get_hosts_fqdn_representation
 
@@ -245,10 +244,3 @@ def check_no_concerns_on_objects(*adcm_object):
     if not report:
         return
     raise AssertionError(f"{', '.join(obj for obj in report)}")
-
-
-def check_response_data_code(response: RequestResult, expected_data_code: str) -> None:
-    """Method to check response data"""
-    assert (
-        response.data["code"] == expected_data_code
-    ), f"Incorrect request data code.\nActual: {response.data['code']}\nExpected: {expected_data_code}"
