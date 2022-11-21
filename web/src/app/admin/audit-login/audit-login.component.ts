@@ -59,7 +59,7 @@ export class AuditLoginComponent extends RbacEntityListDirective<RbacAuditLoginM
     }
   ] as IColumns<RbacAuditLoginModel>;
 
-  pageName: TypeName = 'audit_login';
+  type: TypeName = 'audit_login';
   filterParams$: BehaviorSubject<any> = new BehaviorSubject<any>({});
 
   auditLoginFilters: IFilter[] = [
