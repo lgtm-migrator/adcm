@@ -97,7 +97,7 @@ export class AuditOperationsComponent extends RbacEntityListDirective<RbacAuditO
 
   ] as IColumns<RbacAuditOperationsModel>;
 
-  type: TypeName = 'audit_operations';
+  pageName: TypeName = 'audit_operations';
   filterParams$: BehaviorSubject<any> = new BehaviorSubject<any>({});
 
   auditOperationsFilters: IFilter[] = [
