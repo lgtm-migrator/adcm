@@ -478,11 +478,15 @@ def get_data_for_body_check(method: Methods, endpoints_with_test_sets: List[tupl
             for test_set in test_group:
                 if positive:
                     status_code = method.default_success_code
-                elif endpoint == Endpoints.RbacUser and (
-                    # If there's an attempt to change username, 409 will be the response
-                    # if there's a drop - 400
-                    "username" in test_group[0].keys()
-                    and not test_group[0]["username"].drop_key
+                elif (
+                    method in {Methods.PUT, Methods.PATCH}
+                    and endpoint == Endpoints.RbacUser
+                    and (
+                        # If there's an attempt to change username, 409 will be the response
+                        # if there's a drop - 400
+                        "username" in test_group[0].keys()
+                        and not test_group[0]["username"].drop_key
+                    )
                 ):
                     status_code = HTTPStatus.CONFLICT
                 else:
