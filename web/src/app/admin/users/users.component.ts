@@ -72,7 +72,7 @@ export class UsersComponent extends RbacEntityListDirective<RbacUserModel> imple
   ] as IColumns<RbacUserModel>;
 
   type: TypeName = 'user'
-  filteredData$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  filterParams$: BehaviorSubject<any> = new BehaviorSubject<any>({});
 
   userFilters: IFilter[] = [
     {
