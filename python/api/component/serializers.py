@@ -76,33 +76,6 @@ class ComponentShortSerializer(ComponentSerializer):
     )
 
 
-SERVICECOMPONENT_FIELDS = (
-    "action",
-    "bound_to",
-    "cluster_id",
-    "concerns",
-    "config",
-    "constraint",
-    "description",
-    "display_name",
-    "group_config",
-    "id",
-    "is_maintenance_mode_available",
-    "locked",
-    "maintenance_mode",
-    "monitoring",
-    "multi_state",
-    "name",
-    "prototype",
-    "prototype_id",
-    "requires",
-    "service_id",
-    "state",
-    "status",
-    "url",
-)
-
-
 class ServiceComponentSerializer(ModelSerializer):
     action = CommonAPIURL(read_only=True, view_name="object-action")
     concerns = ConcernItemSerializer(many=True, read_only=True)
@@ -123,7 +96,31 @@ class ServiceComponentSerializer(ModelSerializer):
 
     class Meta:
         model = ServiceComponent
-        fields = SERVICECOMPONENT_FIELDS
+        fields = (
+            "action",
+            "bound_to",
+            "cluster_id",
+            "concerns",
+            "config",
+            "constraint",
+            "description",
+            "display_name",
+            "group_config",
+            "id",
+            "is_maintenance_mode_available",
+            "locked",
+            "maintenance_mode",
+            "monitoring",
+            "multi_state",
+            "name",
+            "prototype",
+            "prototype_id",
+            "requires",
+            "service_id",
+            "state",
+            "status",
+            "url",
+        )
 
 
 class ServiceComponentUISerializer(ServiceComponentSerializer):
@@ -151,7 +148,7 @@ class ServiceComponentUISerializer(ServiceComponentSerializer):
 
     class Meta:
         model = ServiceComponent
-        fields = SERVICECOMPONENT_FIELDS + ("actions", "concerns", "main_info", "version")
+        fields = (*ServiceComponentSerializer.Meta.fields, "actions", "concerns", "main_info", "version")
 
 
 class StatusSerializer(EmptySerializer):
