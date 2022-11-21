@@ -54,14 +54,14 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
     serializer_class = ServiceComponentSerializer
     lookup_url_kwarg = "component_pk"
     permission_classes = (DjangoOnlyObjectPermissions,)
+    _status_permission_classes = (permissions.IsAuthenticated,)
     permission_required = ["cm.view_servicecomponent"]
     filterset_fields = ("cluster_id", "service_id")
     ordering_fields = ("state", "prototype__display_name", "prototype__version_order")
 
     def get_permissions(self):
         if self.action == "status":
-            permission_classes = (permissions.IsAuthenticated,)
-            return [permission() for permission in permission_classes]
+            return [permission() for permission in self._status_permission_classes]
         else:
             return super().get_permissions()
 
