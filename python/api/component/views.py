@@ -12,6 +12,7 @@
 
 from guardian.mixins import PermissionListMixin
 from rest_framework import permissions
+from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -64,22 +65,15 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
     def get_serializer_class(self):
         if self.is_for_ui():
             return ServiceComponentUISerializer
+        if self.action == "maintenance_mode":
+            return ComponentChangeMaintenanceModeSerializer
         return super().get_serializer_class()
-
-
-class ComponentMaintenanceModeView(GenericUIView):
-    queryset = ServiceComponent.objects.all()
-    permission_classes = (DjangoOnlyObjectPermissions,)
-    serializer_class = ComponentChangeMaintenanceModeSerializer
-    lookup_field = "id"
-    lookup_url_kwarg = "component_id"
 
     @update_mm_objects
     @audit
-    def post(self, request: Request, **kwargs) -> Response:
-        component = get_object_for_user(
-            request.user, "cm.view_servicecomponent", ServiceComponent, id=kwargs["component_id"]
-        )
+    @action(detail=True, methods=["post"], url_path="maintenance-mode", url_name="maintenance-mode")
+    def maintenance_mode(self, request: Request, component_id=None) -> Response:
+        component = get_object_for_user(request.user, "cm.view_servicecomponent", ServiceComponent, id=component_id)
         # pylint: disable=protected-access
         check_custom_perm(request.user, "change_maintenance_mode", component._meta.model_name, component)
         serializer = self.get_serializer(instance=component, data=request.data)

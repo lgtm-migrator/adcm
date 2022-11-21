@@ -14,22 +14,13 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from api.component.views import (
-    ComponentMaintenanceModeView,
-    ComponentViewSet,
-    StatusList,
-)
+from api.component.views import ComponentViewSet, StatusList
 
 router = DefaultRouter()
 router.register(r"", ComponentViewSet, basename="component")
 
 urlpatterns = [
     *router.urls,
-    path(
-        "<int:component_id>/maintenance-mode/",
-        ComponentMaintenanceModeView.as_view(),
-        name="component-maintenance-mode",
-    ),
     path(
         "<int:component_id>/config/", include("api.config.urls"), {"object_type": "component"}, name="component-config"
     ),
