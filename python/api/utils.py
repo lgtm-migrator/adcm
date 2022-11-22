@@ -154,13 +154,13 @@ def filter_actions(obj: ADCMEntity, actions_set: List[Action]):
 
 
 def get_api_url_kwargs(obj, request, no_obj_type=False):
-    obj_type_pk_name_map = {"component": "_pk"}
+    obj_type_pk_name_map = {
+        "adcm": "_pk",
+        "component": "_pk",
+    }
     obj_type = obj.prototype.type
 
-    if obj_type == "adcm":  # TODO: this is a temporary patch for `config` endpoint
-        kwargs = {"adcm_pk": obj.pk}
-    else:
-        kwargs = {f"{obj_type}{obj_type_pk_name_map.get(obj_type, '_id')}": obj.id}
+    kwargs = {f"{obj_type}{obj_type_pk_name_map.get(obj_type, '_id')}": obj.id}
 
     # Do not include object_type in kwargs if no_obj_type == True
     if not no_obj_type:
