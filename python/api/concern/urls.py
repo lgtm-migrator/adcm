@@ -15,7 +15,7 @@ from rest_framework.routers import DefaultRouter
 from api.concern.views import ConcernItemViewSet
 
 router = DefaultRouter()
-router.register(r'', ConcernItemViewSet, basename="concern")
+router.register("", ConcernItemViewSet, basename="concern")
 
 urlpatterns = [
     *router.urls,

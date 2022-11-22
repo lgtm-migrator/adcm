@@ -82,14 +82,8 @@ class ConcernFilter(drf_filters.FilterSet):
 
 
 class ConcernItemViewSet(ListModelMixin, RetrieveModelMixin, GenericUIViewSet):
-    """
-    get:
-    List of all existing concern items
-    """
-
     queryset = models.ConcernItem.objects.all()
     serializer_class = ConcernItemSerializer
-    serializer_class_ui = ConcernItemUISerializer
     permission_classes = (IsAuthenticated,)
     lookup_url_kwarg = "concern_pk"
     filterset_class = ConcernFilter
