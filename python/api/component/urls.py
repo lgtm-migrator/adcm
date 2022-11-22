@@ -17,7 +17,7 @@ from rest_framework.routers import DefaultRouter
 from api.component.views import ComponentViewSet
 
 router = DefaultRouter()
-router.register(r"", ComponentViewSet, basename="component")
+router.register("", ComponentViewSet, basename="component")
 
 urlpatterns = [
     *router.urls,
