@@ -37,7 +37,7 @@ class APIRoot(routers.APIRootView):
         "stats": "stats",
         "task": "tasklog-list",
         "info": "adcm-info",
-        "concern": "concern-list",
+        "concern": "concernitem-list",
         "rbac": "rbac:root",
         "token": "token",
     }
