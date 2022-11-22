@@ -58,9 +58,9 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
 
     def get_permissions(self):
         if self.action == "status":
-            return [permissions.IsAuthenticated]
+            return [permissions.IsAuthenticated()]
         else:
-            return [DjangoOnlyObjectPermissions]
+            return [DjangoOnlyObjectPermissions()]
 
     def get_required_permissions(self, request=None):
         if self.action == "status":
