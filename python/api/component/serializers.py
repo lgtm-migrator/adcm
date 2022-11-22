@@ -43,7 +43,7 @@ class ComponentSerializer(EmptySerializer):
     description = CharField(read_only=True)
     state = CharField(read_only=True)
     prototype_id = IntegerField(required=True, help_text="id of component prototype")
-    url = ObjectURL(read_only=True, view_name="component-detail")
+    url = ObjectURL(read_only=True, view_name="servicecomponent-detail")
     maintenance_mode = CharField(read_only=True)
     is_maintenance_mode_available = BooleanField(read_only=True)
 
@@ -88,7 +88,7 @@ class ServiceComponentSerializer(ModelSerializer):
         lookup_url_kwarg="prototype_pk",
     )
     status = SerializerMethodField()
-    url = ObjectURL(read_only=True, view_name="component-detail")
+    url = ObjectURL(read_only=True, view_name="servicecomponent-detail")
 
     @staticmethod
     def get_status(obj: ServiceComponent) -> int:

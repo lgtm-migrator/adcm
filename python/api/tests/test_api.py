@@ -102,7 +102,7 @@ class TestAPI(BaseTestCase):
 
     def get_component_id(self, cluster_id, service_id, component_name):
         response: Response = self.client.get(
-            reverse("component-list", kwargs={"cluster_id": cluster_id, "service_id": service_id})
+            reverse("servicecomponent-list", kwargs={"cluster_id": cluster_id, "service_id": service_id})
         )
 
         self.assertEqual(response.status_code, HTTP_200_OK)
