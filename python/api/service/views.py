@@ -118,11 +118,16 @@ class ServiceDetailView(PermissionListMixin, DetailView):
     @audit
     def delete(self, request, *args, **kwargs):
         instance: ClusterObject = self.get_object()
-        if instance.state != "created":
-            raise_adcm_ex("SERVICE_DELETE_ERROR")
+        delete_action = Action.objects.filter(
+            prototype=instance.prototype, name=settings.ADCM_DELETE_SERVICE_ACTION_NAME
+        ).first()
 
-        if HostComponent.objects.filter(cluster=instance.cluster, service=instance).exists():
-            raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} has component(s) on host(s)")
+        if not delete_action:
+            if instance.state != "created":
+                raise_adcm_ex("SERVICE_DELETE_ERROR")
+
+            if HostComponent.objects.filter(cluster=instance.cluster, service=instance).exists():
+                raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} has component(s) on host(s)")
 
         if ClusterBind.objects.filter(source_service=instance).exists():
             raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} has exports(s)")
@@ -130,9 +135,12 @@ class ServiceDetailView(PermissionListMixin, DetailView):
         if instance.has_another_service_requires:
             raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} has another service requires host components")
 
-        delete_action = Action.objects.filter(
-            prototype=instance.prototype, name=settings.ADCM_DELETE_SERVICE_ACTION_NAME
-        ).first()
+        if instance.prototype.required:
+            raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} is required")
+
+        if ClusterBind.objects.filter(service=instance).exists():
+            raise_adcm_ex("SERVICE_CONFLICT", f"Service #{instance.id} has bind")
+
         if TaskLog.objects.filter(action=delete_action, status=JobStatus.RUNNING).exists():
             raise_adcm_ex("SERVICE_DELETE_ERROR", "Service is deleting now")
 
@@ -164,8 +172,7 @@ class ServiceMaintenanceModeView(GenericUIView):
     @audit
     def post(self, request: Request, **kwargs) -> Response:
         service = get_object_for_user(request.user, "cm.view_clusterobject", ClusterObject, id=kwargs["service_id"])
-        # pylint: disable=protected-access
-        check_custom_perm(request.user, "change_maintenance_mode", service._meta.model_name, service)
+        check_custom_perm(request.user, "change_maintenance_mode", service.__class__.__name__.lower(), service)
         serializer = self.get_serializer(instance=service, data=request.data)
         serializer.is_valid(raise_exception=True)
 
