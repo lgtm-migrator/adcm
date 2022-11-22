@@ -11,7 +11,8 @@
 # limitations under the License.
 
 from django.contrib.contenttypes.models import ContentType
-from django_filters import rest_framework as drf_filters
+from django.db.models import QuerySet
+from django_filters.rest_framework import ChoiceFilter, FilterSet, NumberFilter
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 
@@ -35,12 +36,12 @@ OBJECT_TYPES = {
 CHOICES = list(zip(OBJECT_TYPES, OBJECT_TYPES))
 
 
-class ConcernFilter(drf_filters.FilterSet):
-    type = drf_filters.ChoiceFilter(choices=ConcernType.choices)
-    cause = drf_filters.ChoiceFilter(choices=ConcernCause.choices)
-    object_id = drf_filters.NumberFilter(label="Related object ID", method="_pass")
-    object_type = drf_filters.ChoiceFilter(label="Related object type", choices=CHOICES, method="_filter_by_object")
-    owner_type = drf_filters.ChoiceFilter(choices=CHOICES, method="_filter_by_owner_type")
+class ConcernFilter(FilterSet):
+    type = ChoiceFilter(choices=ConcernType.choices)
+    cause = ChoiceFilter(choices=ConcernCause.choices)
+    object_id = NumberFilter(label="Related object ID")
+    object_type = ChoiceFilter(label="Related object type", choices=CHOICES, method="filter_by_object")
+    owner_type = ChoiceFilter(choices=CHOICES, method="filter_by_owner_type")
 
     class Meta:
         model = ConcernItem
@@ -54,15 +55,12 @@ class ConcernFilter(drf_filters.FilterSet):
             "owner_id",
         ]
 
-    def _filter_by_owner_type(self, queryset, name, value: str):
+    @staticmethod
+    def filter_by_owner_type(queryset: QuerySet, value: str):
         owner_type = ContentType.objects.get(app_label="cm", model=OBJECT_TYPES[value])
         return queryset.filter(owner_type=owner_type)
 
-    def _pass(self, queryset, name, value):
-        # do not pass to filter directly
-        return queryset
-
-    def _filter_by_object(self, queryset, name, value):
+    def filter_by_object(self, queryset: QuerySet, value: str):
         object_id = self.request.query_params.get("object_id")
         filters = {f"{OBJECT_TYPES[value]}_entities__id": object_id}
         return queryset.filter(**filters)

@@ -17,6 +17,4 @@ from api.concern.views import ConcernItemViewSet
 router = DefaultRouter()
 router.register("", ConcernItemViewSet)
 
-urlpatterns = [
-    *router.urls,
-]
+urlpatterns = router.urls
