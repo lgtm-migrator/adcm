@@ -55,7 +55,6 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
     lookup_url_kwarg = "component_pk"
     permission_classes = (DjangoOnlyObjectPermissions,)
     _status_permission_classes = (permissions.IsAuthenticated,)
-    permission_required = ["cm.view_servicecomponent"]
     filterset_fields = ("cluster_id", "service_id")
     ordering_fields = ("state", "prototype__display_name", "prototype__version_order")
 
@@ -69,7 +68,7 @@ class ComponentViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
         if self.action == "status":
             return []
         else:
-            return super().get_required_permissions(request)
+            return ["cm.view_servicecomponent"]
 
     def get_queryset(self, *args, **kwargs):
         if self.action == "status":
