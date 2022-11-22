@@ -279,7 +279,7 @@ class TestTaskPage:
     def test_download_bulk_log(self, cluster: Cluster, app_fs: ADCMTest, downloads_directory):
         task = run_cluster_action_and_assert_result(cluster, CHECK_ACTION_NAME)
         jobs_page = JobListPage(driver=app_fs.driver, base_url=app_fs.adcm.url).open()
-        with allure.step('Bulk download logfiles'):
+        with allure.step("Bulk download logfiles"):
             jobs_page.click_on_log_download(row=jobs_page.table.get_row(0))
             wait_file_is_presented(
                 app_fs=app_fs,
