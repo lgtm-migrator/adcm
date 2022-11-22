@@ -19,7 +19,7 @@ from cm.models import ConcernItem
 
 
 class ConcernItemSerializer(HyperlinkedModelSerializer):
-    url = HyperlinkedIdentityField(view_name='concern-detail', lookup_url_kwarg='concern_pk')
+    url = HyperlinkedIdentityField(view_name="concernitem-detail", lookup_url_kwarg="concern_pk")
 
     class Meta:
         model = ConcernItem
