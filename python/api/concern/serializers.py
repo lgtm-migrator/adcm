@@ -29,8 +29,6 @@ class ConcernItemUISerializer(ConcernItemSerializer):
 
 
 class ConcernItemDetailSerializer(ConcernItemUISerializer):
-    _proto_type_view_postfix_map = {"component": "-detail"}
-
     name = serializers.CharField()
     related_objects = serializers.SerializerMethodField()
     owner = serializers.SerializerMethodField()
@@ -38,8 +36,7 @@ class ConcernItemDetailSerializer(ConcernItemUISerializer):
     def get_related_objects(self, item):
         result = []
         for obj in item.related_objects:
-            view_postfix = self._proto_type_view_postfix_map.get(obj.prototype.type, "-details")
-            view_name = f"{obj.prototype.type}{view_postfix}"
+            view_name = f"{obj.prototype.type}{'-detail' if obj.prototype.type == 'component' else '-details'}"
             request = self.context.get("request", None)
             kwargs = get_api_url_kwargs(obj, request, no_obj_type=True)
             result.append(
@@ -54,9 +51,13 @@ class ConcernItemDetailSerializer(ConcernItemUISerializer):
     def get_owner(self, item):
         request = self.context.get("request", None)
         kwargs = get_api_url_kwargs(item.owner, request, no_obj_type=True)
-        view_postfix = self._proto_type_view_postfix_map.get(item.owner.prototype.type, "-details")
         return {
             "type": item.owner.prototype.type,
             "id": item.owner.pk,
-            "url": reverse(f"{item.owner.prototype.type}{view_postfix}", kwargs=kwargs, request=request),
+            "url": reverse(
+                f"{item.owner.prototype.type}"
+                f"{'-detail' if item.owner.prototype.type == 'component' else '-details'}",
+                kwargs=kwargs,
+                request=request,
+            ),
         }
