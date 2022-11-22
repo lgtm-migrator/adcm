@@ -10,30 +10,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from rest_framework import serializers
+from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.reverse import reverse
+from rest_framework.serializers import HyperlinkedModelSerializer, SerializerMethodField
 
-from api.utils import get_api_url_kwargs, hlink
+from api.utils import get_api_url_kwargs
+from cm.models import ConcernItem
 
 
-class ConcernItemSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    url = hlink("concern-details", "id", "concern_id")
+class ConcernItemSerializer(HyperlinkedModelSerializer):
+    url = HyperlinkedIdentityField(view_name='concern-detail', lookup_url_kwarg='concern_pk')
+
+    class Meta:
+        model = ConcernItem
+        fields = ("id", "url")
 
 
 class ConcernItemUISerializer(ConcernItemSerializer):
-    type = serializers.CharField()
-    blocking = serializers.BooleanField()
-    reason = serializers.JSONField()
-    cause = serializers.CharField()
+    class Meta:
+        model = ConcernItem
+        fields = (*ConcernItemSerializer.Meta.fields, "type", "blocking", "reason", "cause")
 
 
 class ConcernItemDetailSerializer(ConcernItemUISerializer):
     _proto_type_view_postfix_map = {"component": "-detail"}
 
-    name = serializers.CharField()
-    related_objects = serializers.SerializerMethodField()
-    owner = serializers.SerializerMethodField()
+    related_objects = SerializerMethodField()
+    owner = SerializerMethodField()
+
+    class Meta:
+        model = ConcernItem
+        fields = (*ConcernItemUISerializer.Meta.fields, "name", "related_objects", "owner")
 
     def get_related_objects(self, item):
         result = []

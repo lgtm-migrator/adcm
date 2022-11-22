@@ -10,11 +10,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-from api.concern.views import ConcernItemDetail, ConcernItemList
+from api.concern.views import ConcernItemViewSet
+
+router = DefaultRouter()
+router.register(r'', ConcernItemViewSet, basename="concern")
 
 urlpatterns = [
-    path('', ConcernItemList.as_view(), name='concern'),
-    path('<int:concern_id>/', ConcernItemDetail.as_view(), name='concern-details'),
+    *router.urls,
 ]
