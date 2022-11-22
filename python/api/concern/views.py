@@ -21,8 +21,8 @@ from api.concern.serializers import (
     ConcernItemSerializer,
     ConcernItemUISerializer,
 )
-from cm import models
 from cm.errors import AdcmEx
+from cm.models import ConcernCause, ConcernItem, ConcernType
 
 OBJECT_TYPES = {
     "adcm": "adcm",
@@ -36,14 +36,14 @@ CHOICES = list(zip(OBJECT_TYPES, OBJECT_TYPES))
 
 
 class ConcernFilter(drf_filters.FilterSet):
-    type = drf_filters.ChoiceFilter(choices=models.ConcernType.choices)
-    cause = drf_filters.ChoiceFilter(choices=models.ConcernCause.choices)
+    type = drf_filters.ChoiceFilter(choices=ConcernType.choices)
+    cause = drf_filters.ChoiceFilter(choices=ConcernCause.choices)
     object_id = drf_filters.NumberFilter(label="Related object ID", method="_pass")
     object_type = drf_filters.ChoiceFilter(label="Related object type", choices=CHOICES, method="_filter_by_object")
     owner_type = drf_filters.ChoiceFilter(choices=CHOICES, method="_filter_by_owner_type")
 
     class Meta:
-        model = models.ConcernItem
+        model = ConcernItem
         fields = [
             "name",
             "type",
@@ -82,7 +82,7 @@ class ConcernFilter(drf_filters.FilterSet):
 
 
 class ConcernItemViewSet(ListModelMixin, RetrieveModelMixin, GenericUIViewSet):
-    queryset = models.ConcernItem.objects.all()
+    queryset = ConcernItem.objects.all()
     serializer_class = ConcernItemSerializer
     permission_classes = (IsAuthenticated,)
     lookup_url_kwarg = "concern_pk"
