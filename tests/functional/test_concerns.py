@@ -17,16 +17,13 @@ from typing import Tuple
 import allure
 import coreapi
 import pytest
-
 from adcm_client.base import ActionHasIssues
-from adcm_client.objects import ADCMClient, Provider, Host, Service, Cluster
+from adcm_client.objects import ADCMClient, Cluster, Host, Provider, Service
 from adcm_pytest_plugin import utils
 from adcm_pytest_plugin.utils import catch_failed
 from coreapi.exceptions import ErrorMessage
-
 from tests.functional.conftest import only_clean_adcm
 from tests.library.adcm_websockets import ADCMWebsocket, EventMessage
-
 
 # pylint: disable=redefined-outer-name
 
@@ -111,7 +108,9 @@ def test_when_hostprovider_has_issue_then_upgrade_locked(sdk_client_fs: ADCMClie
 
 
 @allure.link("https://jira.arenadata.io/browse/ADCM-487")
-def test_when_component_has_no_constraint_then_cluster_doesnt_have_issues(sdk_client_fs: ADCMClient):
+def test_when_component_has_no_constraint_then_cluster_doesnt_have_issues(
+    sdk_client_fs: ADCMClient,
+):
     """Test no cluster issues if no constraints on components"""
     with allure.step("Create cluster (component has no constraint)"):
         bundle_path = utils.get_data_dir(__file__, "cluster_component_hasnt_constraint")
@@ -241,7 +240,11 @@ class TestProviderIndependence:
                 (
                     EventMessage(
                         'add',
-                        {'type': 'service', 'id': service.id, 'details': {'type': 'cluster', 'value': str(cluster.id)}},
+                        {
+                            'type': 'service',
+                            'id': service.id,
+                            'details': {'type': 'cluster', 'value': str(cluster.id)},
+                        },
                     ),
                     *[
                         self._concern_add_msg(type_)

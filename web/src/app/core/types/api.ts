@@ -39,7 +39,9 @@ export type TypeName =
   'group_config_hosts' |
   'group' |
   'role' |
-  'policy';
+  'policy' |
+  'audit_operations' |
+  'audit_login';
 export type Entities = ICluster | Service | Host | Provider | Job | Task | Bundle;
 
 /**

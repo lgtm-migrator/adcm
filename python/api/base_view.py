@@ -13,6 +13,7 @@
 # pylint: disable=not-callable, unused-import, too-many-locals
 
 import rest_framework.pagination
+from django.conf import settings
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from rest_framework import serializers
 from rest_framework.generics import GenericAPIView
@@ -22,7 +23,6 @@ from rest_framework.utils.urls import replace_query_param
 from rest_framework.viewsets import ViewSetMixin
 
 from adcm.permissions import DjangoObjectPermissionsAudit
-from adcm.settings import REST_FRAMEWORK
 from api.utils import AdcmFilterBackend, AdcmOrderingFilter, getlist_from_querydict
 from audit.utils import audit
 from cm.errors import AdcmEx
@@ -137,13 +137,7 @@ class PaginatedView(GenericUIView):
                     obj = obj.values(*fields)
 
             except (FieldError, ValueError):
-                qp = ",".join(
-                    [
-                        f"{k}={v}"
-                        for k, v in request.query_params.items()
-                        if k in ["fields", "distinct"]
-                    ]
-                )
+                qp = ",".join([f"{k}={v}" for k, v in request.query_params.items() if k in ["fields", "distinct"]])
                 msg = f"Bad query params: {qp}"
 
                 raise AdcmEx("BAD_QUERY_PARAMS", msg=msg) from None
@@ -156,7 +150,7 @@ class PaginatedView(GenericUIView):
 
             return self.get_paginated_response(page)
 
-        if count <= REST_FRAMEWORK["PAGE_SIZE"]:
+        if count <= settings.REST_FRAMEWORK["PAGE_SIZE"]:
             if serializer_class is not None:
                 serializer = serializer_class(obj, many=True, context=context)
                 obj = serializer.data

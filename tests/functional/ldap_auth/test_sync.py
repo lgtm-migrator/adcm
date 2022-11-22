@@ -22,10 +22,10 @@ from adcm_client.objects import ADCM, ADCMClient, Group, User
 from adcm_pytest_plugin.steps.actions import wait_for_task_and_assert_result
 from adcm_pytest_plugin.utils import random_string, wait_until_step_succeeds
 from coreapi.exceptions import ErrorMessage
-
 from tests.functional.conftest import only_clean_adcm
 from tests.functional.ldap_auth.utils import (
     DEFAULT_LOCAL_USERS,
+    LDAP_ACTION_CAN_NOT_START_REASON,
     SYNC_ACTION_NAME,
     TEST_CONNECTION_ACTION,
     check_existing_groups,
@@ -35,8 +35,16 @@ from tests.functional.ldap_auth.utils import (
     login_should_fail,
 )
 from tests.functional.rbac.conftest import BusinessRoles, RbacRoles
-from tests.library.assertions import expect_api_error, expect_no_api_error, sets_are_equal
-from tests.library.ldap_interactions import LDAPTestConfig, configure_adcm_for_ldap, sync_adcm_with_ldap
+from tests.library.assertions import (
+    expect_api_error,
+    expect_no_api_error,
+    sets_are_equal,
+)
+from tests.library.ldap_interactions import (
+    LDAPTestConfig,
+    configure_adcm_for_ldap,
+    sync_adcm_with_ldap,
+)
 
 # pylint: disable=redefined-outer-name
 
@@ -77,30 +85,33 @@ def adcm_superuser_client(sdk_client_fs) -> ADCMClient:
 class TestDisablingCause:
     """Test LDAP-related ADCM actions have correct disabling cause"""
 
-    DISABLING_CAUSE = "no_ldap_settings"
-
     def test_ldap_connection_test_disabling_cause(self, sdk_client_fs, ad_config, ldap_basic_ous):
         """Test that disabling cause is set right for "test_ldap_connection" action"""
         adcm = sdk_client_fs.adcm()
 
         with allure.step("Check that with default settings disabling cause is set"):
-            self._check_disabling_cause(adcm, self.DISABLING_CAUSE)
+            self._check_disabling_cause(adcm, LDAP_ACTION_CAN_NOT_START_REASON)
         with allure.step("Set correct LDAP settings and check disabling cause is None"):
             self._set_ldap_settings(sdk_client_fs, ad_config, ldap_basic_ous)
             self._check_disabling_cause(adcm, None)
         with allure.step("Disable LDAP settings and check disabling cause is set"):
             adcm.config_set_diff({"attr": {"ldap_integration": {"active": False}}})
-            self._check_disabling_cause(adcm, self.DISABLING_CAUSE)
+            self._check_disabling_cause(adcm, LDAP_ACTION_CAN_NOT_START_REASON)
 
     def _check_disabling_cause(self, adcm: ADCM, expected: Optional[str]):
         # retrieve each time to avoid rereading
         sync = adcm.action(name=SYNC_ACTION_NAME)
         test_connection = adcm.action(name=TEST_CONNECTION_ACTION)
         assert (
-            sync.disabling_cause == expected
-        ), f"Sync action has incorrect disabling cause: {sync.disabling_cause}.\nExpected: {expected}"
-        assert test_connection.disabling_cause == expected, (
-            f"Test connection action has incorrect disabling cause: {test_connection.disabling_cause}.\n"
+            expected in sync.start_impossible_reason if expected is not None else sync.start_impossible_reason is None
+        ), f"Sync action has incorrect disabling cause: {sync.start_impossible_reason}.\nExpected: {expected}"
+        assert (
+            expected in test_connection.start_impossible_reason
+            if expected is not None
+            else test_connection.start_impossible_reason is None
+        ), (
+            "Test connection action has incorrect disabling cause: "
+            f"{test_connection.start_impossible_reason}.\n"
             f"Expected: {expected}"
         )
 
@@ -118,9 +129,14 @@ class TestLDAPSyncAction:
         """Test that LDAP sync action pulls users and groups from LDAP"""
         self._simple_sync(sdk_client_fs, ldap_group, ldap_user_in_group, DEFAULT_LOCAL_USERS)
 
-    # pylint: disable-next=too-many-arguments
     def test_access_to_tasks(
-        self, adcm_user_client, adcm_admin_client, adcm_superuser_client, sdk_client_fs, ldap_user_in_group, ldap_group
+        self,
+        adcm_user_client,
+        adcm_admin_client,
+        adcm_superuser_client,
+        sdk_client_fs,
+        ldap_user_in_group,
+        ldap_group,
     ):
         """Test that only superusers can see LDAP-related tasks"""
         superuser_name = adcm_superuser_client.me().username
@@ -128,7 +144,12 @@ class TestLDAPSyncAction:
             sdk_client_fs,
             ldap_group,
             ldap_user_in_group,
-            (*DEFAULT_LOCAL_USERS, adcm_user_client.me().username, adcm_admin_client.me().username, superuser_name),
+            (
+                *DEFAULT_LOCAL_USERS,
+                adcm_user_client.me().username,
+                adcm_admin_client.me().username,
+                superuser_name,
+            ),
         )
         wait_for_task_and_assert_result(sdk_client_fs.adcm().action(name=TEST_CONNECTION_ACTION).run(), "success")
         _check_task_logs_amount(adcm_user_client, 0)
@@ -181,7 +202,6 @@ class TestLDAPSyncAction:
         check_existing_users(sdk_client_fs, expected_local=expected_local_users)
         check_existing_groups(sdk_client_fs, expected_ldap=[ldap_group["name"]], expected_local=[group_name])
 
-    # pylint: disable-next=too-many-arguments
     def test_ldap_group_removed(self, sdk_client_fs, ldap_ad, ldap_group, ldap_user_in_group):
         """Test LDAP group removed from ADCM after it's removed from LDAP"""
         sync_adcm_with_ldap(sdk_client_fs)
@@ -193,7 +213,6 @@ class TestLDAPSyncAction:
         check_existing_users(sdk_client_fs, {ldap_user_in_group["name"]})
         check_existing_groups(sdk_client_fs)
 
-    # pylint: disable-next=too-many-arguments
     def test_user_removed_from_group(self, sdk_client_fs, ldap_ad, ldap_group, ldap_user_in_group):
         """Test that when user is removed from group in AD, it is also removed in ADCM's LDAP group"""
         another_group: Group = sdk_client_fs.group_create("Another group")
@@ -216,7 +235,11 @@ class TestLDAPSyncAction:
     def test_user_deactivated(self, sdk_client_fs, ldap_ad, ldap_user_in_group):
         """Test that user is deactivated in ADCM after it's deactivated in AD"""
         ldap_user = ldap_user_in_group
-        credentials = {"user": ldap_user["name"], "password": ldap_user["password"], "url": sdk_client_fs.url}
+        credentials = {
+            "user": ldap_user["name"],
+            "password": ldap_user["password"],
+            "url": sdk_client_fs.url,
+        }
         with allure.step("Run sync and check that user is active and can log in"):
             sync_adcm_with_ldap(sdk_client_fs)
             user = get_ldap_user_from_adcm(sdk_client_fs, ldap_user["name"])
@@ -253,7 +276,11 @@ class TestLDAPSyncAction:
 
     def test_name_email_sync_from_ldap(self, sdk_client_fs, ldap_ad, ldap_user_in_group):
         """Test that first/last name and email are synced with LDAP"""
-        new_user_info = {"first_name": "Babaika", "last_name": "Labadaika", "email": "doesnt@ex.ist"}
+        new_user_info = {
+            "first_name": "Babaika",
+            "last_name": "Labadaika",
+            "email": "doesnt@ex.ist",
+        }
         sync_adcm_with_ldap(sdk_client_fs)
         user = get_ldap_user_from_adcm(sdk_client_fs, ldap_user_in_group["name"])
         self._check_user_info(user, ldap_user_in_group)
@@ -313,7 +340,11 @@ class TestPeriodicSync:
 
         with allure.step("Check that after 1 more minute the second sync task was launched"):
             wait_until_step_succeeds(
-                self._check_sync_task_is_presented, timeout=70, period=5, client=sdk_client_fs, expected_amount=2
+                self._check_sync_task_is_presented,
+                timeout=70,
+                period=5,
+                client=sdk_client_fs,
+                expected_amount=2,
             )
 
         with allure.step("Disable sync in settings and check no new task was launched"):

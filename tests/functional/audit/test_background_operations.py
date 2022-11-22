@@ -23,8 +23,11 @@ import pytest
 from adcm_client.objects import Cluster, Task
 from adcm_pytest_plugin.steps.commands import clearaudit, logrotate
 from adcm_pytest_plugin.utils import wait_until_step_succeeds
-
-from tests.functional.audit.conftest import BUNDLES_DIR, parametrize_audit_scenario_parsing, set_operations_date
+from tests.functional.audit.conftest import (
+    BUNDLES_DIR,
+    parametrize_audit_scenario_parsing,
+    set_operations_date,
+)
 from tests.functional.conftest import only_clean_adcm
 from tests.library.db import set_configs_date, set_jobs_date, set_tasks_date
 
@@ -58,7 +61,11 @@ def _make_objects_old(adcm_db, sdk_client_fs, cluster_with_history) -> None:
     get_id = attrgetter("id")
     set_configs_date(adcm_db, old_date, tuple(map(itemgetter("id"), configs[: len(configs) // 2])))
     set_tasks_date(adcm_db, old_date, tuple(map(get_id, old_tasks)))
-    set_jobs_date(adcm_db, old_date, tuple(map(get_id, chain.from_iterable(map(methodcaller("job_list"), old_tasks)))))
+    set_jobs_date(
+        adcm_db,
+        old_date,
+        tuple(map(get_id, chain.from_iterable(map(methodcaller("job_list"), old_tasks)))),
+    )
     set_operations_date(adcm_db, old_date, sdk_client_fs.audit_operation_list(paging={"limit": 4}))
 
 

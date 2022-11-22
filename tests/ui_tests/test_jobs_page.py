@@ -14,39 +14,33 @@
 
 import os
 from dataclasses import asdict
-from typing import Union, List
+from typing import List, Union
 
 import allure
 import pytest
 from adcm_client.objects import (
+    Action,
     ADCMClient,
-    Cluster,
     Bundle,
+    Cluster,
+    Component,
+    Host,
+    ObjectNotFound,
     Provider,
     Service,
-    Host,
-    Component,
-    Action,
-    ObjectNotFound,
 )
 from adcm_pytest_plugin import utils
-from adcm_pytest_plugin.steps.actions import (
-    run_cluster_action_and_assert_result,
-)
+from adcm_pytest_plugin.steps.actions import run_cluster_action_and_assert_result
 from adcm_pytest_plugin.utils import catch_failed
-
 from tests.ui_tests.app.app import ADCMTest
 from tests.ui_tests.app.page.cluster_list.page import ClusterListPage
 from tests.ui_tests.app.page.job.page import JobPageStdout
-from tests.ui_tests.app.page.job_list.page import (
-    JobListPage,
-    JobStatus,
-)
+from tests.ui_tests.app.page.job_list.page import JobListPage, JobStatus
 from tests.ui_tests.app.page.login.page import LoginPage
 from tests.ui_tests.utils import (
-    wait_and_assert_ui_info,
-    is_not_empty,
     is_empty,
+    is_not_empty,
+    wait_and_assert_ui_info,
     wait_file_is_presented,
     wait_until_step_succeeds,
 )
@@ -68,7 +62,6 @@ COMPONENT_NAME = 'test_component'
 
 @pytest.fixture()
 @allure.title("Open /task page")
-# pylint: disable-next=unused-argument
 def page(app_fs: ADCMTest, _login_to_adcm_over_api) -> JobListPage:
     """Open /task page"""
     return JobListPage(app_fs.driver, app_fs.adcm.url).open()
@@ -269,11 +262,15 @@ class TestTaskPage:
         with allure.step('Download logfiles'):
             job_page.click_on_log_download('stdout')
             wait_file_is_presented(
-                downloaded_file_template.format(job_id=job_id, log_type='stdout'), app_fs, dirname=downloads_directory
+                downloaded_file_template.format(job_id=job_id, log_type='stdout'),
+                app_fs,
+                dirname=downloads_directory,
             )
             job_page.click_on_log_download('stderr')
             wait_file_is_presented(
-                downloaded_file_template.format(job_id=job_id, log_type='stderr'), app_fs, dirname=downloads_directory
+                downloaded_file_template.format(job_id=job_id, log_type='stderr'),
+                app_fs,
+                dirname=downloads_directory,
             )
 
     def test_invoker_object_url(self, cluster: Cluster, provider: Provider, page: JobListPage):
@@ -449,7 +446,9 @@ class TestTaskHeaderPopup:
         with allure.step('Run actions in cluster'):
             for _ in range(6):
                 run_cluster_action_and_assert_result(
-                    cluster, cluster.action(display_name=SUCCESS_ACTION_DISPLAY_NAME).name, status='success'
+                    cluster,
+                    cluster.action(display_name=SUCCESS_ACTION_DISPLAY_NAME).name,
+                    status='success',
                 )
         cluster_page.header.click_job_block_in_header()
         with allure.step("Check that in popup 5 tasks"):
@@ -572,7 +571,9 @@ def _check_link_to_invoker_object(expected_link: str, page: JobListPage, action:
     with page.table.wait_rows_change():
         action.run()
     wait_and_assert_ui_info(
-        expected_value, page.get_task_info_from_table, get_info_kwargs={'full_invoker_objects_link': True}
+        expected_value,
+        page.get_task_info_from_table,
+        get_info_kwargs={'full_invoker_objects_link': True},
     )
     detail_page = JobPageStdout(page.driver, page.base_url, action.task_list()[0].id).open()
     wait_and_assert_ui_info(expected_value, detail_page.get_job_info)

@@ -48,7 +48,7 @@ export class ListService implements IListService<Entities> {
   getList(p: ParamMap, typeName: TypeName): Observable<ListResult<Entities>> {
     const listParamStr = localStorage.getItem('list:param');
 
-    if (p?.keys.length) {
+    if (p?.keys?.length > 0) {
       const param = p.keys.reduce((a, c) => ({ ...a, [c]: p.get(c) }), {});
       delete param['page'];
 
@@ -82,6 +82,12 @@ export class ListService implements IListService<Entities> {
       case 'policy':
         params = { ...params['params'], 'expand': 'child,role,user,group,object', 'built_in': 'false' };
         return this.api.getList(`${environment.apiRoot}rbac/policy/`, convertToParamMap(params));
+      case 'audit_operations':
+        params = { ...params['params'], 'expand': null };
+        return this.api.getList(`${environment.apiRoot}audit/operation`, convertToParamMap(params));
+      case 'audit_login':
+        params = { ...params['params'], 'expand': null };
+        return this.api.getList(`${environment.apiRoot}audit/login`, convertToParamMap(params));
       default:
         return this.api.root.pipe(switchMap((root) => this.api.getList<Entities>(root[this.current.typeName], p)));
     }

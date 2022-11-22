@@ -13,7 +13,6 @@
 """Cluster List page locators"""
 
 from selenium.webdriver.common.by import By
-
 from tests.ui_tests.app.helpers.locator import Locator
 from tests.ui_tests.app.page.common.table.locator import CommonTable
 
@@ -64,5 +63,9 @@ class ClusterListLocators:
     class LicensePopup:
         """Cluster List page licence popup elements locators"""
 
-        block = Locator(By.XPATH, "//app-dialog[./h3[contains(text(), 'license')]]", "block with license agreement")
+        block = Locator(
+            By.XPATH,
+            "//app-dialog[./h3[contains(text(), 'license')]]",
+            "block with license agreement",
+        )
         agree_btn = Locator(By.XPATH, "//button[./span[contains(text(), 'Yes')]]", "Agree button")
