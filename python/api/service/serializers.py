@@ -111,9 +111,9 @@ class ServiceDetailSerializer(ServiceSerializer):
     monitoring = CharField(read_only=True)
     action = CommonAPIURL(read_only=True, view_name="object-action")
     config = CommonAPIURL(read_only=True, view_name="object-config")
-    component = ObjectURL(read_only=True, view_name="servicecomponent-list")
-    imports = ObjectURL(read_only=True, view_name="service-import")
-    bind = ObjectURL(read_only=True, view_name="service-bind")
+    component = HyperlinkedIdentityField(view_name="servicecomponent-list", lookup_url_kwarg="service_id")
+    imports = HyperlinkedIdentityField(view_name="service-import", lookup_url_kwarg="service_id")
+    bind = HyperlinkedIdentityField(view_name="service-bind", lookup_url_kwarg="service_id")
     prototype = HyperlinkedRelatedField(
         read_only=True,
         view_name="service-prototype-detail",

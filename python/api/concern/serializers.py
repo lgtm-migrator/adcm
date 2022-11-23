@@ -43,7 +43,7 @@ class ConcernItemDetailSerializer(ConcernItemUISerializer):
     def get_related_objects(self, item):
         result = []
         for obj in item.related_objects:
-            view_name = f"{obj.prototype.type}{'-detail' if obj.prototype.type == 'component' else '-details'}"
+            view_name = f"{obj.prototype.type}-detail"
             request = self.context.get("request", None)
             kwargs = get_api_url_kwargs(obj, request, no_obj_type=True)
             result.append(
