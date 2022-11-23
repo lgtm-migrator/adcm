@@ -49,30 +49,6 @@ class TestCluster(BaseTestCase):
         self.prototype = Prototype.objects.create(name="test_prototype_name", type="cluster", bundle=self.bundle)
         self.cluster = Cluster.objects.create(name="test_cluster_name", prototype=self.prototype)
 
-    def test_cluster_update_duplicate_name_fail(self):
-        new_cluster = Cluster.objects.create(name="new_name", prototype=self.prototype)
-        url = reverse("cluster-details", kwargs={"cluster_id": self.cluster.pk})
-
-        response = self.client.patch(path=url, data={"name": new_cluster.name}, content_type=APPLICATION_JSON)
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-        self.assertEqual(response.json()["code"], "CLUSTER_CONFLICT")
-        self.assertEqual(response.json()["desc"], f'Cluster with name "{new_cluster.name}" already exists')
-
-        response = self.client.put(path=url, data={"name": new_cluster.name}, content_type=APPLICATION_JSON)
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-        self.assertEqual(response.json()["code"], "CLUSTER_CONFLICT")
-        self.assertEqual(response.json()["desc"], f'Cluster with name "{new_cluster.name}" already exists')
-
-    def test_cluster_create_duplicate_name_fail(self):
-        response = self.client.post(
-            path=reverse("cluster"),
-            data={"name": self.cluster.name, "prototype_id": self.cluster.prototype.pk},
-            content_type=APPLICATION_JSON,
-        )
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-        self.assertEqual(response.json()["code"], "CLUSTER_CONFLICT")
-        self.assertEqual(response.json()["desc"], f'Cluster with name "{self.cluster.name}" already exists')
-
     def test_cluster_create_name_validation(self):
         url = reverse("cluster")
         amount_of_clusters = Cluster.objects.count()

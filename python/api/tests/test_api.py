@@ -257,8 +257,7 @@ class TestAPI(BaseTestCase):
 
         response: Response = self.client.post(cluster_url, {"name": cluster_name, "prototype_id": proto_id})
 
-        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
-        self.assertEqual(response.json()["code"], "CLUSTER_CONFLICT")
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
         response: Response = self.client.delete(this_cluster_url)
 
@@ -320,8 +319,7 @@ class TestAPI(BaseTestCase):
             second_cluster_url, {"name": patched_name}, content_type=APPLICATION_JSON
         )
 
-        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
-        self.assertEqual(response.json()["code"], "CLUSTER_CONFLICT")
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
         response: Response = self.client.delete(first_cluster_url)
 

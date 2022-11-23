@@ -42,28 +42,13 @@ from cm.status_api import get_cluster_status, get_hc_status
 from cm.upgrade import get_upgrade
 
 
-def get_cluster_id(obj):
-    if hasattr(obj.obj_ref, "clusterobject"):
-        return obj.obj_ref.clusterobject.cluster.id
-    else:
-        return obj.obj_ref.cluster.id
-
-
-class ClusterUniqueValidator(UniqueValidator):
-    def __call__(self, value, serializer_field):
-        try:
-            super().__call__(value, serializer_field)
-        except ValidationError as e:
-            raise AdcmEx("CLUSTER_CONFLICT", f'Cluster with name "{value}" already exists') from e
-
-
 class ClusterSerializer(Serializer):
     id = IntegerField(read_only=True)
     prototype_id = IntegerField(help_text="ID of Cluster type")
     name = CharField(
         help_text="Cluster name",
         validators=[
-            ClusterUniqueValidator(queryset=Cluster.objects.all()),
+            UniqueValidator(queryset=Cluster.objects.all()),
             StartMidEndValidator(
                 start=settings.ALLOWED_CLUSTER_NAME_START_END_CHARS,
                 mid=settings.ALLOWED_CLUSTER_NAME_MID_CHARS,
@@ -169,7 +154,7 @@ class ClusterUpdateSerializer(EmptySerializer):
     name = CharField(
         max_length=80,
         validators=[
-            ClusterUniqueValidator(queryset=Cluster.objects.all()),
+            UniqueValidator(queryset=Cluster.objects.all()),
             StartMidEndValidator(
                 start=settings.ALLOWED_CLUSTER_NAME_START_END_CHARS,
                 mid=settings.ALLOWED_CLUSTER_NAME_MID_CHARS,
