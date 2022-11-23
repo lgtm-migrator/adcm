@@ -286,7 +286,7 @@ class TestComponent(BaseTestCase):
 
     def test_change_maintenance_mode(self):
         self.client.post(
-            path=reverse("component-maintenance-mode", kwargs={"component_pk": self.component.pk}),
+            path=reverse("servicecomponent-maintenance-mode", kwargs={"component_pk": self.component.pk}),
             data={"maintenance_mode": MaintenanceMode.ON},
         )
 
@@ -301,7 +301,7 @@ class TestComponent(BaseTestCase):
     def test_change_maintenance_mode_via_service(self):
         self.client.post(
             path=reverse(
-                "component-maintenance-mode",
+                "servicecomponent-maintenance-mode",
                 kwargs={"service_id": self.service.pk, "component_pk": self.component.pk},
             ),
             data={"maintenance_mode": MaintenanceMode.ON},
@@ -318,7 +318,7 @@ class TestComponent(BaseTestCase):
     def test_change_maintenance_mode_via_cluster(self):
         self.client.post(
             path=reverse(
-                "component-maintenance-mode",
+                "servicecomponent-maintenance-mode",
                 kwargs={
                     "cluster_id": self.cluster.pk,
                     "service_id": self.service.pk,
@@ -338,7 +338,7 @@ class TestComponent(BaseTestCase):
 
     def test_change_maintenance_mode_failed(self):
         self.client.post(
-            path=reverse("component-maintenance-mode", kwargs={"component_pk": self.component.pk}),
+            path=reverse("servicecomponent-maintenance-mode", kwargs={"component_pk": self.component.pk}),
             data={"maintenance_mode": MaintenanceMode.CHANGING},
         )
 
@@ -353,7 +353,7 @@ class TestComponent(BaseTestCase):
     def test_change_maintenance_mode_denied(self):
         with self.no_rights_user_logged_in:
             self.client.post(
-                path=reverse("component-maintenance-mode", kwargs={"component_pk": self.component.pk}),
+                path=reverse("servicecomponent-maintenance-mode", kwargs={"component_pk": self.component.pk}),
                 data={"maintenance_mode": MaintenanceMode.ON},
             )
 

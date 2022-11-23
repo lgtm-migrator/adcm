@@ -17,6 +17,7 @@ from rest_framework.serializers import (
     CharField,
     ChoiceField,
     HyperlinkedIdentityField,
+    HyperlinkedModelSerializer,
     IntegerField,
     JSONField,
     ModelSerializer,
@@ -43,7 +44,7 @@ class ComponentSerializer(EmptySerializer):
     description = CharField(read_only=True)
     state = CharField(read_only=True)
     prototype_id = IntegerField(required=True, help_text="id of component prototype")
-    url = ObjectURL(read_only=True, view_name="component-detail")
+    url = ObjectURL(read_only=True, view_name="servicecomponent-detail")
     maintenance_mode = CharField(read_only=True)
     is_maintenance_mode_available = BooleanField(read_only=True)
 
@@ -76,7 +77,7 @@ class ComponentShortSerializer(ComponentSerializer):
     )
 
 
-class ServiceComponentSerializer(ModelSerializer):
+class ServiceComponentSerializer(HyperlinkedModelSerializer):
     action = CommonAPIURL(read_only=True, view_name="object-action")
     concerns = ConcernItemSerializer(many=True, read_only=True)
     config = CommonAPIURL(read_only=True, view_name="object-config")
@@ -88,7 +89,7 @@ class ServiceComponentSerializer(ModelSerializer):
         lookup_url_kwarg="prototype_pk",
     )
     status = SerializerMethodField()
-    url = ObjectURL(read_only=True, view_name="component-detail")
+    url = HyperlinkedIdentityField(view_name="servicecomponent-detail", lookup_url_kwarg="component_pk")
 
     @staticmethod
     def get_status(obj: ServiceComponent) -> int:
