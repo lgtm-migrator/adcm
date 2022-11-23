@@ -33,6 +33,16 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
 
     if (listParam) {
       const json = JSON.parse(listParam);
+
+      Object.keys(json[this.entity]).filter((name) => name.includes('_after') || name.includes('_before')).forEach((date) => {
+        let dateProp = date.replace(/_after|_before/gi, '');
+        let period = date.includes('_after') ? 'start' : 'end';
+
+        json[this.entity][dateProp] = { ...json[this.entity][dateProp], [period]: new Date(json[this.entity][date]) };
+
+        delete json[this.entity][date];
+      })
+
       Object.keys(json[this.entity]).forEach((name) => {
         this.toggleFilters(this.availableFilters.find((f) => f.name === name));
         this.filterForm.get(name).setValue(json[this.entity][name]);
@@ -52,6 +62,15 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
     }).length === 0) {
       this.filterParams$.next({});
       return;
+    }
+
+    if (this.filters.some((f) => f.filter_type === 'datepicker' && filters[f.filter_field].end)) {
+      Object.keys(filters).filter((f) => this.filtersByType[f] === 'datepicker').forEach((date) => {
+        filters[`${date}_after`] = filters[date].start.toISOString();
+        filters[`${date}_before`] = filters[date].end.toISOString();
+
+        delete filters[date];
+      })
     }
 
     this.filterParams$.next(filters);
