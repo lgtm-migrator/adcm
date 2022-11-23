@@ -28,6 +28,17 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
     this.availableFilters.forEach((i: IFilter) => {
       this.filtersByType[i.filter_field] = i.filter_type;
     })
+
+    let listParam = localStorage.getItem('list:param');
+
+    if (listParam) {
+      const json = JSON.parse(listParam);
+      Object.keys(json[this.entity]).forEach((name) => {
+        this.toggleFilters(this.availableFilters.find((f) => f.name === name));
+        this.filterForm.get(name).setValue(json[this.entity][name]);
+      });
+      this.applyFilters();
+    }
   }
 
   applyFilters(): void {
