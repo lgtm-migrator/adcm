@@ -34,7 +34,7 @@ from api.host.serializers import HostSerializer
 from api.serializers import DoUpgradeSerializer, StringListSerializer
 from api.utils import CommonAPIURL, ObjectURL, UrlField, check_obj, filter_actions
 from cm.adcm_config import get_main_info
-from cm.api import add_cluster, add_hc, bind, multi_bind
+from cm.api import add_hc, bind, multi_bind
 from cm.errors import AdcmEx
 from cm.issue import update_hierarchy_issues
 from cm.models import Action, Cluster, Host, Prototype, ServiceComponent
@@ -44,7 +44,7 @@ from cm.upgrade import get_upgrade
 
 class ClusterSerializer(Serializer):
     id = IntegerField(read_only=True)
-    prototype_id = IntegerField(help_text="ID of Cluster type")
+    prototype_id = IntegerField()
     name = CharField(
         help_text="Cluster name",
         min_length=2,
@@ -53,28 +53,10 @@ class ClusterSerializer(Serializer):
             RegexValidator(regex=settings.CLUSTER_NAME_REGEX),
         ],
     )
-    description = CharField(help_text="Cluster description", required=False)
+    description = CharField(required=False)
     state = CharField(read_only=True)
     before_upgrade = JSONField(read_only=True)
     url = HyperlinkedIdentityField(view_name="cluster-details", lookup_field="id", lookup_url_kwarg="cluster_id")
-
-    @staticmethod
-    def validate_prototype_id(prototype_id):
-        return check_obj(Prototype, {"id": prototype_id, "type": "cluster"})
-
-    def create(self, validated_data):
-        return add_cluster(
-            validated_data.get("prototype_id"),
-            validated_data.get("name"),
-            validated_data.get("description", ""),
-        )
-
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get("name", instance.name)
-        instance.description = validated_data.get("description", instance.description)
-        instance.save()
-
-        return instance
 
 
 class ClusterUISerializer(ClusterSerializer):

@@ -54,38 +54,14 @@ from api.utils import (
     update,
 )
 from audit.utils import audit
-from cm.api import delete_cluster, get_import, unbind
-from cm.errors import AdcmEx
+from cm.api import add_cluster, delete_cluster, get_import, unbind
 from cm.issue import update_hierarchy_issues
-from cm.models import (
-    Cluster,
-    ClusterBind,
-    ClusterObject,
-    HostComponent,
-    Prototype,
-    Upgrade,
-)
+from cm.models import Cluster, ClusterBind, HostComponent, Prototype, Upgrade
 from cm.status_api import make_ui_cluster_status
 from cm.upgrade import do_upgrade, get_upgrade
 from rbac.viewsets import DjangoOnlyObjectPermissions
 
 VIEW_CLUSTER_PERM = "cm.view_cluster"
-
-
-def get_obj_conf(cluster_id, service_id):
-    cluster = check_obj(Cluster, cluster_id)
-    if service_id:
-        co = check_obj(ClusterObject, {"cluster": cluster, "id": service_id})
-        obj = co
-    else:
-        obj = cluster
-
-    if not obj:
-        raise AdcmEx("CONFIG_NOT_FOUND", "this object has no config")
-    if not obj.config:
-        raise AdcmEx("CONFIG_NOT_FOUND", "this object has no config")
-
-    return obj
 
 
 class ClusterList(PermissionListMixin, PaginatedView):
@@ -100,8 +76,22 @@ class ClusterList(PermissionListMixin, PaginatedView):
     @audit
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        return create(serializer)
+        prototype_pk = serializer.validated_data.get("prototype_id")
+        prototype = Prototype.objects.filter(pk=prototype_pk).first()
+        if not prototype:
+            return Response(
+                {"prototype_id": [f"Prototype with id {prototype_pk} doesn't exist"]}, status=HTTP_400_BAD_REQUEST
+            )
+
+        serializer.instance = add_cluster(
+            prototype,
+            serializer.validated_data.get("name"),
+            serializer.validated_data.get("description", ""),
+        )
+
+        return Response(serializer.data, status=HTTP_201_CREATED)
 
 
 class ClusterDetail(PermissionListMixin, DetailView):

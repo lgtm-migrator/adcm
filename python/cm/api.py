@@ -174,14 +174,14 @@ def update_mm_objects(func):
     return wrapper
 
 
-def add_cluster(proto, name, desc=""):
-    if proto.type != "cluster":
-        raise_adcm_ex("OBJ_TYPE_ERROR", f"Prototype type should be cluster, not {proto.type}")
+def add_cluster(prototype: Prototype, name: str, description: str = "") -> Cluster:
+    if prototype.type != "cluster":
+        raise_adcm_ex("OBJ_TYPE_ERROR", f"Prototype type should be cluster, not {prototype.type}")
 
-    check_license(proto)
+    check_license(prototype)
     with transaction.atomic():
-        cluster = Cluster.objects.create(prototype=proto, name=name, description=desc)
-        obj_conf = init_object_config(proto, cluster)
+        cluster = Cluster.objects.create(prototype=prototype, name=name, description=description)
+        obj_conf = init_object_config(prototype, cluster)
         cluster.config = obj_conf
         cluster.save()
         update_hierarchy_issues(cluster)

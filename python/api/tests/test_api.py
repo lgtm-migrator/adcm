@@ -231,8 +231,7 @@ class TestAPI(BaseTestCase):
 
         response: Response = self.client.post(cluster_url, {"name": cluster_name, "prototype_id": 100500})
 
-        self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
-        self.assertEqual(response.json()["code"], "PROTOTYPE_NOT_FOUND")
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
         response: Response = self.client.post(
             cluster_url,
