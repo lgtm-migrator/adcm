@@ -16,6 +16,7 @@ from rest_framework.serializers import (
     CharField,
     ChoiceField,
     HyperlinkedIdentityField,
+    HyperlinkedModelSerializer,
     IntegerField,
     ModelSerializer,
     SerializerMethodField,
@@ -32,6 +33,76 @@ from cm.api import add_host
 from cm.issue import update_hierarchy_issues, update_issue_after_deleting
 from cm.models import Action, Host, HostProvider, MaintenanceMode, Prototype
 from cm.status_api import get_host_status
+
+
+# TODO: rename
+class HostSerializerNew(HyperlinkedModelSerializer):
+    action = CommonAPIURL(view_name="object-action")
+    concerns = ConcernItemSerializer(many=True, read_only=True)
+    config = CommonAPIURL(view_name="object-config")
+    fqdn = CharField(
+        max_length=253,
+        help_text="fully qualified domain name",
+        validators=[
+            HostUniqueValidator(queryset=Host.objects.all()),
+            StartMidEndValidator(
+                start=settings.ALLOWED_HOST_FQDN_START_CHARS,
+                mid=settings.ALLOWED_HOST_FQDN_MID_END_CHARS,
+                end=settings.ALLOWED_HOST_FQDN_MID_END_CHARS,
+                err_code="WRONG_NAME",
+                err_msg="Wrong FQDN.",
+            ),
+        ],
+    )
+    multi_state = StringListSerializer(read_only=True)
+    prototype = HyperlinkedIdentityField(
+        view_name="host-prototype-detail", lookup_field="pk", lookup_url_kwarg="prototype_pk"
+    )
+    status = SerializerMethodField()
+    url = HyperlinkedIdentityField(view_name="host-detail", lookup_url_kwarg="host_id")  # TODO: host_pk
+
+    @staticmethod
+    def validate_prototype_id(prototype_id):
+        return check_obj(Prototype, {"id": prototype_id, "type": "host"})
+
+    @staticmethod
+    def validate_provider_id(provider_id):
+        return check_obj(HostProvider, provider_id)
+
+    def create(self, validated_data):
+        return add_host(
+            validated_data.get("prototype_id"),
+            validated_data.get("provider_id"),
+            validated_data.get("fqdn"),
+            validated_data.get("description", ""),
+        )
+
+    @staticmethod
+    def get_status(obj):
+        return get_host_status(obj)
+
+    class Meta:
+        model = Host
+        fields = (
+            "action",
+            "bundle_id",
+            "cluster_id",
+            "concerns",
+            "config",
+            "description",
+            "fqdn",
+            "id",
+            "is_maintenance_mode_available",
+            "locked",
+            "maintenance_mode",
+            "multi_state",
+            "prototype",
+            "prototype_id",
+            "provider_id",
+            "state",
+            "status",
+            "url",
+        )
 
 
 class HostSerializer(EmptySerializer):
@@ -57,7 +128,7 @@ class HostSerializer(EmptySerializer):
     state = CharField(read_only=True)
     maintenance_mode = ChoiceField(choices=MaintenanceMode.choices, read_only=True)
     is_maintenance_mode_available = BooleanField(read_only=True)
-    url = ObjectURL(read_only=True, view_name="host-details")
+    url = ObjectURL(read_only=True, view_name="host-detail")
 
     @staticmethod
     def validate_prototype_id(prototype_id):

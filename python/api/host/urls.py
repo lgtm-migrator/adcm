@@ -12,10 +12,15 @@
 
 
 from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-from api.host.views import HostList
+from api.host.views import HostViewSet
 
+router = DefaultRouter()
+router.register("", HostViewSet)
+
+urlpatterns = router.urls
 urlpatterns = [
-    path("", HostList.as_view(), name="host"),
+    *router.urls,
     path("", include("api.host.host_urls")),
 ]

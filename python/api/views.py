@@ -26,7 +26,7 @@ class APIRoot(routers.APIRootView):
         "audit": "audit:root",
         "cluster": "cluster",
         "provider": "provider",
-        "host": "host",
+        "host": "host-list",
         "service": "service",
         "component": "servicecomponent-list",
         "group-config": "group-config-list",

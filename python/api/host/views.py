@@ -23,14 +23,16 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_409_CONFLICT,
 )
+from rest_framework.viewsets import ModelViewSet
 
-from api.base_view import DetailView, GenericUIView, PaginatedView
+from api.base_view import DetailView, GenericUIView, GenericUIViewSet, PaginatedView
 from api.host.serializers import (
     ClusterHostSerializer,
     HostChangeMaintenanceModeSerializer,
     HostDetailSerializer,
     HostDetailUISerializer,
     HostSerializer,
+    HostSerializerNew,
     HostUISerializer,
     HostUpdateSerializer,
     ProvideHostSerializer,
@@ -121,6 +123,72 @@ def get_host_queryset(queryset, user, kwargs):
         queryset = queryset.filter(provider=provider)
 
     return queryset
+
+
+# pylint: disable = too-many-ancestors
+class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
+    queryset = Host.objects.all()
+    serializer_class = HostSerializerNew
+    permission_classes = (DjangoOnlyObjectPermissions,)
+    permission_required = [HOST_VIEW]
+    lookup_url_kwarg = "host_id"  # TODO: host_pk
+    filterset_class = HostFilter
+    filterset_fields = (
+        "cluster_id",
+        "prototype_id",
+        "provider_id",
+        "fqdn",
+        "cluster_is_null",
+        "provider_is_null",
+        "group_config",
+        "hostcomponent__service_id",
+        "hostcomponent__component_id",
+        "exclude_group_config__in",
+    )
+    ordering_fields = (
+        "fqdn",
+        "state",
+        "provider__name",
+        "cluster__name",
+        "prototype__display_name",
+        "prototype__version_order",
+    )
+
+    def get_queryset(self, *args, **kwargs):
+        queryset = super().get_queryset(*args, **kwargs)
+        queryset = get_host_queryset(queryset, self.request.user, self.kwargs)
+
+        return get_objects_for_user(**self.get_get_objects_for_user_kwargs(queryset))
+
+    def get_serializer_class(self):
+        if self.is_for_ui():
+            return HostUISerializer
+        if self.action == "maintenance_mode":
+            return HostChangeMaintenanceModeSerializer
+        return super().get_serializer_class()
+
+    @audit
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(
+            data=request.data,
+            context={
+                "request": request,
+                "cluster_id": kwargs.get("cluster_id", None),
+                "provider_id": kwargs.get("provider_id", None),
+            },
+        )
+        if serializer.is_valid():
+            if "provider_id" in kwargs:  # List provider hosts
+                provider = get_object_for_user(request.user, PROVIDER_VIEW, HostProvider, id=kwargs["provider_id"])
+            else:
+                provider = serializer.validated_data.get("provider_id")
+                provider = get_object_for_user(request.user, PROVIDER_VIEW, HostProvider, id=provider.id)
+
+            check_custom_perm(request.user, "add_host_to", "hostprovider", provider)
+
+            return create(serializer)
+
+        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
 
 class HostList(PermissionListMixin, PaginatedView):
