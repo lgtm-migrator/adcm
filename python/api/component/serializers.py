@@ -29,7 +29,7 @@ from api.action.serializers import ActionShort
 from api.concern.serializers import ConcernItemSerializer, ConcernItemUISerializer
 from api.group_config.serializers import GroupConfigsHyperlinkedIdentityField
 from api.serializers import StringListSerializer
-from api.utils import CommonAPIURL, ObjectURL, filter_actions
+from api.utils import CommonAPIURL, filter_actions
 from cm.adcm_config import get_main_info
 from cm.models import Action, MaintenanceMode, ServiceComponent
 from cm.status_api import get_component_status
@@ -44,7 +44,7 @@ class ComponentSerializer(EmptySerializer):
     description = CharField(read_only=True)
     state = CharField(read_only=True)
     prototype_id = IntegerField(required=True, help_text="id of component prototype")
-    url = ObjectURL(read_only=True, view_name="servicecomponent-detail")
+    url = HyperlinkedIdentityField(view_name="servicecomponent-detail", lookup_url_kwarg="component_pk")
     maintenance_mode = CharField(read_only=True)
     is_maintenance_mode_available = BooleanField(read_only=True)
 
