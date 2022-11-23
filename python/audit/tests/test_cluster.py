@@ -1299,7 +1299,7 @@ class TestCluster(BaseTestCase):
                 kwargs={
                     "cluster_id": self.cluster.pk,
                     "service_id": self.service.pk,
-                    "component_id": component.pk,
+                    "component_pk": component.pk,
                 },
             ),
             data={"config": {}},
@@ -1326,7 +1326,7 @@ class TestCluster(BaseTestCase):
                     kwargs={
                         "cluster_id": self.cluster.pk,
                         "service_id": self.service.pk,
-                        "component_id": component.pk,
+                        "component_pk": component.pk,
                     },
                 ),
                 data={"config": {}},
@@ -1556,7 +1556,7 @@ class TestCluster(BaseTestCase):
                 kwargs={
                     "cluster_id": self.cluster.pk,
                     "service_id": self.service.pk,
-                    "component_id": component.pk,
+                    "component_pk": component.pk,
                     "version": config_log.pk,
                 },
             ),
@@ -1583,7 +1583,7 @@ class TestCluster(BaseTestCase):
                     kwargs={
                         "cluster_id": self.cluster.pk,
                         "service_id": self.service.pk,
-                        "component_id": component.pk,
+                        "component_pk": component.pk,
                         "version": config_log.pk,
                     },
                 ),

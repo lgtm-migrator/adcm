@@ -114,7 +114,7 @@ class TestComponent(BaseTestCase):
 
     def test_update_config(self):
         self.client.post(
-            path=reverse("config-history", kwargs={"component_id": self.component.pk}),
+            path=reverse("config-history", kwargs={"component_pk": self.component.pk}),
             data={"config": {}},
             content_type=APPLICATION_JSON,
         )
@@ -127,7 +127,7 @@ class TestComponent(BaseTestCase):
         self.client.patch(
             path=reverse(
                 "config-history-version-restore",
-                kwargs={"component_id": self.component.pk, "version": self.config_log.pk},
+                kwargs={"component_pk": self.component.pk, "version": self.config_log.pk},
             ),
             content_type=APPLICATION_JSON,
         )
@@ -141,7 +141,7 @@ class TestComponent(BaseTestCase):
             response: Response = self.client.patch(
                 path=reverse(
                     "config-history-version-restore",
-                    kwargs={"component_id": self.component.pk, "version": self.config_log.pk},
+                    kwargs={"component_pk": self.component.pk, "version": self.config_log.pk},
                 ),
                 content_type=APPLICATION_JSON,
             )
@@ -159,7 +159,7 @@ class TestComponent(BaseTestCase):
         self.client.post(
             path=reverse(
                 "config-history",
-                kwargs={"service_id": self.service.pk, "component_id": self.component.pk},
+                kwargs={"service_id": self.service.pk, "component_pk": self.component.pk},
             ),
             data={"config": {}},
             content_type=APPLICATION_JSON,
@@ -174,7 +174,7 @@ class TestComponent(BaseTestCase):
             response: Response = self.client.post(
                 path=reverse(
                     "config-history",
-                    kwargs={"service_id": self.service.pk, "component_id": self.component.pk},
+                    kwargs={"service_id": self.service.pk, "component_pk": self.component.pk},
                 ),
                 data={"config": {}},
                 content_type=APPLICATION_JSON,
@@ -195,7 +195,7 @@ class TestComponent(BaseTestCase):
                 "config-history-version-restore",
                 kwargs={
                     "service_id": self.service.pk,
-                    "component_id": self.component.pk,
+                    "component_pk": self.component.pk,
                     "version": self.config_log.pk,
                 },
             ),
@@ -213,7 +213,7 @@ class TestComponent(BaseTestCase):
                     "config-history-version-restore",
                     kwargs={
                         "service_id": self.service.pk,
-                        "component_id": self.component.pk,
+                        "component_pk": self.component.pk,
                         "version": self.config_log.pk,
                     },
                 ),
@@ -241,7 +241,7 @@ class TestComponent(BaseTestCase):
                 path=reverse(
                     "run-task",
                     kwargs={
-                        "component_id": self.component.pk,
+                        "component_pk": self.component.pk,
                         "action_id": action.pk,
                     },
                 )
@@ -257,7 +257,7 @@ class TestComponent(BaseTestCase):
                     "run-task",
                     kwargs={
                         "service_id": self.service.pk,
-                        "component_id": self.component.pk,
+                        "component_pk": self.component.pk,
                         "action_id": action.pk,
                     },
                 )
@@ -274,7 +274,7 @@ class TestComponent(BaseTestCase):
                     kwargs={
                         "cluster_id": self.cluster.pk,
                         "service_id": self.service.pk,
-                        "component_id": self.component.pk,
+                        "component_pk": self.component.pk,
                         "action_id": action.pk,
                     },
                 )
@@ -286,7 +286,7 @@ class TestComponent(BaseTestCase):
 
     def test_change_maintenance_mode(self):
         self.client.post(
-            path=reverse("component-maintenance-mode", kwargs={"component_id": self.component.pk}),
+            path=reverse("servicecomponent-maintenance-mode", kwargs={"component_pk": self.component.pk}),
             data={"maintenance_mode": MaintenanceMode.ON},
         )
 
@@ -301,8 +301,8 @@ class TestComponent(BaseTestCase):
     def test_change_maintenance_mode_via_service(self):
         self.client.post(
             path=reverse(
-                "component-maintenance-mode",
-                kwargs={"service_id": self.service.pk, "component_id": self.component.pk},
+                "servicecomponent-maintenance-mode",
+                kwargs={"service_id": self.service.pk, "component_pk": self.component.pk},
             ),
             data={"maintenance_mode": MaintenanceMode.ON},
         )
@@ -318,11 +318,11 @@ class TestComponent(BaseTestCase):
     def test_change_maintenance_mode_via_cluster(self):
         self.client.post(
             path=reverse(
-                "component-maintenance-mode",
+                "servicecomponent-maintenance-mode",
                 kwargs={
                     "cluster_id": self.cluster.pk,
                     "service_id": self.service.pk,
-                    "component_id": self.component.pk,
+                    "component_pk": self.component.pk,
                 },
             ),
             data={"maintenance_mode": MaintenanceMode.ON},
@@ -338,7 +338,7 @@ class TestComponent(BaseTestCase):
 
     def test_change_maintenance_mode_failed(self):
         self.client.post(
-            path=reverse("component-maintenance-mode", kwargs={"component_id": self.component.pk}),
+            path=reverse("servicecomponent-maintenance-mode", kwargs={"component_pk": self.component.pk}),
             data={"maintenance_mode": MaintenanceMode.CHANGING},
         )
 
@@ -353,7 +353,7 @@ class TestComponent(BaseTestCase):
     def test_change_maintenance_mode_denied(self):
         with self.no_rights_user_logged_in:
             self.client.post(
-                path=reverse("component-maintenance-mode", kwargs={"component_id": self.component.pk}),
+                path=reverse("servicecomponent-maintenance-mode", kwargs={"component_pk": self.component.pk}),
                 data={"maintenance_mode": MaintenanceMode.ON},
             )
 

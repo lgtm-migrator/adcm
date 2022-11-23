@@ -10,49 +10,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from rest_framework import serializers
+from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.reverse import reverse
+from rest_framework.serializers import HyperlinkedModelSerializer, SerializerMethodField
 
-from api.utils import get_api_url_kwargs, hlink
+from api.utils import get_api_url_kwargs
+from cm.models import ConcernItem
 
 
-class ConcernItemSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    url = hlink('concern-details', 'id', 'concern_id')
+class ConcernItemSerializer(HyperlinkedModelSerializer):
+    url = HyperlinkedIdentityField(view_name="concernitem-detail", lookup_url_kwarg="concern_pk")
+
+    class Meta:
+        model = ConcernItem
+        fields = ("id", "url")
 
 
 class ConcernItemUISerializer(ConcernItemSerializer):
-    type = serializers.CharField()
-    blocking = serializers.BooleanField()
-    reason = serializers.JSONField()
-    cause = serializers.CharField()
+    class Meta:
+        model = ConcernItem
+        fields = (*ConcernItemSerializer.Meta.fields, "type", "blocking", "reason", "cause")
 
 
 class ConcernItemDetailSerializer(ConcernItemUISerializer):
-    name = serializers.CharField()
-    related_objects = serializers.SerializerMethodField()
-    owner = serializers.SerializerMethodField()
+    related_objects = SerializerMethodField()
+    owner = SerializerMethodField()
+
+    class Meta:
+        model = ConcernItem
+        fields = (*ConcernItemUISerializer.Meta.fields, "name", "related_objects", "owner")
 
     def get_related_objects(self, item):
         result = []
         for obj in item.related_objects:
-            view_name = f'{obj.prototype.type}-details'
-            request = self.context.get('request', None)
+            view_name = f"{obj.prototype.type}-detail"
+            request = self.context.get("request", None)
             kwargs = get_api_url_kwargs(obj, request, no_obj_type=True)
             result.append(
                 {
-                    'type': obj.prototype.type,
-                    'id': obj.pk,
-                    'url': reverse(view_name, kwargs=kwargs, request=request),
+                    "type": obj.prototype.type,
+                    "id": obj.pk,
+                    "url": reverse(view_name, kwargs=kwargs, request=request),
                 }
             )
         return result
 
     def get_owner(self, item):
-        request = self.context.get('request', None)
+        request = self.context.get("request", None)
         kwargs = get_api_url_kwargs(item.owner, request, no_obj_type=True)
         return {
-            'type': item.owner.prototype.type,
-            'id': item.owner.pk,
-            'url': reverse(f'{item.owner.prototype.type}-details', kwargs=kwargs, request=request),
+            "type": item.owner.prototype.type,
+            "id": item.owner.pk,
+            "url": reverse(
+                f"{item.owner.prototype.type}"
+                f"{'-detail' if item.owner.prototype.type == 'component' else '-details'}",
+                kwargs=kwargs,
+                request=request,
+            ),
         }
