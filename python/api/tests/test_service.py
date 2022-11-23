@@ -28,8 +28,10 @@ from cm.models import (
     Action,
     Bundle,
     Cluster,
+    ClusterBind,
     ClusterObject,
     Host,
+    HostComponent,
     HostProvider,
     MaintenanceMode,
     Prototype,
@@ -41,15 +43,15 @@ class TestServiceAPI(BaseTestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        bundle = Bundle.objects.create()
-        cluster_prototype = Prototype.objects.create(bundle=bundle, type="cluster")
-        cluster = Cluster.objects.create(prototype=cluster_prototype, name="test_cluster")
-        service_prototype = Prototype.objects.create(
-            bundle=bundle,
+        self.bundle = Bundle.objects.create()
+        self.cluster_prototype = Prototype.objects.create(bundle=self.bundle, type="cluster")
+        self.cluster = Cluster.objects.create(prototype=self.cluster_prototype, name="test_cluster")
+        self.service_prototype = Prototype.objects.create(
+            bundle=self.bundle,
             type="service",
             display_name="test_service",
         )
-        self.service = ClusterObject.objects.create(prototype=service_prototype, cluster=cluster)
+        self.service = ClusterObject.objects.create(prototype=self.service_prototype, cluster=self.cluster)
 
     def test_change_maintenance_mode_wrong_name_fail(self):
         response: Response = self.client.post(
@@ -187,6 +189,37 @@ class TestServiceAPI(BaseTestCase):
             )
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+        start_task_mock.assert_not_called()
+
+        host = Host.objects.create(
+            fqdn="test-fqdn",
+            prototype=Prototype.objects.create(bundle=self.bundle, type="host"),
+            provider=HostProvider.objects.create(
+                name="test_provider",
+                prototype=Prototype.objects.create(bundle=self.bundle, type="provider"),
+            ),
+        )
+        service_component = ServiceComponent.objects.create(
+            prototype=Prototype.objects.create(
+                bundle=self.bundle,
+                type="component",
+            ),
+            cluster=self.cluster,
+            service=self.service,
+        )
+        HostComponent.objects.create(
+            cluster=self.cluster,
+            host=host,
+            service=self.service,
+            component=service_component,
+        )
+
+        with patch("api.service.views.delete_service"), patch("api.service.views.start_task") as start_task_mock:
+            response: Response = self.client.delete(
+                path=reverse("service-details", kwargs={"service_id": self.service.pk})
+            )
+
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         start_task_mock.assert_called_once_with(
             action=action, obj=self.service, conf={}, attr={}, hc=[], hosts=[], verbose=False
         )
@@ -268,5 +301,30 @@ class TestServiceAPI(BaseTestCase):
         )
 
         response: Response = self.client.delete(path=reverse("service-details", kwargs={"service_id": service_1.pk}))
+
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
+
+    def test_delete_required_fail(self):
+        self.service.prototype.required = True
+        self.service.prototype.save(update_fields=["required"])
+
+        with patch("api.service.views.delete_service"):
+            response: Response = self.client.delete(
+                path=reverse("service-details", kwargs={"service_id": self.service.pk})
+            )
+
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
+
+    def test_delete_bind_fail(self):
+        cluster_2 = Cluster.objects.create(prototype=self.cluster_prototype, name="test_cluster_2")
+        service_2 = ClusterObject.objects.create(prototype=self.service_prototype, cluster=cluster_2)
+        ClusterBind.objects.create(
+            cluster=self.cluster, service=self.service, source_cluster=cluster_2, source_service=service_2
+        )
+
+        with patch("api.service.views.delete_service"):
+            response: Response = self.client.delete(
+                path=reverse("service-details", kwargs={"service_id": self.service.pk})
+            )
 
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)

@@ -25,6 +25,7 @@ import pytest
 from adcm_client.objects import ADCMClient, Cluster, Component, Host, Provider, Service
 from tests.functional.tools import AnyADCMObject, get_object_represent
 from tests.library.api.client import APIClient
+from tests.library.assertions import sets_are_equal
 from tests.library.utils import get_hosts_fqdn_representation
 
 BUNDLES_DIR = Path(os.path.dirname(__file__)) / 'bundles'
@@ -38,6 +39,8 @@ MM_NOT_ALLOWED = False
 START_IMPOSSIBLE_REASONS = {
     "The Action is not available. One or more hosts in 'Maintenance mode'",
     "The Action is not available. Host in 'Maintenance mode'",
+    "The Action is not available. Service in 'Maintenance mode'",
+    "The Action is not available. Component in 'Maintenance mode'",
 }
 
 PROVIDER_NAME = 'Test Default Provider'
@@ -210,3 +213,63 @@ def get_disabled_actions_names(adcm_object: AnyADCMObject) -> Set[str]:
         for action in adcm_object.action_list()
         if action.start_impossible_reason in START_IMPOSSIBLE_REASONS
     }
+
+
+def check_concerns_on_object(adcm_object: AnyADCMObject, expected_concerns: set[str]) -> None:
+    """Check concerns on object"""
+    with allure.step(f"Check concerns on object {adcm_object}"):
+        adcm_object.reread()
+        actual_concerns = {concern.reason["placeholder"]["source"]["name"] for concern in adcm_object.concerns()}
+        sets_are_equal(
+            actual_concerns,
+            expected_concerns,
+            "Actual concerns must be equal with expected concerns"
+            f" on: {get_object_represent(adcm_object)}\n"
+            f"Actual concerns: {actual_concerns}\n"
+            f"Expected concerns: {expected_concerns}",
+        )
+
+
+def check_no_concerns_on_objects(*adcm_object):
+    """Method to check concerns on adcm_object is absent"""
+    for obj in adcm_object:
+        obj.reread()
+    report = [
+        (
+            f"{get_object_represent(obj)} have concern:\n"
+            f"{[issue.name for issue in obj.concerns()]}\n"
+            "while concern is not expected"
+        )
+        for obj in adcm_object
+        if len(obj.concerns()) != 0
+    ]
+    if not report:
+        return
+    raise AssertionError(f"{', '.join(obj for obj in report)}")
+
+
+def check_actions_availability(
+    adcm_object: AnyADCMObject, expected_enabled: set[str], expected_disabled: set[str]
+) -> None:
+    """Method to check actual enabled and disabled actions with expected"""
+    representation = get_object_represent(adcm_object)
+    actual_enabled = get_enabled_actions_names(adcm_object)
+    actual_disabled = get_disabled_actions_names(adcm_object)
+
+    with allure.step(f"Compare actual enabled actions with expected enabled actions on object {representation}"):
+        sets_are_equal(
+            actual_enabled,
+            expected_enabled,
+            f"Incorrect actions are enabled on object {representation}\n"
+            f"Actual enabled actions: {actual_enabled}\n"
+            f"Expected enabled actions: {expected_enabled}",
+        )
+
+    with allure.step(f"Compare actual disabled actions with expected disabled actions on object {representation}"):
+        sets_are_equal(
+            actual_disabled,
+            expected_disabled,
+            f"Incorrect actions are disabled on object {representation}\n"
+            f"Actual disabled actions: {actual_disabled}\n"
+            f"Expected disabled actions: {expected_disabled}",
+        )
