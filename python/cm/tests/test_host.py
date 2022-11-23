@@ -197,7 +197,6 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         )
 
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()["code"], "WRONG_NAME")
 
         response: Response = self.client.post(
             host_url, {"fqdn": host, "prototype_id": host_proto, "provider_id": provider_id}
@@ -230,8 +229,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
             host_url, {"fqdn": host, "prototype_id": host_proto, "provider_id": provider_id}
         )
 
-        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
-        self.assertEqual(response.json()["code"], "HOST_CONFLICT")
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
         response: Response = self.client.delete(this_host_url)
 
@@ -320,29 +318,6 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
         self.assertEqual(response.json()["code"], "HOST_UPDATE_ERROR")
 
-    def test_host_update_wrong_fqdn_fail(self):
-        response: Response = self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
-            data={"fqdn": ".new_test_fqdn"},
-            content_type=APPLICATION_JSON,
-        )
-
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()["code"], "WRONG_NAME")
-
-    def test_host_update_not_created_state_wrong_fqdn_fail(self):
-        self.host.state = "active"
-        self.host.save(update_fields=["state"])
-
-        response: Response = self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
-            data={"fqdn": ".new_test_fqdn"},
-            content_type=APPLICATION_JSON,
-        )
-
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()["code"], "WRONG_NAME")
-
     def test_host_create_duplicated_fqdn_fail(self):
         response = self.client.post(
             path=reverse("host"),
@@ -354,123 +329,4 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
             content_type=APPLICATION_JSON,
         )
 
-        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
-        self.assertEqual(response.json()["code"], "HOST_CONFLICT")
-        self.assertEqual(response.json()["desc"], "duplicate host")
-
-    def test_host_update_duplicated_fqdn_fail(self):
-        fqdn = "another"
-        Host.objects.create(
-            fqdn=fqdn,
-            prototype=Prototype.objects.all()[0],
-            provider=self.provider,
-            maintenance_mode=MaintenanceMode.OFF,
-        )
-
-        response = self.client.put(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
-            data={
-                "fqdn": fqdn,
-                "provider_id": self.host.provider.pk,
-                "prototype_id": self.host.prototype.pk,
-                "maintenance_mode": self.host.maintenance_mode,
-            },
-            content_type=APPLICATION_JSON,
-        )
-        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
-        self.assertEqual(response.json()["code"], "HOST_CONFLICT")
-        self.assertEqual(response.json()["desc"], "duplicate host")
-
-        response = self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
-            data={
-                "fqdn": fqdn,
-                "provider_id": self.host.provider.pk,
-                "prototype_id": self.host.prototype.pk,
-                "maintenance_mode": self.host.maintenance_mode,
-            },
-            content_type=APPLICATION_JSON,
-        )
-        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
-        self.assertEqual(response.json()["code"], "HOST_CONFLICT")
-        self.assertEqual(response.json()["desc"], "duplicate host")
-
-    def test_host_create_fqdn_validation(self):
-        url = reverse("host")
-        amount_of_hosts = Host.objects.count()
-        extra_payload = {
-            "prototype_id": self.host.prototype.pk,
-            "provider_id": self.host.provider.pk,
-        }
-
-        for value in self.incorrect_values:
-            with self.subTest("invalid", fqdn=value):
-                response = self.client.post(
-                    path=url,
-                    data={"fqdn": value, **extra_payload},
-                    content_type=APPLICATION_JSON,
-                )
-                self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-                err = response.json()
-                if "code" in err:
-                    self.assertEqual(err["code"], "WRONG_NAME")
-                else:
-                    self.assertIn("fqdn", err)
-                    self.assertEqual(err["fqdn"], ["Ensure this field has no more than 253 characters."])
-                self.assertEqual(Host.objects.count(), amount_of_hosts)
-
-        for value in self.correct_values:
-            with self.subTest("valid", fqdn=value):
-                response = self.client.post(
-                    path=url,
-                    data={"fqdn": value, **extra_payload},
-                    content_type=APPLICATION_JSON,
-                )
-                self.assertEqual(response.status_code, HTTP_201_CREATED)
-                self.assertEqual(response.json()["fqdn"], value)
-
-    def test_host_update_fqdn_validation(self):
-        self.host.maintenance_mode = MaintenanceMode.OFF
-        self.host.save(update_fields=["maintenance_mode"])
-        fqdn = self.host.fqdn
-        default_values = {
-            "provider_id": self.host.provider.pk,
-            "prototype_id": self.host.prototype.pk,
-            "maintenance_mode": self.host.maintenance_mode,
-        }
-
-        for value in self.incorrect_values:
-            with self.subTest("incorrect-put", fqdn=value):
-                response: Response = self.client.put(
-                    path=reverse("host-details", kwargs={"host_id": self.host.pk}),
-                    data={"fqdn": value, **default_values},
-                    content_type=APPLICATION_JSON,
-                )
-                self.check_incorrect_fqdn_update(response, fqdn)
-
-            with self.subTest("incorrect-patch", fqdn=value):
-                response: Response = self.client.patch(
-                    path=reverse("host-details", kwargs={"host_id": self.host.pk}),
-                    data={"fqdn": value},
-                    content_type=APPLICATION_JSON,
-                )
-                self.check_incorrect_fqdn_update(response, fqdn)
-
-        for value in self.correct_values:
-            with self.subTest("correct-put", fqdn=value):
-                response: Response = self.client.put(
-                    path=reverse("host-details", kwargs={"host_id": self.host.pk}),
-                    data={"fqdn": value, **default_values},
-                    content_type=APPLICATION_JSON,
-                )
-                self.check_success_fqdn_update(response, value)
-
-            self.host.fqdn = fqdn
-            self.host.save()
-            with self.subTest("correct-patch", fqdn=value):
-                response: Response = self.client.patch(
-                    path=reverse("host-details", kwargs={"host_id": self.host.pk}),
-                    data={"fqdn": value},
-                    content_type=APPLICATION_JSON,
-                )
-                self.check_success_fqdn_update(response, value)
+        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)

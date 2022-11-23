@@ -11,6 +11,7 @@
 # limitations under the License.
 
 from django.conf import settings
+from django.core.validators import RegexValidator
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import (
     BooleanField,
@@ -32,7 +33,6 @@ from api.group_config.serializers import GroupConfigsHyperlinkedIdentityField
 from api.host.serializers import HostSerializer
 from api.serializers import DoUpgradeSerializer, StringListSerializer
 from api.utils import CommonAPIURL, ObjectURL, UrlField, check_obj, filter_actions
-from api.validators import StartMidEndValidator
 from cm.adcm_config import get_main_info
 from cm.api import add_cluster, add_hc, bind, multi_bind
 from cm.errors import AdcmEx
@@ -47,15 +47,10 @@ class ClusterSerializer(Serializer):
     prototype_id = IntegerField(help_text="ID of Cluster type")
     name = CharField(
         help_text="Cluster name",
+        min_length=2,
         validators=[
             UniqueValidator(queryset=Cluster.objects.all()),
-            StartMidEndValidator(
-                start=settings.ALLOWED_CLUSTER_NAME_START_END_CHARS,
-                mid=settings.ALLOWED_CLUSTER_NAME_MID_CHARS,
-                end=settings.ALLOWED_CLUSTER_NAME_START_END_CHARS,
-                err_code="WRONG_NAME",
-                err_msg="Wrong cluster name.",
-            ),
+            RegexValidator(regex=settings.CLUSTER_NAME_REGEX),
         ],
     )
     description = CharField(help_text="Cluster description", required=False)
@@ -152,16 +147,11 @@ class ClusterDetailSerializer(ClusterSerializer):
 class ClusterUpdateSerializer(EmptySerializer):
     id = IntegerField(read_only=True)
     name = CharField(
+        min_length=2,
         max_length=80,
         validators=[
             UniqueValidator(queryset=Cluster.objects.all()),
-            StartMidEndValidator(
-                start=settings.ALLOWED_CLUSTER_NAME_START_END_CHARS,
-                mid=settings.ALLOWED_CLUSTER_NAME_MID_CHARS,
-                end=settings.ALLOWED_CLUSTER_NAME_START_END_CHARS,
-                err_code="WRONG_NAME",
-                err_msg="Wrong cluster name.",
-            ),
+            RegexValidator(regex=settings.CLUSTER_NAME_REGEX),
         ],
         required=False,
         help_text="Cluster name",

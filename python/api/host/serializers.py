@@ -11,6 +11,7 @@
 # limitations under the License.
 
 from django.conf import settings
+from django.core.validators import RegexValidator
 from rest_framework.serializers import (
     BooleanField,
     CharField,
@@ -20,13 +21,13 @@ from rest_framework.serializers import (
     ModelSerializer,
     SerializerMethodField,
 )
+from rest_framework.validators import UniqueValidator
 
 from adcm.serializers import EmptySerializer
 from api.action.serializers import ActionShort
 from api.concern.serializers import ConcernItemSerializer, ConcernItemUISerializer
 from api.serializers import StringListSerializer
 from api.utils import CommonAPIURL, ObjectURL, check_obj, filter_actions
-from api.validators import HostUniqueValidator, StartMidEndValidator
 from cm.adcm_config import get_main_info
 from cm.api import add_host
 from cm.issue import update_hierarchy_issues, update_issue_after_deleting
@@ -43,14 +44,8 @@ class HostSerializer(EmptySerializer):
         max_length=253,
         help_text="fully qualified domain name",
         validators=[
-            HostUniqueValidator(queryset=Host.objects.all()),
-            StartMidEndValidator(
-                start=settings.ALLOWED_HOST_FQDN_START_CHARS,
-                mid=settings.ALLOWED_HOST_FQDN_MID_END_CHARS,
-                end=settings.ALLOWED_HOST_FQDN_MID_END_CHARS,
-                err_code="WRONG_NAME",
-                err_msg="Wrong FQDN.",
-            ),
+            UniqueValidator(queryset=Host.objects.all()),
+            RegexValidator(regex=settings.HOST_NAME_REGEX),
         ],
     )
     description = CharField(required=False, allow_blank=True)
