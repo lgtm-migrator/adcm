@@ -35,8 +35,7 @@ from cm.models import Action, Host, HostProvider, MaintenanceMode, Prototype
 from cm.status_api import get_host_status
 
 
-# TODO: rename
-class HostSerializerNew(HyperlinkedModelSerializer):
+class HostSerializerNew(HyperlinkedModelSerializer):  # TODO: rename
     action = CommonAPIURL(view_name="object-action")
     concerns = ConcernItemSerializer(many=True, read_only=True)
     config = CommonAPIURL(view_name="object-config")
@@ -61,14 +60,6 @@ class HostSerializerNew(HyperlinkedModelSerializer):
     status = SerializerMethodField()
     url = HyperlinkedIdentityField(view_name="host-detail", lookup_url_kwarg="host_id")  # TODO: host_pk
 
-    @staticmethod
-    def validate_prototype_id(prototype_id):
-        return check_obj(Prototype, {"id": prototype_id, "type": "host"})
-
-    @staticmethod
-    def validate_provider_id(provider_id):
-        return check_obj(HostProvider, provider_id)
-
     def create(self, validated_data):
         return add_host(
             validated_data.get("prototype_id"),
@@ -76,6 +67,25 @@ class HostSerializerNew(HyperlinkedModelSerializer):
             validated_data.get("fqdn"),
             validated_data.get("description", ""),
         )
+
+    def update(self, instance, validated_data):
+        instance.description = validated_data.get("description", instance.description)
+        instance.fqdn = validated_data.get("fqdn", instance.fqdn)
+        instance.save()
+
+        update_hierarchy_issues(instance.cluster)
+        update_hierarchy_issues(instance.provider)
+        update_issue_after_deleting()
+
+        return instance
+
+    @staticmethod
+    def validate_prototype_id(prototype_id):
+        return check_obj(Prototype, {"id": prototype_id, "type": "host"})
+
+    @staticmethod
+    def validate_provider_id(provider_id):
+        return check_obj(HostProvider, provider_id)
 
     @staticmethod
     def get_status(obj):
@@ -102,6 +112,61 @@ class HostSerializerNew(HyperlinkedModelSerializer):
             "state",
             "status",
             "url",
+        )
+
+
+class HostUISerializerNew(HostSerializerNew):  # TODO: rename
+    action = CommonAPIURL(view_name="object-action")
+    cluster_name = SerializerMethodField()
+    prototype_version = SerializerMethodField()
+    prototype_name = SerializerMethodField()
+    prototype_display_name = SerializerMethodField()
+    provider_name = SerializerMethodField()
+    concerns = ConcernItemUISerializer(many=True, read_only=True)
+    locked = BooleanField(read_only=True)
+    status = SerializerMethodField()
+
+    @staticmethod
+    def get_cluster_name(obj: Host) -> str | None:
+        if obj.cluster:
+            return obj.cluster.name
+        return None
+
+    @staticmethod
+    def get_prototype_version(obj: Host) -> str:
+        return obj.prototype.version
+
+    @staticmethod
+    def get_prototype_name(obj: Host) -> str:
+        return obj.prototype.name
+
+    @staticmethod
+    def get_prototype_display_name(obj: Host) -> str | None:
+        return obj.prototype.display_name
+
+    @staticmethod
+    def get_provider_name(obj: Host) -> str | None:
+        if obj.provider:
+            return obj.provider.name
+        return None
+
+    @staticmethod
+    def get_status(obj: Host) -> int:
+        return get_host_status(obj)
+
+    class Meta:
+        model = Host
+        fields = (
+            *HostSerializerNew.Meta.fields,
+            "action",
+            "cluster_name",
+            "prototype_version",
+            "prototype_name",
+            "prototype_display_name",
+            "provider_name",
+            "concerns",
+            "locked",
+            "status",
         )
 
 

@@ -34,6 +34,7 @@ from api.host.serializers import (
     HostSerializer,
     HostSerializerNew,
     HostUISerializer,
+    HostUISerializerNew,
     HostUpdateSerializer,
     ProvideHostSerializer,
     StatusSerializer,
@@ -162,10 +163,39 @@ class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
 
     def get_serializer_class(self):
         if self.is_for_ui():
-            return HostUISerializer
+            return HostUISerializerNew
         if self.action == "maintenance_mode":
             return HostChangeMaintenanceModeSerializer
         return super().get_serializer_class()
+
+    def _update_host_object(
+        self,
+        request,
+        *args,
+        **kwargs,
+    ):
+        host = self.get_object()
+        check_custom_perm(request.user, "change", "host", host)
+        serializer = self.get_serializer(
+            host,
+            data=request.data,
+            context={
+                "request": request,
+                "prototype_id": kwargs.get("prototype_id", None),
+                "cluster_id": kwargs.get("cluster_id", None),
+                "provider_id": kwargs.get("provider_id", None),
+            },
+            partial=kwargs["partial"],
+        )
+
+        serializer.is_valid(raise_exception=True)
+        if "fqdn" in request.data and request.data["fqdn"] != host.fqdn and (host.cluster or host.state != "created"):
+            raise AdcmEx("HOST_UPDATE_ERROR")
+
+        serializer.save(**kwargs)
+        load_service_map()
+
+        return Response(self.get_serializer(self.get_object()).data, status=HTTP_200_OK)
 
     @audit
     def create(self, request, *args, **kwargs):
@@ -190,8 +220,11 @@ class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
 
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
+    def update(self, request, *args, **kwargs):
+        return self._update_host_object(request, *args, **kwargs)
 
-class HostList(PermissionListMixin, PaginatedView):
+
+class HostList(PermissionListMixin, PaginatedView):  # TODO: remove
     queryset = Host.objects.all()
     serializer_class = HostSerializer
     serializer_class_ui = HostUISerializer
@@ -281,7 +314,7 @@ def check_host(host, cluster):
         raise AdcmEx("FOREIGN_HOST", msg)
 
 
-class HostDetail(PermissionListMixin, DetailView):
+class HostDetail(PermissionListMixin, DetailView):  # TODO: remove
     queryset = Host.objects.all()
     serializer_class = HostDetailSerializer
     serializer_class_ui = HostDetailUISerializer
