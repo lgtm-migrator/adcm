@@ -183,9 +183,9 @@ def _get_obj_changes_data(view: GenericAPIView | ModelViewSet) -> tuple[dict | N
         elif view.__class__.__name__ == "HostMaintenanceModeView":
             serializer_class = HostAuditSerializer
             pk = view.kwargs["host_id"]
-        elif view.__class__.__name__ == "ComponentMaintenanceModeView":
+        elif view.__class__.__name__ == "ComponentViewSet" and view.action == "maintenance_mode":
             serializer_class = ComponentAuditSerializer
-            pk = view.kwargs["component_id"]
+            pk = view.kwargs["component_pk"]
 
     if serializer_class:
         model = view.get_queryset().model
@@ -223,8 +223,8 @@ def audit(func):
                 deleted_obj = Host.objects.filter(pk=kwargs["host_id"]).first()
             elif "service_id" in kwargs and "maintenance-mode" in request.path:
                 deleted_obj = ClusterObject.objects.filter(pk=kwargs["service_id"]).first()
-            elif "component_id" in kwargs and "maintenance-mode" in request.path:
-                deleted_obj = ServiceComponent.objects.filter(pk=kwargs["component_id"]).first()
+            elif "component_pk" in kwargs and "maintenance-mode" in request.path:
+                deleted_obj = ServiceComponent.objects.filter(pk=kwargs["component_pk"]).first()
             else:
                 deleted_obj = None
 

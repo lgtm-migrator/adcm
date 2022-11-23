@@ -28,7 +28,7 @@ class APIRoot(routers.APIRootView):
         "provider": "provider",
         "host": "host",
         "service": "service",
-        "component": "component",
+        "component": "servicecomponent-list",
         "group-config": "group-config-list",
         "config": "config-list",
         "config-log": "config-log-list",
@@ -37,7 +37,7 @@ class APIRoot(routers.APIRootView):
         "stats": "stats",
         "task": "tasklog-list",
         "info": "adcm-info",
-        "concern": "concern",
+        "concern": "concernitem-list",
         "rbac": "rbac:root",
         "token": "token",
     }

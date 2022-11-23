@@ -12,30 +12,19 @@
 
 
 from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-from api.component.views import (
-    ComponentDetailView,
-    ComponentListView,
-    ComponentMaintenanceModeView,
-    StatusList,
-)
+from api.component.views import ComponentViewSet
+
+router = DefaultRouter()
+router.register("", ComponentViewSet)
 
 urlpatterns = [
-    path('', ComponentListView.as_view(), name='component'),
+    *router.urls,
     path(
-        '<int:component_id>/',
-        include(
-            [
-                path('', ComponentDetailView.as_view(), name='component-details'),
-                path(
-                    "maintenance-mode/",
-                    ComponentMaintenanceModeView.as_view(),
-                    name="component-maintenance-mode",
-                ),
-                path('config/', include('api.config.urls'), {'object_type': 'component'}),
-                path('action/', include('api.action.urls'), {'object_type': 'component'}),
-                path('status/', StatusList.as_view(), name='component-status'),
-            ]
-        ),
+        "<int:component_pk>/config/", include("api.config.urls"), {"object_type": "component"}, name="component-config"
+    ),
+    path(
+        "<int:component_pk>/action/", include("api.action.urls"), {"object_type": "component"}, name="component-action"
     ),
 ]
