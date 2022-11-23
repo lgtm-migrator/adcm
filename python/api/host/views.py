@@ -13,6 +13,7 @@
 from django_filters import rest_framework as drf_filters
 from guardian.mixins import PermissionListMixin
 from guardian.shortcuts import get_objects_for_user
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -168,12 +169,7 @@ class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
             return HostChangeMaintenanceModeSerializer
         return super().get_serializer_class()
 
-    def _update_host_object(
-        self,
-        request,
-        *args,
-        **kwargs,
-    ):
+    def _update_host_object(self, request, *args, **kwargs):
         host = self.get_object()
         check_custom_perm(request.user, "change", "host", host)
         serializer = self.get_serializer(
@@ -222,6 +218,24 @@ class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
 
     def update(self, request, *args, **kwargs):
         return self._update_host_object(request, *args, **kwargs)
+
+    @update_mm_objects
+    @audit
+    @action(detail=True, methods=["post"], url_path="maintenance-mode", url_name="maintenance-mode")
+    def maintenance_mode(self, request: Request, **kwargs) -> Response:
+        host = get_object_for_user(request.user, HOST_VIEW, Host, id=kwargs["host_id"])
+
+        check_custom_perm(request.user, "change_maintenance_mode", Host.__name__.lower(), host)
+
+        serializer = self.get_serializer(instance=host, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if (
+            serializer.validated_data.get("maintenance_mode") == MaintenanceMode.ON
+            and not host.is_maintenance_mode_available
+        ):
+            return Response(data="MAINTENANCE_MODE_NOT_AVAILABLE", status=HTTP_409_CONFLICT)
+
+        return get_maintenance_mode_response(obj=host, serializer=serializer)
 
 
 class HostList(PermissionListMixin, PaginatedView):  # TODO: remove
@@ -377,15 +391,15 @@ class HostDetail(PermissionListMixin, DetailView):  # TODO: remove
         return Response(status=HTTP_204_NO_CONTENT)
 
     @audit
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):  # TODO: remove
         return self._update_host_object(request, *args, **kwargs)
 
     @audit
-    def put(self, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):  # TODO: remove
         return self._update_host_object(request, partial=False, *args, **kwargs)
 
 
-class HostMaintenanceModeView(GenericUIView):
+class HostMaintenanceModeView(GenericUIView):  # TODO: remove
     queryset = Host.objects.all()
     permission_classes = (DjangoOnlyObjectPermissions,)
     serializer_class = HostChangeMaintenanceModeSerializer
