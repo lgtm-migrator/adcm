@@ -274,10 +274,14 @@ class HostComponentSerializer(ModelSerializer):
         )
 
 
-class HostComponentUISerializer(EmptySerializer):
+class HostComponentUISerializer(ModelSerializer):
     hc = HostComponentSerializer(many=True, read_only=True)
     host = SerializerMethodField()
     component = SerializerMethodField()
+
+    class Meta:
+        model = HostComponent
+        fields = ("hc", "host", "component")
 
     def get_host(self, obj):
         hosts = Host.objects.filter(cluster=self.context.get("cluster"))
