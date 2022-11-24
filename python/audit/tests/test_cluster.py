@@ -787,7 +787,7 @@ class TestCluster(BaseTestCase):
         self.host.save(update_fields=["cluster"])
         self.client.patch(
             path=reverse(
-                "host-details",
+                "host-detail",
                 kwargs={"cluster_id": self.cluster.pk, "host_id": self.host.pk},
             ),
             data=data,
@@ -808,7 +808,7 @@ class TestCluster(BaseTestCase):
         )
         self.client.patch(
             path=reverse(
-                "host-details",
+                "host-detail",
                 kwargs={"cluster_id": self.cluster.pk, "host_id": self.host.pk},
             ),
             data={"fqdn": "new-test-fqdn"},

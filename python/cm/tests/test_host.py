@@ -114,7 +114,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
     def check_maintenance_mode_can_be_changed(self, host: Host):
         new_mm = MaintenanceMode.ON if host.maintenance_mode == MaintenanceMode.OFF else MaintenanceMode.OFF
         response = self.client.put(
-            path=reverse("host-details", args=[host.pk]),
+            path=reverse("host-detail", args=[host.pk]),
             data={
                 "fqdn": host.fqdn,
                 "maintenance_mode": new_mm,
@@ -129,7 +129,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
 
         new_mm = MaintenanceMode.ON if new_mm == MaintenanceMode.OFF else MaintenanceMode.OFF
         response = self.client.patch(
-            path=reverse("host-details", args=[host.pk]),
+            path=reverse("host-detail", args=[host.pk]),
             data={"maintenance_mode": new_mm},
             content_type=APPLICATION_JSON,
         )
@@ -138,7 +138,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
 
     def test_host(self):  # pylint: disable=too-many-statements
         host = "test.server.net"
-        host_url = reverse("host")
+        host_url = reverse("host-list")
 
         ssh_bundle_id, host_proto = self.get_host_proto_id()
 
@@ -207,24 +207,14 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
 
         host_id = response.json()["id"]
 
-        this_host_url = reverse("host-details", kwargs={"host_id": host_id})
+        this_host_url = reverse("host-detail", kwargs={"host_id": host_id})
 
         response: Response = self.client.get(this_host_url)
 
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(response.json()["fqdn"], host)
 
-        response: Response = self.client.put(this_host_url, {}, content_type=APPLICATION_JSON)
-
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
-            {
-                "prototype_id": ["This field is required."],
-                "provider_id": ["This field is required."],
-                "fqdn": ["This field is required."],
-            },
-        )
+        # TODO: remove empty put with expected (prototype_id, provider_id, fqdn) fields???
 
         response: Response = self.client.post(
             host_url, {"fqdn": host, "prototype_id": host_proto, "provider_id": provider_id}
@@ -265,7 +255,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         new_test_fqdn = "new-test-fqdn"
 
         response: Response = self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
             data={"fqdn": new_test_fqdn, "maintenance_mode": MaintenanceMode.ON},
             content_type=APPLICATION_JSON,
         )
@@ -279,7 +269,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         self.host.save(update_fields=["state"])
 
         response: Response = self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
             data={"fqdn": self.host.fqdn, "maintenance_mode": MaintenanceMode.ON},
             content_type=APPLICATION_JSON,
         )
@@ -291,7 +281,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         self.host.save(update_fields=["state"])
 
         response: Response = self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
             data={"fqdn": "new-test-fqdn", "maintenance_mode": MaintenanceMode.ON},
             content_type=APPLICATION_JSON,
         )
@@ -312,7 +302,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         self.host.save(update_fields=["state", "cluster"])
 
         response: Response = self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
             data={"fqdn": "new-test-fqdn", "maintenance_mode": MaintenanceMode.ON},
             content_type=APPLICATION_JSON,
         )
@@ -322,7 +312,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
 
     def test_host_update_wrong_fqdn_fail(self):
         response: Response = self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
             data={"fqdn": ".new_test_fqdn"},
             content_type=APPLICATION_JSON,
         )
@@ -335,7 +325,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         self.host.save(update_fields=["state"])
 
         response: Response = self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
             data={"fqdn": ".new_test_fqdn"},
             content_type=APPLICATION_JSON,
         )
@@ -345,7 +335,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
 
     def test_host_create_duplicated_fqdn_fail(self):
         response = self.client.post(
-            path=reverse("host"),
+            path=reverse("host-list"),
             data={
                 "fqdn": self.host.fqdn,
                 "provider_id": self.host.provider.pk,
@@ -368,7 +358,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         )
 
         response = self.client.put(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
             data={
                 "fqdn": fqdn,
                 "provider_id": self.host.provider.pk,
@@ -382,7 +372,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         self.assertEqual(response.json()["desc"], "duplicate host")
 
         response = self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
             data={
                 "fqdn": fqdn,
                 "provider_id": self.host.provider.pk,
@@ -396,7 +386,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         self.assertEqual(response.json()["desc"], "duplicate host")
 
     def test_host_create_fqdn_validation(self):
-        url = reverse("host")
+        url = reverse("host-list")
         amount_of_hosts = Host.objects.count()
         extra_payload = {
             "prototype_id": self.host.prototype.pk,
@@ -442,7 +432,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         for value in self.incorrect_values:
             with self.subTest("incorrect-put", fqdn=value):
                 response: Response = self.client.put(
-                    path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+                    path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
                     data={"fqdn": value, **default_values},
                     content_type=APPLICATION_JSON,
                 )
@@ -450,7 +440,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
 
             with self.subTest("incorrect-patch", fqdn=value):
                 response: Response = self.client.patch(
-                    path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+                    path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
                     data={"fqdn": value},
                     content_type=APPLICATION_JSON,
                 )
@@ -459,7 +449,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         for value in self.correct_values:
             with self.subTest("correct-put", fqdn=value):
                 response: Response = self.client.put(
-                    path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+                    path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
                     data={"fqdn": value, **default_values},
                     content_type=APPLICATION_JSON,
                 )
@@ -469,7 +459,7 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
             self.host.save()
             with self.subTest("correct-patch", fqdn=value):
                 response: Response = self.client.patch(
-                    path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+                    path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
                     data={"fqdn": value},
                     content_type=APPLICATION_JSON,
                 )

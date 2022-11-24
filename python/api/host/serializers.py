@@ -57,6 +57,8 @@ class HostSerializerNew(HyperlinkedModelSerializer):  # TODO: rename
     prototype = HyperlinkedIdentityField(
         view_name="host-prototype-detail", lookup_field="pk", lookup_url_kwarg="prototype_pk"
     )
+    prototype_id = IntegerField()
+    provider_id = IntegerField()
     status = SerializerMethodField()
     url = HyperlinkedIdentityField(view_name="host-detail", lookup_url_kwarg="host_id")  # TODO: host_pk
 
@@ -113,6 +115,39 @@ class HostSerializerNew(HyperlinkedModelSerializer):  # TODO: rename
             "status",
             "url",
         )
+
+
+class HostUpdateSerializerNew(ModelSerializer):  # TODO: rename
+    fqdn = CharField(
+        max_length=253,
+        help_text="fully qualified domain name",
+        validators=[
+            HostUniqueValidator(queryset=Host.objects.all()),
+            StartMidEndValidator(
+                start=settings.ALLOWED_HOST_FQDN_START_CHARS,
+                mid=settings.ALLOWED_HOST_FQDN_MID_END_CHARS,
+                end=settings.ALLOWED_HOST_FQDN_MID_END_CHARS,
+                err_code="WRONG_NAME",
+                err_msg="Wrong FQDN.",
+            ),
+        ],
+        required=False,
+    )
+
+    def update(self, instance, validated_data):
+        instance.description = validated_data.get("description", instance.description)
+        instance.fqdn = validated_data.get("fqdn", instance.fqdn)
+        instance.save()
+
+        update_hierarchy_issues(instance.cluster)
+        update_hierarchy_issues(instance.provider)
+        update_issue_after_deleting()
+
+        return instance
+
+    class Meta:
+        model = Host
+        fields = ("description", "fqdn")
 
 
 class HostUISerializerNew(HostSerializerNew):  # TODO: rename
@@ -268,6 +303,7 @@ class ClusterHostSerializer(HostSerializer):
     prototype_id = IntegerField(read_only=True)
     provider_id = IntegerField(read_only=True)
     fqdn = CharField(read_only=True)
+    url = HyperlinkedIdentityField(read_only=True, view_name="host-detail", lookup_url_kwarg="host_id")
 
 
 class ProvideHostSerializer(HostSerializer):

@@ -235,7 +235,7 @@ class TestHost(BaseTestCase):
         self.check_denied(log=log)
 
     def test_delete(self):
-        self.client.delete(path=reverse("host-details", kwargs={"host_id": self.host.pk}))
+        self.client.delete(path=reverse("host-detail", kwargs={"host_id": self.host.pk}))
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
@@ -247,7 +247,7 @@ class TestHost(BaseTestCase):
 
         self.client.delete(
             path=reverse(
-                "host-details",
+                "host-detail",
                 kwargs={"cluster_id": self.cluster.pk, "host_id": self.host.pk},
             ),
         )
@@ -268,7 +268,7 @@ class TestHost(BaseTestCase):
         with self.no_rights_user_logged_in:
             self.client.delete(
                 path=reverse(
-                    "host-details",
+                    "host-detail",
                     kwargs={"cluster_id": self.cluster.pk, "host_id": self.host.pk},
                 ),
             )
@@ -289,7 +289,7 @@ class TestHost(BaseTestCase):
         cluster_pks = Cluster.objects.all().values_list("pk", flat=True).order_by("-pk")
         self.client.delete(
             path=reverse(
-                "host-details",
+                "host-detail",
                 kwargs={"cluster_id": cluster_pks[0] + 1, "host_id": self.host.pk},
             ),
         )
@@ -303,7 +303,7 @@ class TestHost(BaseTestCase):
         host_pks = Host.objects.all().values_list("pk", flat=True).order_by("-pk")
         self.client.delete(
             path=reverse(
-                "host-details",
+                "host-detail",
                 kwargs={"cluster_id": self.cluster.pk, "host_id": host_pks[0] + 1},
             ),
         )
@@ -320,7 +320,7 @@ class TestHost(BaseTestCase):
 
     def test_delete_denied(self):
         with self.no_rights_user_logged_in:
-            response: Response = self.client.delete(path=reverse("host-details", kwargs={"host_id": self.host.pk}))
+            response: Response = self.client.delete(path=reverse("host-detail", kwargs={"host_id": self.host.pk}))
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
@@ -331,7 +331,7 @@ class TestHost(BaseTestCase):
         self.host.cluster = self.cluster
         self.host.save(update_fields=["cluster"])
 
-        self.client.delete(path=reverse("host-details", kwargs={"host_id": self.host.pk}))
+        self.client.delete(path=reverse("host-detail", kwargs={"host_id": self.host.pk}))
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
@@ -339,7 +339,7 @@ class TestHost(BaseTestCase):
 
     def test_delete_via_provider(self):
         self.client.delete(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk, "provider_id": self.provider.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk, "provider_id": self.provider.pk}),
         )
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
@@ -350,7 +350,7 @@ class TestHost(BaseTestCase):
         with self.no_rights_user_logged_in:
             response: Response = self.client.delete(
                 path=reverse(
-                    "host-details",
+                    "host-detail",
                     kwargs={"host_id": self.host.pk, "provider_id": self.provider.pk},
                 ),
             )
@@ -365,7 +365,7 @@ class TestHost(BaseTestCase):
         self.host.save(update_fields=["cluster"])
 
         self.client.delete(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk, "provider_id": self.provider.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk, "provider_id": self.provider.pk}),
         )
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
@@ -420,7 +420,7 @@ class TestHost(BaseTestCase):
 
     def test_update_host(self):
         self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
             data={
                 "description": "Such wow new description",
                 "fqdn": "new-test-fqdn",
@@ -440,7 +440,7 @@ class TestHost(BaseTestCase):
         )
 
         self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
             data={"fqdn": "/*-/*-"},
             content_type=APPLICATION_JSON,
         )

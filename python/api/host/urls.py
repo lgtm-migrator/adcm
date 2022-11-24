@@ -19,7 +19,6 @@ from api.host.views import HostViewSet
 router = DefaultRouter()
 router.register("", HostViewSet)
 
-urlpatterns = router.urls
 urlpatterns = [
     *router.urls,
     path("", include("api.host.host_urls")),

@@ -270,7 +270,7 @@ class HostComponentSerializer(EmptySerializer):
     component_id = IntegerField(read_only=True, help_text="component id")
     state = CharField(read_only=True, required=False)
     url = MyUrlField(read_only=True, view_name="host-comp-details")
-    host_url = HyperlinkedIdentityField(view_name="host-details", lookup_field="host_id", lookup_url_kwarg="host_id")
+    host_url = HyperlinkedIdentityField(view_name="host-detail", lookup_field="host_id", lookup_url_kwarg="host_id")
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

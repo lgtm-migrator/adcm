@@ -126,7 +126,7 @@ class TestAuditObjects(BaseTestCase):
         self.assertEqual(resp.status_code, HTTP_201_CREATED)
         self.assertEqual(AuditObject.objects.count(), 2)
         self.assertEqual(AuditObject.objects.filter(is_deleted=True).count(), 0)
-        resp = self.client.delete(reverse("host-details", args=[host_id]))
+        resp = self.client.delete(reverse("host-detail", args=[host_id]))
         self.assertEqual(resp.status_code, HTTP_204_NO_CONTENT)
         resp = self.client.delete(reverse("provider-details", args=[provider_id]))
         self.assertEqual(resp.status_code, HTTP_204_NO_CONTENT)

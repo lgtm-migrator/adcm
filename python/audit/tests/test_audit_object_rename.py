@@ -125,7 +125,7 @@ class TestAuditObjectRename(BaseTestCase):
         self.assertEqual(audit_object_cluster.object_name, self.cluster.name)
 
         self.client.patch(
-            path=reverse("host-details", kwargs={"host_id": self.host.pk}),
+            path=reverse("host-detail", kwargs={"host_id": self.host.pk}),
             data={"fqdn": new_test_host_fqdn, "maintenance_mode": MaintenanceMode.ON},
             content_type=APPLICATION_JSON,
         )

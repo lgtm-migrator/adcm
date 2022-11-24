@@ -23,7 +23,8 @@ urlpatterns = [
         path('status/', views.StatusList.as_view(), name='cluster-status'),
         path('serviceprototype/', views.ClusterBundle.as_view(), name='cluster-service-prototype'),
         path('service/', include('api.service.urls')),
-        path('host/', include('api.host.cluster_urls')),
+        # path('host/', include('api.host.cluster_urls')),  # TODO: remove
+        path('host/', include('api.host.urls')),
         path('action/', include('api.action.urls'), {'object_type': 'cluster'}),
         path('config/', include('api.config.urls'), {'object_type': 'cluster'}),
         path('bind/', include([

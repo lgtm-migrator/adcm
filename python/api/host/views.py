@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from django.http.response import Http404
 from django_filters import rest_framework as drf_filters
 from guardian.mixins import PermissionListMixin
 from guardian.shortcuts import get_objects_for_user
@@ -26,17 +27,15 @@ from rest_framework.status import (
 )
 from rest_framework.viewsets import ModelViewSet
 
-from api.base_view import DetailView, GenericUIView, GenericUIViewSet, PaginatedView
+from api.base_view import GenericUIView, GenericUIViewSet, PaginatedView
 from api.host.serializers import (
     ClusterHostSerializer,
     HostChangeMaintenanceModeSerializer,
-    HostDetailSerializer,
-    HostDetailUISerializer,
     HostSerializer,
     HostSerializerNew,
     HostUISerializer,
     HostUISerializerNew,
-    HostUpdateSerializer,
+    HostUpdateSerializerNew,
     ProvideHostSerializer,
     StatusSerializer,
 )
@@ -156,6 +155,12 @@ class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
         "prototype__version_order",
     )
 
+    def get_object(self):
+        try:
+            return super().get_object()
+        except Http404 as e:
+            raise AdcmEx("HOST_NOT_FOUND") from e
+
     def get_queryset(self, *args, **kwargs):
         queryset = super().get_queryset(*args, **kwargs)
         queryset = get_host_queryset(queryset, self.request.user, self.kwargs)
@@ -165,8 +170,11 @@ class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
     def get_serializer_class(self):
         if self.is_for_ui():
             return HostUISerializerNew
-        if self.action == "maintenance_mode":
-            return HostChangeMaintenanceModeSerializer
+        match self.action:
+            case "maintenance_mode":
+                return HostChangeMaintenanceModeSerializer
+            case "update" | "partial_update":
+                return HostUpdateSerializerNew
         return super().get_serializer_class()
 
     def _update_host_object(self, request, *args, **kwargs):
@@ -181,7 +189,6 @@ class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
                 "cluster_id": kwargs.get("cluster_id", None),
                 "provider_id": kwargs.get("provider_id", None),
             },
-            partial=kwargs["partial"],
         )
 
         serializer.is_valid(raise_exception=True)
@@ -236,6 +243,20 @@ class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
             return Response(data="MAINTENANCE_MODE_NOT_AVAILABLE", status=HTTP_409_CONFLICT)
 
         return get_maintenance_mode_response(obj=host, serializer=serializer)
+
+    @audit
+    def destroy(self, request, *args, **kwargs):
+        host = self.get_object()
+        if "cluster_id" in kwargs:
+            cluster = get_object_for_user(request.user, CLUSTER_VIEW, Cluster, id=kwargs["cluster_id"])
+            check_host(host, cluster)
+            check_custom_perm(request.user, "unmap_host_from", "cluster", cluster)
+            remove_host_from_cluster(host)
+        else:
+            check_custom_perm(request.user, "remove", "host", host)
+            delete_host(host)
+
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class HostList(PermissionListMixin, PaginatedView):  # TODO: remove
@@ -326,102 +347,6 @@ def check_host(host, cluster):
         msg = f"Host #{host.id} doesn't belong to cluster #{cluster.id}"
 
         raise AdcmEx("FOREIGN_HOST", msg)
-
-
-class HostDetail(PermissionListMixin, DetailView):  # TODO: remove
-    queryset = Host.objects.all()
-    serializer_class = HostDetailSerializer
-    serializer_class_ui = HostDetailUISerializer
-    serializer_class_put = HostUpdateSerializer
-    serializer_class_patch = HostUpdateSerializer
-    permission_classes = (DjangoOnlyObjectPermissions,)
-    permission_required = [HOST_VIEW]
-    lookup_field = "id"
-    lookup_url_kwarg = "host_id"
-    error_code = "HOST_NOT_FOUND"
-
-    def _update_host_object(
-        self,
-        request,
-        *args,
-        partial=True,
-        **kwargs,
-    ):
-        host = self.get_object()
-        check_custom_perm(request.user, "change", "host", host)
-        serializer = self.get_serializer(
-            host,
-            data=request.data,
-            context={
-                "request": request,
-                "prototype_id": kwargs.get("prototype_id", None),
-                "cluster_id": kwargs.get("cluster_id", None),
-                "provider_id": kwargs.get("provider_id", None),
-            },
-            partial=partial,
-        )
-
-        serializer.is_valid(raise_exception=True)
-        if "fqdn" in request.data and request.data["fqdn"] != host.fqdn and (host.cluster or host.state != "created"):
-            raise AdcmEx("HOST_UPDATE_ERROR")
-
-        serializer.save(**kwargs)
-        load_service_map()
-
-        return Response(self.get_serializer(self.get_object()).data, status=HTTP_200_OK)
-
-    def get_queryset(self, *args, **kwargs):
-        queryset = super().get_queryset(*args, **kwargs)
-        queryset = get_host_queryset(queryset, self.request.user, self.kwargs)
-
-        return get_objects_for_user(**self.get_get_objects_for_user_kwargs(queryset))
-
-    @audit
-    def delete(self, request, *args, **kwargs):
-        host = self.get_object()
-        if "cluster_id" in kwargs:
-            cluster = get_object_for_user(request.user, CLUSTER_VIEW, Cluster, id=kwargs["cluster_id"])
-            check_host(host, cluster)
-            check_custom_perm(request.user, "unmap_host_from", "cluster", cluster)
-            remove_host_from_cluster(host)
-        else:
-            check_custom_perm(request.user, "remove", "host", host)
-            delete_host(host)
-
-        return Response(status=HTTP_204_NO_CONTENT)
-
-    @audit
-    def patch(self, request, *args, **kwargs):  # TODO: remove
-        return self._update_host_object(request, *args, **kwargs)
-
-    @audit
-    def put(self, request, *args, **kwargs):  # TODO: remove
-        return self._update_host_object(request, partial=False, *args, **kwargs)
-
-
-class HostMaintenanceModeView(GenericUIView):  # TODO: remove
-    queryset = Host.objects.all()
-    permission_classes = (DjangoOnlyObjectPermissions,)
-    serializer_class = HostChangeMaintenanceModeSerializer
-    lookup_field = "id"
-    lookup_url_kwarg = "host_id"
-
-    @update_mm_objects
-    @audit
-    def post(self, request: Request, **kwargs) -> Response:
-        host = get_object_for_user(request.user, HOST_VIEW, Host, id=kwargs["host_id"])
-
-        check_custom_perm(request.user, "change_maintenance_mode", Host.__name__.lower(), host)
-
-        serializer = self.get_serializer(instance=host, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        if (
-            serializer.validated_data.get("maintenance_mode") == MaintenanceMode.ON
-            and not host.is_maintenance_mode_available
-        ):
-            return Response(data="MAINTENANCE_MODE_NOT_AVAILABLE", status=HTTP_409_CONFLICT)
-
-        return get_maintenance_mode_response(obj=host, serializer=serializer)
 
 
 class StatusList(GenericUIView):

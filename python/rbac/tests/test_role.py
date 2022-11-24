@@ -618,7 +618,7 @@ class TestMMRoles(RBACBaseTestCase):
 
     def test_no_roles(self):
         for view_name, url_kwarg_name, obj in (
-            ("host-details", "host_id", self.host),
+            ("host-detail", "host_id", self.host),
             ("servicecomponent-detail", "component_pk", self.component),
             ("service-details", "service_id", self.service),
         ):
