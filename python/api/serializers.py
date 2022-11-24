@@ -94,9 +94,9 @@ class ClusterUpgradeSerializer(UpgradeSerializer):
 class ProviderUpgradeSerializer(UpgradeSerializer):
     class MyUrlField(UrlField):
         def get_kwargs(self, obj):
-            return {'provider_id': self.context['provider_id'], 'upgrade_id': obj.id}
+            return {'provider_pk': self.context['provider_pk'], 'upgrade_pk': obj.id}
 
-    url = MyUrlField(read_only=True, view_name='provider-upgrade-details')
+    url = MyUrlField(read_only=True, view_name='hostprovider-upgrade-detail')
     do = MyUrlField(read_only=True, view_name='do-provider-upgrade')
 
 

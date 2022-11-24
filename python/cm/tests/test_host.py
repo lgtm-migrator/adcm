@@ -252,7 +252,9 @@ class TestHostAPI(BaseTestCase):  # pylint: disable=too-many-public-methods
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
         self.assertEqual(response.json()["code"], "BUNDLE_CONFLICT")
 
-        response: Response = self.client.delete(path=reverse("provider-details", kwargs={"provider_id": provider_id}))
+        response: Response = self.client.delete(
+            path=reverse("hostprovider-detail", kwargs={"provider_id": provider_id})
+        )
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 

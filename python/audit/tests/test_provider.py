@@ -101,7 +101,7 @@ class TestProvider(BaseTestCase):
 
     def test_create(self):
         response: Response = self.client.post(
-            path=reverse("provider"),
+            path=reverse("hostprovider-list"),
             data={
                 "name": self.name,
                 "prototype_id": self.prototype.pk,
@@ -165,7 +165,7 @@ class TestProvider(BaseTestCase):
             name="test_provider",
             prototype=self.prototype,
         )
-        self.client.delete(path=reverse("provider-details", kwargs={"provider_id": provider.pk}))
+        self.client.delete(path=reverse("hostprovider-detail", kwargs={"provider_pk": provider.pk}))
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
@@ -183,7 +183,7 @@ class TestProvider(BaseTestCase):
         )
         with self.no_rights_user_logged_in:
             response: Response = self.client.delete(
-                path=reverse("provider-details", kwargs={"provider_id": provider.pk})
+                path=reverse("hostprovider-detail", kwargs={"provider_pk": provider.pk})
             )
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
@@ -211,7 +211,7 @@ class TestProvider(BaseTestCase):
 
         with self.no_rights_user_logged_in:
             response: Response = self.client.delete(
-                path=reverse("provider-details", kwargs={"provider_id": provider.pk}),
+                path=reverse("hostprovider-detail", kwargs={"provider_pk": provider.pk}),
                 content_type=APPLICATION_JSON,
             )
         self.assertEqual(response.status_code, HTTP_403_FORBIDDEN)
@@ -237,7 +237,7 @@ class TestProvider(BaseTestCase):
             provider=provider,
         )
 
-        self.client.delete(path=reverse("provider-details", kwargs={"provider_id": provider.pk}))
+        self.client.delete(path=reverse("hostprovider-detail", kwargs={"provider_pk": provider.pk}))
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
@@ -257,7 +257,7 @@ class TestProvider(BaseTestCase):
         config.save(update_fields=["current"])
 
         self.client.post(
-            path=reverse("config-history", kwargs={"provider_id": provider.pk}),
+            path=reverse("config-history", kwargs={"provider_pk": provider.pk}),
             data={"config": {}},
             content_type=APPLICATION_JSON,
         )
@@ -274,7 +274,7 @@ class TestProvider(BaseTestCase):
         response: Response = self.client.patch(
             path=reverse(
                 "config-history-version-restore",
-                kwargs={"provider_id": provider.pk, "version": config_log.pk},
+                kwargs={"provider_pk": provider.pk, "version": config_log.pk},
             ),
             content_type=APPLICATION_JSON,
         )
@@ -296,7 +296,7 @@ class TestProvider(BaseTestCase):
         ConfigLog.objects.create(obj_ref=config, config="{}")
         with self.no_rights_user_logged_in:
             response: Response = self.client.post(
-                path=reverse("config-history", kwargs={"provider_id": provider.pk}),
+                path=reverse("config-history", kwargs={"provider_pk": provider.pk}),
                 data={"config": {}},
                 content_type=APPLICATION_JSON,
             )
@@ -315,7 +315,7 @@ class TestProvider(BaseTestCase):
             response: Response = self.client.patch(
                 path=reverse(
                     "config-history-version-restore",
-                    kwargs={"provider_id": provider.pk, "version": 1},
+                    kwargs={"provider_pk": provider.pk, "version": 1},
                 ),
                 content_type=APPLICATION_JSON,
             )
@@ -342,7 +342,7 @@ class TestProvider(BaseTestCase):
             state_available="any",
         )
         with patch("api.action.views.create", return_value=Response(status=HTTP_201_CREATED)):
-            self.client.post(path=reverse("run-task", kwargs={"provider_id": provider.pk, "action_id": action.pk}))
+            self.client.post(path=reverse("run-task", kwargs={"provider_pk": provider.pk, "action_id": action.pk}))
 
         log: AuditLog = AuditLog.objects.order_by("operation_time").last()
 
@@ -371,7 +371,7 @@ class TestProvider(BaseTestCase):
             self.client.post(
                 path=reverse(
                     "do-provider-upgrade",
-                    kwargs={"provider_id": provider.pk, "upgrade_id": upgrade.pk},
+                    kwargs={"provider_pk": provider.pk, "upgrade_pk": upgrade.pk},
                 )
             )
 

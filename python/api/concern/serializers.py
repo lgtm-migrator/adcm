@@ -17,6 +17,14 @@ from rest_framework.serializers import HyperlinkedModelSerializer, SerializerMet
 from api.utils import get_api_url_kwargs
 from cm.models import ConcernItem
 
+TYPE_VIEW_NAME_MAP = {
+    "cluster": "cluster-details",
+    "service": "service-details",
+    "component": "servicecomponent-detail",
+    "host": "host-details",
+    "provider": "hostprovider-detail",
+}
+
 
 class ConcernItemSerializer(HyperlinkedModelSerializer):
     url = HyperlinkedIdentityField(view_name="concernitem-detail", lookup_url_kwarg="concern_pk")
@@ -43,14 +51,13 @@ class ConcernItemDetailSerializer(ConcernItemUISerializer):
     def get_related_objects(self, item):
         result = []
         for obj in item.related_objects:
-            view_name = f"{obj.prototype.type}-detail"
             request = self.context.get("request", None)
             kwargs = get_api_url_kwargs(obj, request, no_obj_type=True)
             result.append(
                 {
                     "type": obj.prototype.type,
                     "id": obj.pk,
-                    "url": reverse(view_name, kwargs=kwargs, request=request),
+                    "url": reverse(TYPE_VIEW_NAME_MAP[obj.prototype.type], kwargs=kwargs, request=request),
                 }
             )
         return result
@@ -62,8 +69,7 @@ class ConcernItemDetailSerializer(ConcernItemUISerializer):
             "type": item.owner.prototype.type,
             "id": item.owner.pk,
             "url": reverse(
-                f"{item.owner.prototype.type}"
-                f"{'-detail' if item.owner.prototype.type == 'component' else '-details'}",
+                f"{TYPE_VIEW_NAME_MAP[item.owner.prototype.type]}",
                 kwargs=kwargs,
                 request=request,
             ),

@@ -25,7 +25,7 @@ class APIRoot(routers.APIRootView):
         "adcm": "adcm-list",
         "audit": "audit:root",
         "cluster": "cluster",
-        "provider": "provider",
+        "provider": "hostprovider-list",
         "host": "host",
         "service": "service",
         "component": "servicecomponent-list",

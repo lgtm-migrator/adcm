@@ -56,7 +56,7 @@ class ConcernFilter(FilterSet):
         ]
 
     @staticmethod
-    def filter_by_owner_type(queryset: QuerySet, value: str):
+    def filter_by_owner_type(queryset: QuerySet, name: str, value: str):
         owner_type = ContentType.objects.get(app_label="cm", model=OBJECT_TYPES[value])
         return queryset.filter(owner_type=owner_type)
 

@@ -11,30 +11,31 @@
 # limitations under the License.
 
 from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-from api.provider.views import (
-    DoProviderUpgrade,
-    ProviderDetail,
-    ProviderList,
-    ProviderUpgrade,
-    ProviderUpgradeDetail,
-)
+from api.provider.views import ProviderUpgradeViewSet, ProviderViewSet
 
-# fmt: off
+router = DefaultRouter()
+router.register("", ProviderViewSet)
+router.register("", ProviderUpgradeViewSet, basename="hostprovider-upgrade")
+
 urlpatterns = [
-    path('', ProviderList.as_view(), name='provider'),
-    path('<int:provider_id>/', include([
-        path('', ProviderDetail.as_view(), name='provider-details'),
-        path('host/', include('api.host.provider_urls')),
-        path('action/', include('api.action.urls'), {'object_type': 'provider'}),
-        path('config/', include('api.config.urls'), {'object_type': 'provider'}),
-        path('upgrade/', include([
-            path('', ProviderUpgrade.as_view(), name='provider-upgrade'),
-            path('<int:upgrade_id>/', include([
-                path('', ProviderUpgradeDetail.as_view(), name='provider-upgrade-details'),
-                path('do/', DoProviderUpgrade.as_view(), name='do-provider-upgrade'),
-            ])),
-        ])),
-    ])),
+    *router.urls,
+    path("<int:provider_pk>/config/", include("api.config.urls"), {"object_type": "provider"}, name="provider-config"),
+    path("<int:provider_pk>/action/", include("api.action.urls"), {"object_type": "provider"}, name="provider-action"),
+    path("<int:provider_pk>/host/", include("api.host.provider_urls")),
+    path(
+        "<int:provider_pk>/upgrade/", ProviderUpgradeViewSet.as_view({"get": "list"}), name="hostprovider-upgrade-list"
+    ),
+    path(
+        "<int:provider_pk>/upgrade/<int:upgrade_pk>/",
+        ProviderUpgradeViewSet.as_view({"get": "retrieve"}),
+        name="hostprovider-upgrade-detail",
+    ),
+    path(
+        "<int:provider_pk>/upgrade/<int:upgrade_pk>/do/",
+        ProviderUpgradeViewSet.as_view({"post": "do"}),
+        name="do-provider-upgrade",
+    ),
 ]
 # fmt: on
