@@ -282,6 +282,17 @@ class UrlField(HyperlinkedIdentityField):
         return reverse(self.view_name, kwargs=kwargs, request=request, format=_format)
 
 
+class HCHyperlinkedIdentityField(HyperlinkedIdentityField):
+    @staticmethod
+    def get_kwargs(obj: HostComponent) -> dict[str, int]:
+        return {"cluster_id": obj.cluster.id, "hs_id": obj.pk}
+
+    def get_url(self, obj, view_name, request, _format):
+        kwargs = self.get_kwargs(obj)
+
+        return reverse(self.view_name, kwargs=kwargs, request=request, format=_format)
+
+
 class AdcmOrderingFilter(OrderingFilter):
     def get_ordering(self, request, queryset, view):
         ordering = None

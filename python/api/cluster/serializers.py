@@ -30,7 +30,7 @@ from api.concern.serializers import ConcernItemSerializer, ConcernItemUISerializ
 from api.group_config.serializers import GroupConfigsHyperlinkedIdentityField
 from api.host.serializers import HostSerializer
 from api.serializers import DoUpgradeSerializer
-from api.utils import UrlField, check_obj, filter_actions
+from api.utils import HCHyperlinkedIdentityField, UrlField, check_obj, filter_actions
 from cm.adcm_config import get_main_info
 from cm.api import add_hc, bind, multi_bind
 from cm.errors import AdcmEx
@@ -245,34 +245,33 @@ class StatusSerializer(EmptySerializer):
         return get_hc_status(obj)
 
 
-class HostComponentSerializer(EmptySerializer):
-    class MyUrlField(UrlField):
-        def get_kwargs(self, obj):
-            return {
-                "cluster_id": obj.cluster.id,
-                "hs_id": obj.id,
-            }
+class HostComponentSerializer(ModelSerializer):
+    host = CharField(source="host.fqdn")
+    service_name = CharField(source="service.prototype.name")
+    service_display_name = CharField(source="service.prototype.display_name")
+    service_version = CharField(source="service.prototype.version")
+    component = CharField(source="component.prototype.name")
+    component_display_name = CharField(source="component.prototype.display_name")
+    url = HCHyperlinkedIdentityField(view_name="host-comp-details")
+    host_url = HyperlinkedIdentityField(view_name="host-details", lookup_url_kwarg="host_id")
 
-    id = IntegerField(read_only=True)
-    host_id = IntegerField(help_text="host id")
-    host = CharField(read_only=True)
-    service_id = IntegerField()
-    component = CharField(help_text="component name")
-    component_id = IntegerField(read_only=True, help_text="component id")
-    state = CharField(read_only=True, required=False)
-    url = MyUrlField(read_only=True, view_name="host-comp-details")
-    host_url = HyperlinkedIdentityField(view_name="host-details", lookup_field="host_id", lookup_url_kwarg="host_id")
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["component"] = instance.component.prototype.name
-        data["component_display_name"] = instance.component.prototype.display_name
-        data["host"] = instance.host.fqdn
-        data["service_name"] = instance.service.prototype.name
-        data["service_display_name"] = instance.service.prototype.display_name
-        data["service_version"] = instance.service.prototype.version
-
-        return data
+    class Meta:
+        model = HostComponent
+        fields = (
+            "id",
+            "host_id",
+            "host",
+            "service_id",
+            "service_name",
+            "service_display_name",
+            "service_version",
+            "component_id",
+            "component",
+            "component_display_name",
+            "state",
+            "url",
+            "host_url",
+        )
 
 
 class HostComponentUISerializer(EmptySerializer):
