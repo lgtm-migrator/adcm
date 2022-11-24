@@ -34,7 +34,7 @@ from api.utils import UrlField, check_obj, filter_actions
 from cm.adcm_config import get_main_info
 from cm.api import add_hc, bind, multi_bind
 from cm.errors import AdcmEx
-from cm.models import Action, Cluster, Host, Prototype, ServiceComponent
+from cm.models import Action, Cluster, Host, HostComponent, Prototype, ServiceComponent
 from cm.status_api import get_cluster_status, get_hc_status
 from cm.upgrade import get_upgrade
 
@@ -214,24 +214,35 @@ class ClusterUpdateSerializer(ModelSerializer):
 
 
 class StatusSerializer(EmptySerializer):
-    id = IntegerField(read_only=True)
-    component_id = IntegerField(read_only=True)
-    service_id = IntegerField(read_only=True)
-    state = CharField(read_only=True, required=False)
+    component = CharField(source="component.prototype.name")
+    component_display_name = CharField(source="component.prototype.display_name")
+    host = CharField(source="host.fqdn")
+    service_name = CharField(source="service.prototype.name")
+    service_display_name = CharField(source="service.prototype.display_name")
+    service_version = CharField(source="service.prototype.version")
+    monitoring = CharField(source="component.prototype.monitoring")
+    status = SerializerMethodField()
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["component"] = instance.component.prototype.name
-        data["component_display_name"] = instance.component.prototype.display_name
-        data["host"] = instance.host.fqdn
-        data["service_name"] = instance.service.prototype.name
-        data["service_display_name"] = instance.service.prototype.display_name
-        data["service_version"] = instance.service.prototype.version
-        data["monitoring"] = instance.component.prototype.monitoring
-        status = get_hc_status(instance)
-        data["status"] = status
+    class Meta:
+        model = HostComponent
+        fields = (
+            "id",
+            "component_id",
+            "description",
+            "service_id",
+            "state",
+            "component",
+            "component_display_name",
+            "host",
+            "service_name",
+            "service_display_name",
+            "service_version",
+            "status",
+        )
 
-        return data
+    @staticmethod
+    def get_status(obj: HostComponent):
+        return get_hc_status(obj)
 
 
 class HostComponentSerializer(EmptySerializer):
