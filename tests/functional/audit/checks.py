@@ -51,7 +51,7 @@ def check_audit_cef_logs(client: ADCMClient, adcm_container: Container):
     operations = client.audit_operation_list(paging={"limit": 200})
     logins = client.audit_login_list()
     logs: List[Union[AuditOperation, AuditLogin]] = list(operations) + list(logins)
-    logs.sort(key=lambda l: l.operation_time if isinstance(l, AuditOperation) else l.login_time)
+    logs.sort(key=lambda l: l.operation_time if isinstance(l, AuditOperation) else l.login_time)  # noqa: E741
     exit_code, out = adcm_container.exec_run(["cat", "/adcm/data/log/audit.log"])
     logfile_content = out.decode("utf-8")
     if exit_code != 0:
@@ -60,7 +60,7 @@ def check_audit_cef_logs(client: ADCMClient, adcm_container: Container):
     cef_records: Tuple[CEFRecord, ...] = tuple(
         map(
             lambda r: CEFRecord(*r.split("|")),
-            filter(lambda l: 'CEF' in l, logfile_content.split("\n")),
+            filter(lambda l: 'CEF' in l, logfile_content.split("\n")),  # noqa: E741
         )
     )
     with allure.step("Check all logs have correct CEF version, vendor, product name and version"):
