@@ -223,7 +223,7 @@ class TestHostAPI(BaseTestCase):
 
         cluster_prototype = Prototype.objects.get(bundle_id=cluster_bundle.pk, type="cluster")
         cluster_response: Response = self.client.post(
-            path=reverse("cluster"),
+            path=reverse("cluster-list"),
             data={"name": "test-cluster", "prototype_id": cluster_prototype.pk},
         )
         cluster = Cluster.objects.get(pk=cluster_response.data["id"])
@@ -292,7 +292,7 @@ class TestHostAPI(BaseTestCase):
 
         cluster_prototype = Prototype.objects.get(bundle_id=bundle.pk, type="cluster")
         cluster_response: Response = self.client.post(
-            path=reverse("cluster"),
+            path=reverse("cluster-list"),
             data={"name": "test-cluster", "prototype_id": cluster_prototype.pk},
         )
         cluster = Cluster.objects.get(pk=cluster_response.data["id"])

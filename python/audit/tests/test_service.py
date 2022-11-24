@@ -355,7 +355,7 @@ class TestService(BaseTestCase):
         )
 
         response: Response = self.client.post(
-            path=reverse("cluster"),
+            path=reverse("cluster-list"),
             data={
                 "name": "Cluster name",
                 "prototype_id": Prototype.objects.get(name="importer_cluster").pk,

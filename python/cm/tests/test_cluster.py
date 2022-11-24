@@ -53,7 +53,7 @@ class TestCluster(BaseTestCase):
         state_created = "created"
         state_another = "another state"
         valid_name = self.valid_names[0]
-        url = reverse("cluster-details", kwargs={"cluster_id": self.cluster.pk})
+        url = reverse("cluster-detail", kwargs={"cluster_pk": self.cluster.pk})
 
         self.cluster.state = state_created
         self.cluster.save()

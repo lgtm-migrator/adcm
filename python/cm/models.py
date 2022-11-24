@@ -482,7 +482,6 @@ class ADCMEntity(ADCMModel):
 
     @property
     def multi_state(self) -> List[str]:
-        """Easy to operate self._multi_state representation"""
         return sorted(self._multi_state.keys())
 
     def set_multi_state(self, multi_state: str, event=None) -> None:

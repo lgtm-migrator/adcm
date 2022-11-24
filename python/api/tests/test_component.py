@@ -84,7 +84,7 @@ class TestComponentAPI(BaseTestCase):
 
         cluster_prototype = Prototype.objects.get(bundle=bundle, type="cluster")
         cluster_response: Response = self.client.post(
-            path=reverse("cluster"),
+            path=reverse("cluster-list"),
             data={"name": "test-cluster", "prototype_id": cluster_prototype.pk},
         )
         cluster = Cluster.objects.get(pk=cluster_response.data["id"])

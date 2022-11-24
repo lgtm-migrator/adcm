@@ -11,36 +11,51 @@
 # limitations under the License.
 
 from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-from api.cluster import views
+from api.cluster.views import (
+    ClusterBindDetail,
+    ClusterBindList,
+    ClusterBundle,
+    ClusterImport,
+    ClusterUpgrade,
+    ClusterUpgradeDetail,
+    ClusterViewSet,
+    DoClusterUpgrade,
+    HostComponentDetail,
+    HostComponentList,
+    StatusList,
+)
+
+router = DefaultRouter()
+router.register("", ClusterViewSet)
 
 # fmt: off
 urlpatterns = [
-    path('', views.ClusterList.as_view(), name='cluster'),
     path('<int:cluster_id>/', include([
-        path('', views.ClusterDetail.as_view(), name='cluster-details'),
-        path('import/', views.ClusterImport.as_view(), name='cluster-import'),
-        path('status/', views.StatusList.as_view(), name='cluster-status'),
-        path('serviceprototype/', views.ClusterBundle.as_view(), name='cluster-service-prototype'),
+        path('import/', ClusterImport.as_view(), name='cluster-import'),
+        path('status/', StatusList.as_view(), name='cluster-status'),
+        path('serviceprototype/', ClusterBundle.as_view(), name='cluster-service-prototype'),
         path('service/', include('api.service.urls')),
         path('host/', include('api.host.cluster_urls')),
         path('action/', include('api.action.urls'), {'object_type': 'cluster'}),
         path('config/', include('api.config.urls'), {'object_type': 'cluster'}),
         path('bind/', include([
-            path('', views.ClusterBindList.as_view(), name='cluster-bind'),
-            path('<int:bind_id>/', views.ClusterBindDetail.as_view(), name='cluster-bind-details'),
+            path('', ClusterBindList.as_view(), name='cluster-bind'),
+            path('<int:bind_id>/', ClusterBindDetail.as_view(), name='cluster-bind-details'),
         ])),
         path('upgrade/', include([
-            path('', views.ClusterUpgrade.as_view(), name='cluster-upgrade'),
+            path('', ClusterUpgrade.as_view(), name='cluster-upgrade'),
             path('<int:upgrade_id>/', include([
-                path('', views.ClusterUpgradeDetail.as_view(), name='cluster-upgrade-details'),
-                path('do/', views.DoClusterUpgrade.as_view(), name='do-cluster-upgrade'),
+                path('', ClusterUpgradeDetail.as_view(), name='cluster-upgrade-details'),
+                path('do/', DoClusterUpgrade.as_view(), name='do-cluster-upgrade'),
             ])),
         ])),
         path('hostcomponent/', include([
-            path('', views.HostComponentList.as_view(), name='host-component'),
-            path('<int:hs_id>/', views.HostComponentDetail.as_view(), name='host-comp-details'),
+            path('', HostComponentList.as_view(), name='host-component'),
+            path('<int:hs_id>/', HostComponentDetail.as_view(), name='host-comp-details'),
         ])),
     ])),
+    *router.urls,
 ]
 # fmt: on

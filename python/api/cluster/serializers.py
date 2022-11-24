@@ -14,13 +14,11 @@ from django.conf import settings
 from django.core.validators import RegexValidator
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import (
-    BooleanField,
     CharField,
     HyperlinkedIdentityField,
     IntegerField,
     JSONField,
     ModelSerializer,
-    Serializer,
     SerializerMethodField,
 )
 from rest_framework.validators import UniqueValidator
@@ -31,103 +29,18 @@ from api.component.serializers import ComponentShortSerializer
 from api.concern.serializers import ConcernItemSerializer, ConcernItemUISerializer
 from api.group_config.serializers import GroupConfigsHyperlinkedIdentityField
 from api.host.serializers import HostSerializer
-from api.serializers import DoUpgradeSerializer, StringListSerializer
-from api.utils import CommonAPIURL, ObjectURL, UrlField, check_obj, filter_actions
+from api.serializers import DoUpgradeSerializer
+from api.utils import UrlField, check_obj, filter_actions
 from cm.adcm_config import get_main_info
 from cm.api import add_hc, bind, multi_bind
 from cm.errors import AdcmEx
-from cm.issue import update_hierarchy_issues
 from cm.models import Action, Cluster, Host, Prototype, ServiceComponent
 from cm.status_api import get_cluster_status, get_hc_status
 from cm.upgrade import get_upgrade
 
 
-class ClusterSerializer(Serializer):
-    id = IntegerField(read_only=True)
-    prototype_id = IntegerField()
-    name = CharField(
-        help_text="Cluster name",
-        min_length=2,
-        validators=[
-            UniqueValidator(queryset=Cluster.objects.all()),
-            RegexValidator(regex=settings.CLUSTER_NAME_REGEX),
-        ],
-    )
-    description = CharField(required=False)
-    state = CharField(read_only=True)
-    before_upgrade = JSONField(read_only=True)
-    url = HyperlinkedIdentityField(view_name="cluster-details", lookup_field="id", lookup_url_kwarg="cluster_id")
-
-
-class ClusterUISerializer(ClusterSerializer):
-    action = CommonAPIURL(view_name="object-action")
-    edition = CharField(read_only=True)
-    prototype_version = SerializerMethodField()
-    prototype_name = SerializerMethodField()
-    prototype_display_name = SerializerMethodField()
-    upgrade = HyperlinkedIdentityField(view_name="cluster-upgrade", lookup_field="id", lookup_url_kwarg="cluster_id")
-    upgradable = SerializerMethodField()
-    concerns = ConcernItemUISerializer(many=True, read_only=True)
-    locked = BooleanField(read_only=True)
-    status = SerializerMethodField()
-
-    @staticmethod
-    def get_upgradable(obj: Cluster) -> bool:
-        return bool(get_upgrade(obj))
-
-    @staticmethod
-    def get_prototype_version(obj: Cluster) -> str:
-        return obj.prototype.version
-
-    @staticmethod
-    def get_prototype_name(obj: Cluster) -> str:
-        return obj.prototype.name
-
-    @staticmethod
-    def get_prototype_display_name(obj: Cluster) -> str | None:
-        return obj.prototype.display_name
-
-    @staticmethod
-    def get_status(obj: Cluster) -> int:
-        return get_cluster_status(obj)
-
-
-class ClusterDetailSerializer(ClusterSerializer):
-    bundle_id = IntegerField(read_only=True)
-    edition = CharField(read_only=True)
-    license = CharField(read_only=True)
-    action = CommonAPIURL(view_name="object-action")
-    service = ObjectURL(view_name="service")
-    host = ObjectURL(view_name="host")
-    hostcomponent = HyperlinkedIdentityField(
-        view_name="host-component", lookup_field="id", lookup_url_kwarg="cluster_id"
-    )
-    status = SerializerMethodField()
-    status_url = HyperlinkedIdentityField(view_name="cluster-status", lookup_field="id", lookup_url_kwarg="cluster_id")
-    config = CommonAPIURL(view_name="object-config")
-    serviceprototype = HyperlinkedIdentityField(
-        view_name="cluster-service-prototype", lookup_field="id", lookup_url_kwarg="cluster_id"
-    )
-    upgrade = HyperlinkedIdentityField(view_name="cluster-upgrade", lookup_field="id", lookup_url_kwarg="cluster_id")
-    imports = HyperlinkedIdentityField(view_name="cluster-import", lookup_field="id", lookup_url_kwarg="cluster_id")
-    bind = HyperlinkedIdentityField(view_name="cluster-bind", lookup_field="id", lookup_url_kwarg="cluster_id")
-    prototype = HyperlinkedIdentityField(
-        view_name="cluster-prototype-detail",
-        lookup_field="pk",
-        lookup_url_kwarg="prototype_pk",
-    )
-    multi_state = StringListSerializer(read_only=True)
-    concerns = ConcernItemSerializer(many=True, read_only=True)
-    locked = BooleanField(read_only=True)
-    group_config = GroupConfigsHyperlinkedIdentityField(view_name="group-config-list")
-
-    @staticmethod
-    def get_status(obj: Cluster) -> int:
-        return get_cluster_status(obj)
-
-
-class ClusterUpdateSerializer(EmptySerializer):
-    id = IntegerField(read_only=True)
+class ClusterSerializer(ModelSerializer):
+    prototype_id = IntegerField(read_only=False, required=True)
     name = CharField(
         min_length=2,
         max_length=80,
@@ -135,59 +48,169 @@ class ClusterUpdateSerializer(EmptySerializer):
             UniqueValidator(queryset=Cluster.objects.all()),
             RegexValidator(regex=settings.CLUSTER_NAME_REGEX),
         ],
-        required=False,
-        help_text="Cluster name",
+        required=True,
     )
-    description = CharField(required=False, help_text="Cluster description")
 
-    def update(self, instance, validated_data):
-        if validated_data.get("name") and validated_data.get("name") != instance.name and instance.state != "created":
-            raise ValidationError("Name change is available only in the 'created' state")
+    class Meta:
+        model = Cluster
+        fields = (
+            "id",
+            "prototype_id",
+            "name",
+            "description",
+            "state",
+            "before_upgrade",
+        )
+        extra_kwargs = {"url": {"lookup_url_kwarg": "cluster_id"}}
 
-        instance.name = validated_data.get("name", instance.name)
-        instance.description = validated_data.get("description", instance.description)
-        instance.save()
-        update_hierarchy_issues(instance)
 
-        return instance
-
-
-class ClusterDetailUISerializer(ClusterDetailSerializer):
-    actions = SerializerMethodField()
-    prototype_version = SerializerMethodField()
-    prototype_name = SerializerMethodField()
-    prototype_display_name = SerializerMethodField()
+class ClusterUISerializer(ModelSerializer):
+    action = HyperlinkedIdentityField(view_name="object-action", lookup_url_kwarg="cluster_id")
+    prototype_version = CharField(source="prototype.version")
+    prototype_name = CharField(source="prototype.name")
+    prototype_display_name = CharField(source="prototype.display_name")
+    upgrade = HyperlinkedIdentityField(view_name="cluster-upgrade", lookup_url_kwarg="cluster_id")
     upgradable = SerializerMethodField()
     concerns = ConcernItemUISerializer(many=True, read_only=True)
-    main_info = SerializerMethodField()
+    status = SerializerMethodField()
 
-    def get_actions(self, obj):
-        act_set = Action.objects.filter(prototype=obj.prototype)
-        self.context["object"] = obj
-        self.context["cluster_id"] = obj.id
-        actions = ActionShort(filter_actions(obj, act_set), many=True, context=self.context)
-
-        return actions.data
+    class Meta:
+        model = Cluster
+        fields = (
+            *ClusterSerializer.Meta.fields,
+            "action",
+            "edition",
+            "prototype_version",
+            "prototype_name",
+            "prototype_display_name",
+            "upgrade",
+            "upgradable",
+            "concerns",
+            "status",
+        )
+        extra_kwargs = {"url": {"lookup_url_kwarg": "cluster_id"}}
 
     @staticmethod
     def get_upgradable(obj: Cluster) -> bool:
         return bool(get_upgrade(obj))
 
     @staticmethod
-    def get_prototype_version(obj: Cluster) -> str:
-        return obj.prototype.version
+    def get_status(obj: Cluster) -> int:
+        return get_cluster_status(obj)
+
+
+class ClusterDetailSerializer(ModelSerializer):
+    action = HyperlinkedIdentityField(view_name="object-action", lookup_url_kwarg="cluster_id")
+    service = HyperlinkedIdentityField(view_name="service", lookup_url_kwarg="cluster_id")
+    host = HyperlinkedIdentityField(view_name="host", lookup_url_kwarg="cluster_id")
+    hostcomponent = HyperlinkedIdentityField(
+        view_name="host-component", lookup_field="id", lookup_url_kwarg="cluster_id"
+    )
+    status = SerializerMethodField()
+    status_url = HyperlinkedIdentityField(view_name="cluster-status", lookup_url_kwarg="cluster_id")
+    config = HyperlinkedIdentityField(view_name="object-config", lookup_url_kwarg="cluster_id")
+    serviceprototype = HyperlinkedIdentityField(view_name="cluster-service-prototype", lookup_url_kwarg="cluster_id")
+    upgrade = HyperlinkedIdentityField(view_name="cluster-upgrade", lookup_url_kwarg="cluster_id")
+    imports = HyperlinkedIdentityField(view_name="cluster-import", lookup_url_kwarg="cluster_id")
+    bind = HyperlinkedIdentityField(view_name="cluster-bind", lookup_url_kwarg="cluster_id")
+    prototype = HyperlinkedIdentityField(view_name="cluster-prototype-detail", lookup_url_kwarg="prototype_pk")
+    concerns = ConcernItemSerializer(many=True, read_only=True)
+    group_config = GroupConfigsHyperlinkedIdentityField(view_name="group-config-list")
+
+    class Meta:
+        model = Cluster
+        fields = (
+            *ClusterSerializer.Meta.fields,
+            "bundle_id",
+            "edition",
+            "license",
+            "action",
+            "service",
+            "host",
+            "status",
+            "concerns",
+            "status",
+            "status_url",
+            "config",
+            "serviceprototype",
+            "upgrade",
+            "imports",
+            "bind",
+            "prototype",
+            "multi_state",
+            "concerns",
+            "group_config",
+        )
+        extra_kwargs = {"url": {"lookup_url_kwarg": "cluster_id"}}
 
     @staticmethod
-    def get_prototype_name(obj: Cluster) -> str:
-        return obj.prototype.name
+    def get_status(obj: Cluster) -> int:
+        return get_cluster_status(obj)
+
+
+class ClusterDetailUISerializer(ModelSerializer):
+    actions = SerializerMethodField()
+    prototype_version = CharField(source="prototype.version")
+    prototype_name = CharField(source="prototype.name")
+    prototype_display_name = CharField(source="prototype.display_name")
+    upgradable = SerializerMethodField()
+    concerns = ConcernItemUISerializer(many=True, read_only=True)
+    main_info = SerializerMethodField()
+
+    class Meta:
+        model = Cluster
+        fields = (
+            *ClusterDetailSerializer.Meta.fields,
+            "actions",
+            "prototype_version",
+            "prototype_name",
+            "prototype_display_name",
+            "upgradable",
+            "concerns",
+            "main_info",
+        )
+        extra_kwargs = {"url": {"lookup_url_kwarg": "cluster_id"}}
+
+    def get_actions(self, obj: Cluster):
+        self.context["object"] = obj
+        self.context["cluster_id"] = obj.id
+
+        return ActionShort(
+            filter_actions(obj, Action.objects.filter(prototype=obj.prototype)), many=True, context=self.context
+        ).data
 
     @staticmethod
-    def get_prototype_display_name(obj: Cluster) -> str | None:
-        return obj.prototype.display_name
+    def get_upgradable(obj: Cluster) -> bool:
+        return bool(get_upgrade(obj))
 
     @staticmethod
     def get_main_info(obj: Cluster) -> str | None:
         return get_main_info(obj)
+
+
+class ClusterUpdateSerializer(ModelSerializer):
+    name = CharField(
+        min_length=2,
+        max_length=80,
+        validators=[
+            UniqueValidator(queryset=Cluster.objects.all()),
+            RegexValidator(regex=settings.CLUSTER_NAME_REGEX),
+        ],
+    )
+
+    class Meta:
+        model = Cluster
+        fields = (
+            "id",
+            "name",
+            "description",
+        )
+
+    def validate_name(self, value: str) -> str:
+        if self.instance.state != "created" and self.instance.name != value:
+            raise ValidationError("Name change is available only in the 'created' state")
+
+        return value
 
 
 class StatusSerializer(EmptySerializer):

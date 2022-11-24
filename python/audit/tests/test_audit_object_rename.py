@@ -67,7 +67,7 @@ class TestAuditObjectRename(BaseTestCase):
     def test_cluster_rename(self):
         new_test_cluster_name = "new-test-cluster-name"
         self.client.patch(
-            path=reverse("cluster-details", kwargs={"cluster_id": self.cluster.pk}),
+            path=reverse("cluster-detail", kwargs={"cluster_pk": self.cluster.pk}),
             data={"description": "test_cluster_description"},
             content_type=APPLICATION_JSON,
         )
@@ -89,7 +89,7 @@ class TestAuditObjectRename(BaseTestCase):
         self.assertEqual(audit_object_host.object_name, self.host.fqdn)
 
         self.client.patch(
-            path=reverse("cluster-details", kwargs={"cluster_id": self.cluster.pk}),
+            path=reverse("cluster-detail", kwargs={"cluster_pk": self.cluster.pk}),
             data={"name": new_test_cluster_name},
             content_type=APPLICATION_JSON,
         )
@@ -114,7 +114,7 @@ class TestAuditObjectRename(BaseTestCase):
         self.assertEqual(audit_object_host.object_name, self.host.fqdn)
 
         self.client.patch(
-            path=reverse("cluster-details", kwargs={"cluster_id": self.cluster.pk}),
+            path=reverse("cluster-detail", kwargs={"cluster_pk": self.cluster.pk}),
             data={"description": "test_cluster_description"},
             content_type=APPLICATION_JSON,
         )
@@ -153,7 +153,7 @@ class TestAuditObjectRename(BaseTestCase):
         self.assertEqual(audit_object_group.object_name, self.group.name)
 
         self.client.patch(
-            path=reverse("cluster-details", kwargs={"cluster_id": self.cluster.pk}),
+            path=reverse("cluster-detail", kwargs={"cluster_pk": self.cluster.pk}),
             data={"description": "test_cluster_description"},
             content_type=APPLICATION_JSON,
         )
@@ -203,7 +203,7 @@ class TestAuditObjectRename(BaseTestCase):
         self.assertEqual(audit_object_policy.object_name, self.policy.name)
 
         self.client.patch(
-            path=reverse("cluster-details", kwargs={"cluster_id": self.cluster.pk}),
+            path=reverse("cluster-detail", kwargs={"cluster_pk": self.cluster.pk}),
             data={"description": "test_cluster_description"},
             content_type=APPLICATION_JSON,
         )

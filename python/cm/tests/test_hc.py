@@ -162,7 +162,7 @@ class TestHC(BaseTestCase):
         service_prototype = Prototype.objects.get(bundle=bundle, type="service")
 
         response: Response = self.client.post(
-            path=reverse("cluster"),
+            path=reverse("cluster-list"),
             data={
                 "bundle_id": bundle.pk,
                 "display_name": "test_cluster_display_name",

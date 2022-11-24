@@ -159,7 +159,7 @@ class TestAPI(BaseTestCase):
     def test_access(self):
         self.client.logout()
 
-        api = [reverse("cluster"), reverse("host"), reverse("tasklog-list")]
+        api = [reverse("cluster-list"), reverse("host"), reverse("tasklog-list")]
         for url in api:
             response: Response = self.client.get(url)
 
@@ -200,7 +200,7 @@ class TestAPI(BaseTestCase):
 
     def test_cluster(self):  # pylint: disable=too-many-statements
         cluster_name = "test-cluster"
-        cluster_url = reverse("cluster")
+        cluster_url = reverse("cluster-list")
         self.load_bundle(self.bundle_adh_name)
         bundle_id, proto_id = self.get_cluster_proto_id()
 
@@ -233,21 +233,11 @@ class TestAPI(BaseTestCase):
 
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
 
-        response: Response = self.client.post(
-            cluster_url,
-            {"name": cluster_name, "prototype_id": proto_id, "description": ""},
-            content_type=APPLICATION_JSON,
-        )
-
-        self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json()["description"], ["This field may not be blank."])
-
         response: Response = self.client.post(cluster_url, {"name": cluster_name, "prototype_id": proto_id})
 
         self.assertEqual(response.status_code, HTTP_201_CREATED)
 
-        cluster_id = response.json()["id"]
-        this_cluster_url = reverse("cluster-details", kwargs={"cluster_id": cluster_id})
+        this_cluster_url = reverse("cluster-detail", kwargs={"cluster_pk": response.json()["id"]})
 
         response: Response = self.client.get(this_cluster_url)
 
@@ -265,12 +255,10 @@ class TestAPI(BaseTestCase):
         response: Response = self.client.get(this_cluster_url)
 
         self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
-        self.assertEqual(response.json()["code"], "CLUSTER_NOT_FOUND")
 
         response: Response = self.client.delete(this_cluster_url)
 
         self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
-        self.assertEqual(response.json()["code"], "CLUSTER_NOT_FOUND")
 
         response: Response = self.client.delete(reverse("bundle-detail", kwargs={"bundle_pk": bundle_id}))
 
@@ -278,7 +266,7 @@ class TestAPI(BaseTestCase):
 
     def test_cluster_patching(self):
         name = "test-cluster"
-        cluster_url = reverse("cluster")
+        cluster_url = reverse("cluster-list")
 
         self.load_bundle(self.bundle_adh_name)
         bundle_id, proto_id = self.get_cluster_proto_id()
@@ -287,8 +275,7 @@ class TestAPI(BaseTestCase):
 
         self.assertEqual(response.status_code, HTTP_201_CREATED)
 
-        cluster_id = response.json()["id"]
-        first_cluster_url = reverse("cluster-details", kwargs={"cluster_id": cluster_id})
+        first_cluster_url = reverse("cluster-detail", kwargs={"cluster_pk": response.json()["id"]})
 
         patched_name = "patched-cluster"
 
@@ -312,7 +299,7 @@ class TestAPI(BaseTestCase):
         self.assertEqual(response.status_code, HTTP_201_CREATED)
 
         second_cluster_id = response.json()["id"]
-        second_cluster_url = reverse("cluster-details", kwargs={"cluster_id": second_cluster_id})
+        second_cluster_url = reverse("cluster-detail", kwargs={"cluster_pk": second_cluster_id})
 
         response: Response = self.client.patch(
             second_cluster_url, {"name": patched_name}, content_type=APPLICATION_JSON
@@ -334,7 +321,7 @@ class TestAPI(BaseTestCase):
 
     def test_cluster_host(self):
         host = "test.host.net"
-        cluster_url = reverse("cluster")
+        cluster_url = reverse("cluster-list")
 
         self.load_bundle(self.bundle_adh_name)
         self.load_bundle(self.bundle_ssh_name)
@@ -342,8 +329,8 @@ class TestAPI(BaseTestCase):
         adh_bundle_id, cluster_proto = self.get_cluster_proto_id()
 
         response: Response = self.client.post(cluster_url, {"name": self.cluster, "prototype_id": cluster_proto})
-        cluster_id = response.json()["id"]
-        this_cluster_host_url = reverse("host", kwargs={"cluster_id": cluster_id})
+        cluster_pk = response.json()["id"]
+        this_cluster_host_url = reverse("host", kwargs={"cluster_id": cluster_pk})
 
         ssh_bundle_id, _, host_id = self.create_host(host)
 
@@ -361,11 +348,11 @@ class TestAPI(BaseTestCase):
 
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         self.assertEqual(response.json()["id"], host_id)
-        self.assertEqual(response.json()["cluster_id"], cluster_id)
+        self.assertEqual(response.json()["cluster_id"], cluster_pk)
 
         response: Response = self.client.post(cluster_url, {"name": "qwe", "prototype_id": cluster_proto})
-        cluster_id2 = response.json()["id"]
-        second_cluster_host_url = reverse("host", kwargs={"cluster_id": cluster_id2})
+        cluster_pk_2 = response.json()["id"]
+        second_cluster_host_url = reverse("host", kwargs={"cluster_id": cluster_pk_2})
 
         response: Response = self.client.post(second_cluster_host_url, {"host_id": host_id})
 
@@ -384,10 +371,10 @@ class TestAPI(BaseTestCase):
         response: Response = self.client.post(second_cluster_host_url, {"host_id": host_id})
 
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-        self.assertEqual(response.json()["cluster_id"], cluster_id2)
+        self.assertEqual(response.json()["cluster_id"], cluster_pk_2)
 
-        self.client.delete(reverse("cluster-details", kwargs={"cluster_id": cluster_id}))
-        self.client.delete(reverse("cluster-details", kwargs={"cluster_id": cluster_id2}))
+        self.client.delete(reverse("cluster-detail", kwargs={"cluster_pk": cluster_pk}))
+        self.client.delete(reverse("cluster-detail", kwargs={"cluster_pk": cluster_pk_2}))
         self.client.delete(reverse("host-details", kwargs={"host_id": host_id}))
         response: Response = self.client.delete(reverse("bundle-detail", kwargs={"bundle_pk": adh_bundle_id}))
 
@@ -437,13 +424,13 @@ class TestAPI(BaseTestCase):
         bundle_id, cluster_proto_id = self.get_cluster_proto_id()
 
         cluster = "test-cluster"
-        cluster_url = reverse("cluster")
+        cluster_url = reverse("cluster-list")
         response: Response = self.client.post(cluster_url, {"name": cluster, "prototype_id": cluster_proto_id})
 
         self.assertEqual(response.status_code, HTTP_201_CREATED)
 
-        cluster_id = response.json()["id"]
-        this_service_url = reverse("service", kwargs={"cluster_id": cluster_id})
+        cluster_pk = response.json()["id"]
+        this_service_url = reverse("service", kwargs={"cluster_id": cluster_pk})
 
         response: Response = self.client.post(
             this_service_url,
@@ -485,13 +472,13 @@ class TestAPI(BaseTestCase):
         self.assertEqual(response.json()["code"], "SERVICE_CONFLICT")
 
         this_service_from_cluster_url = reverse(
-            "service-details", kwargs={"cluster_id": cluster_id, "service_id": service_id}
+            "service-details", kwargs={"cluster_id": cluster_pk, "service_id": service_id}
         )
         response: Response = self.client.delete(this_service_from_cluster_url)
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
-        response: Response = self.client.delete(reverse("cluster-details", kwargs={"cluster_id": cluster_id}))
+        response: Response = self.client.delete(reverse("cluster-detail", kwargs={"cluster_pk": cluster_pk}))
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
 
@@ -506,11 +493,13 @@ class TestAPI(BaseTestCase):
         adh_bundle_id, cluster_proto = self.get_cluster_proto_id()
         ssh_bundle_id, _, host_id = self.create_host(self.host)
         service_proto_id = self.get_service_proto_id()
-        response: Response = self.client.post(reverse("cluster"), {"name": self.cluster, "prototype_id": cluster_proto})
-        cluster_id = response.json()["id"]
+        response: Response = self.client.post(
+            reverse("cluster-list"), {"name": self.cluster, "prototype_id": cluster_proto}
+        )
+        cluster_pk = response.json()["id"]
 
         response: Response = self.client.post(
-            reverse("service", kwargs={"cluster_id": cluster_id}),
+            reverse("service", kwargs={"cluster_id": cluster_pk}),
             {"prototype_id": service_proto_id},
         )
 
@@ -518,14 +507,14 @@ class TestAPI(BaseTestCase):
 
         service_id = response.json()["id"]
 
-        hc_url = reverse("host-component", kwargs={"cluster_id": cluster_id})
+        hc_url = reverse("host-component", kwargs={"cluster_id": cluster_pk})
         response: Response = self.client.post(hc_url, {"hc": {}}, content_type=APPLICATION_JSON)
 
         self.assertEqual(response.status_code, HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json()["code"], "INVALID_INPUT")
         self.assertEqual(response.json()["desc"], "hc field is required")
 
-        comp_id = self.get_component_id(cluster_id, service_id, self.component)
+        comp_id = self.get_component_id(cluster_pk, service_id, self.component)
         response: Response = self.client.post(
             hc_url,
             {"hc": [{"service_id": service_id, "host_id": 100500, "component_id": comp_id}]},
@@ -554,7 +543,7 @@ class TestAPI(BaseTestCase):
         self.assertEqual(response.json()["code"], "FOREIGN_HOST")
 
         response: Response = self.client.post(
-            reverse("host", kwargs={"cluster_id": cluster_id}),
+            reverse("host", kwargs={"cluster_id": cluster_pk}),
             {"host_id": host_id},
             content_type=APPLICATION_JSON,
         )
@@ -612,7 +601,7 @@ class TestAPI(BaseTestCase):
 
         self.assertEqual(response.status_code, HTTP_200_OK)
 
-        zclient_id = self.get_component_id(cluster_id, service_id, "ZOOKEEPER_CLIENT")
+        zclient_id = self.get_component_id(cluster_pk, service_id, "ZOOKEEPER_CLIENT")
         response: Response = self.client.post(
             hc_url,
             {"hc": [{"service_id": service_id, "host_id": host_id, "component_id": zclient_id}]},
@@ -622,14 +611,14 @@ class TestAPI(BaseTestCase):
         self.assertEqual(response.status_code, HTTP_201_CREATED)
 
         response: Response = self.client.post(
-            reverse("cluster"),
+            reverse("cluster-list"),
             {"name": "qwe", "prototype_id": cluster_proto},
             content_type=APPLICATION_JSON,
         )
-        cluster_id2 = response.json()["id"]
+        cluster_pk_2 = response.json()["id"]
 
         response: Response = self.client.post(
-            reverse("host-component", kwargs={"cluster_id": cluster_id2}),
+            reverse("host-component", kwargs={"cluster_id": cluster_pk_2}),
             {"hc": [{"service_id": service_id, "host_id": host_id, "component_id": comp_id}]},
             content_type=APPLICATION_JSON,
         )
@@ -638,7 +627,7 @@ class TestAPI(BaseTestCase):
         self.assertEqual(response.json()["code"], "CLUSTER_SERVICE_NOT_FOUND")
 
         response: Response = self.client.post(
-            reverse("service", kwargs={"cluster_id": cluster_id2}),
+            reverse("service", kwargs={"cluster_id": cluster_pk_2}),
             {"prototype_id": service_proto_id},
             content_type=APPLICATION_JSON,
         )
@@ -646,9 +635,9 @@ class TestAPI(BaseTestCase):
 
         self.assertEqual(response.status_code, HTTP_201_CREATED)
 
-        comp_id2 = self.get_component_id(cluster_id2, service_id2, self.component)
+        comp_id2 = self.get_component_id(cluster_pk_2, service_id2, self.component)
         response: Response = self.client.post(
-            reverse("host-component", kwargs={"cluster_id": cluster_id2}),
+            reverse("host-component", kwargs={"cluster_id": cluster_pk_2}),
             {"hc": [{"service_id": service_id2, "host_id": host_id, "component_id": comp_id2}]},
             content_type=APPLICATION_JSON,
         )
@@ -660,8 +649,8 @@ class TestAPI(BaseTestCase):
 
         self.assertEqual(response.status_code, HTTP_405_METHOD_NOT_ALLOWED)
 
-        self.client.delete(reverse("cluster-details", kwargs={"cluster_id": cluster_id}))
-        self.client.delete(reverse("cluster-details", kwargs={"cluster_id": cluster_id2}))
+        self.client.delete(reverse("cluster-detail", kwargs={"cluster_pk": cluster_pk}))
+        self.client.delete(reverse("cluster-detail", kwargs={"cluster_pk": cluster_pk_2}))
         self.client.delete(reverse("host-details", kwargs={"host_id": host_id}))
         response: Response = self.client.delete(reverse("bundle-detail", kwargs={"bundle_pk": adh_bundle_id}))
 
@@ -676,23 +665,23 @@ class TestAPI(BaseTestCase):
         self.load_bundle(self.bundle_adh_name)
         adh_bundle_id, proto_id = self.get_cluster_proto_id()
         service_proto_id = self.get_service_proto_id()
-        response: Response = self.client.post(reverse("cluster"), {"name": self.cluster, "prototype_id": proto_id})
-        cluster_id = response.json()["id"]
+        response: Response = self.client.post(reverse("cluster-list"), {"name": self.cluster, "prototype_id": proto_id})
+        cluster_pk = response.json()["id"]
 
-        response: Response = self.client.get(reverse("service", kwargs={"cluster_id": cluster_id}))
+        response: Response = self.client.get(reverse("service", kwargs={"cluster_id": cluster_pk}))
 
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(response.json(), [])
 
         response: Response = self.client.post(
-            reverse("service", kwargs={"cluster_id": cluster_id}), {"prototype_id": 100500}
+            reverse("service", kwargs={"cluster_id": cluster_pk}), {"prototype_id": 100500}
         )
 
         self.assertEqual(response.status_code, HTTP_404_NOT_FOUND)
         self.assertEqual(response.json()["code"], "PROTOTYPE_NOT_FOUND")
 
         response: Response = self.client.post(
-            reverse("service", kwargs={"cluster_id": cluster_id}),
+            reverse("service", kwargs={"cluster_id": cluster_pk}),
             {"prototype_id": service_proto_id},
         )
 
@@ -700,7 +689,7 @@ class TestAPI(BaseTestCase):
 
         service_id = response.json()["id"]
 
-        zurl = reverse("service-details", kwargs={"cluster_id": cluster_id, "service_id": service_id})
+        zurl = reverse("service-details", kwargs={"cluster_id": cluster_pk, "service_id": service_id})
         response: Response = self.client.get(zurl)
 
         self.assertEqual(response.status_code, HTTP_200_OK)
@@ -709,7 +698,7 @@ class TestAPI(BaseTestCase):
             reverse(
                 "config-current",
                 kwargs={
-                    "cluster_id": cluster_id,
+                    "cluster_id": cluster_pk,
                     "service_id": service_id,
                     "object_type": "service",
                     "version": "current",
@@ -726,7 +715,7 @@ class TestAPI(BaseTestCase):
 
         config_history_url = reverse(
             "config-history",
-            kwargs={"cluster_id": cluster_id, "service_id": service_id, "object_type": "service"},
+            kwargs={"cluster_id": cluster_pk, "service_id": service_id, "object_type": "service"},
         )
         response: Response = self.client.post(config_history_url, {"config": "qwe"})
 
@@ -750,7 +739,7 @@ class TestAPI(BaseTestCase):
             reverse(
                 "config-history-version",
                 kwargs={
-                    "cluster_id": cluster_id,
+                    "cluster_id": cluster_pk,
                     "service_id": service_id,
                     "object_type": "service",
                     "version": id2,
@@ -768,7 +757,7 @@ class TestAPI(BaseTestCase):
             reverse(
                 "config-history-version-restore",
                 kwargs={
-                    "cluster_id": cluster_id,
+                    "cluster_id": cluster_pk,
                     "service_id": service_id,
                     "object_type": "service",
                     "version": id1,
@@ -784,7 +773,7 @@ class TestAPI(BaseTestCase):
             reverse(
                 "config-current",
                 kwargs={
-                    "cluster_id": cluster_id,
+                    "cluster_id": cluster_pk,
                     "service_id": service_id,
                     "object_type": "service",
                     "version": "current",
@@ -799,7 +788,7 @@ class TestAPI(BaseTestCase):
             reverse(
                 "config-previous",
                 kwargs={
-                    "cluster_id": cluster_id,
+                    "cluster_id": cluster_pk,
                     "service_id": service_id,
                     "object_type": "service",
                     "version": "previous",
@@ -818,7 +807,7 @@ class TestAPI(BaseTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(len(response.json()), 2)
 
-        self.client.delete(reverse("cluster-details", kwargs={"cluster_id": cluster_id}))
+        self.client.delete(reverse("cluster-detail", kwargs={"cluster_pk": cluster_pk}))
         self.client.delete(reverse("bundle-detail", kwargs={"bundle_pk": adh_bundle_id}))
 
 

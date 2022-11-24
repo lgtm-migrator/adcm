@@ -62,7 +62,9 @@ class TestAuditObjects(BaseTestCase):
         )
 
     def create_cluster_via_api(self, name: str = "Cluster") -> Response:
-        return self.client.post(path=reverse("cluster"), data={"prototype_id": self.cluster_proto.id, "name": name})
+        return self.client.post(
+            path=reverse("cluster-list"), data={"prototype_id": self.cluster_proto.id, "name": name}
+        )
 
     def _get_id_from_create_response(self, resp: Response) -> int:
         self.assertEqual(resp.status_code, HTTP_201_CREATED)
@@ -74,8 +76,8 @@ class TestAuditObjects(BaseTestCase):
         provider_id = self._get_id_from_create_response(self.create_provider_via_api())
         host_id = self._get_id_from_create_response(self.create_host_via_api("test-fqdn", provider_id))
 
-        cluster_id = self._get_id_from_create_response(self.create_cluster_via_api())
-        filter_kwargs = dict(object_id=cluster_id, object_type=AuditObjectType.Cluster)
+        cluster_pk = self._get_id_from_create_response(self.create_cluster_via_api())
+        filter_kwargs = dict(object_id=cluster_pk, object_type=AuditObjectType.Cluster)
         cluster_ao: AuditObject = AuditObject.objects.filter(**filter_kwargs).first()
         self.assertIsNotNone(cluster_ao)
         self.assertFalse(cluster_ao.is_deleted)
@@ -83,25 +85,25 @@ class TestAuditObjects(BaseTestCase):
         service_id = self._get_id_from_create_response(
             self.client.post(
                 path=reverse("service"),
-                data={"cluster_id": cluster_id, "prototype_id": self.service_proto.id},
+                data={"cluster_id": cluster_pk, "prototype_id": self.service_proto.id},
             )
         )
-        resp = self.client.post(path=reverse("host", kwargs={"cluster_id": cluster_id}), data={"host_id": host_id})
+        resp = self.client.post(path=reverse("host", kwargs={"cluster_id": cluster_pk}), data={"host_id": host_id})
         self.assertEqual(resp.status_code, HTTP_201_CREATED)
         self.assertEqual(AuditObject.objects.filter(**filter_kwargs).count(), 1)
         cluster_ao.refresh_from_db()
         self.assertFalse(cluster_ao.is_deleted)
 
         resp = self.client.delete(
-            path=reverse("service-details", kwargs={"cluster_id": cluster_id, "service_id": service_id})
+            path=reverse("service-details", kwargs={"cluster_id": cluster_pk, "service_id": service_id})
         )
         self.assertEqual(resp.status_code, HTTP_204_NO_CONTENT)
-        resp = self.client.delete(path=reverse("host-details", kwargs={"cluster_id": cluster_id, "host_id": host_id}))
+        resp = self.client.delete(path=reverse("host-details", kwargs={"cluster_id": cluster_pk, "host_id": host_id}))
         self.assertEqual(resp.status_code, HTTP_204_NO_CONTENT)
         cluster_ao.refresh_from_db()
         self.assertFalse(cluster_ao.is_deleted)
 
-        resp = self.client.delete(path=reverse("cluster-details", args=[cluster_id]))
+        resp = self.client.delete(path=reverse("cluster-detail", args=[cluster_pk]))
         self.assertEqual(resp.status_code, HTTP_204_NO_CONTENT)
         self.assertEqual(AuditObject.objects.filter(**filter_kwargs).count(), 1)
         cluster_ao.refresh_from_db()

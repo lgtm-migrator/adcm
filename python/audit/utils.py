@@ -85,9 +85,13 @@ def _get_deleted_obj(view: GenericAPIView, request: Request, kwargs) -> Model | 
                 deleted_obj = None
         except AttributeError:
             deleted_obj = None
-    except (AdcmEx, Http404):  # when denied returns 404 from PermissionListMixin
+    except (AdcmEx, Http404) as e:  # when denied returns 404 from PermissionListMixin
         try:
-            deleted_obj = view.queryset[0]
+            queryset = view.queryset
+            if isinstance(e, Http404) and "cluster_pk" in view.kwargs:
+                queryset = queryset.filter(pk=view.kwargs["cluster_pk"])
+
+            deleted_obj = queryset[0]
         except TypeError:
             if "role" in request.path:
                 deleted_obj = Role.objects.filter(pk=view.kwargs["pk"]).first()
@@ -100,6 +104,8 @@ def _get_deleted_obj(view: GenericAPIView, request: Request, kwargs) -> Model | 
     except PermissionDenied:
         if "cluster_id" in kwargs:
             deleted_obj = Cluster.objects.filter(pk=kwargs["cluster_id"]).first()
+        elif "cluster_pk" in view.kwargs:
+            deleted_obj = Cluster.objects.filter(pk=view.kwargs["cluster_pk"]).first()
         elif "service_id" in kwargs:
             deleted_obj = ClusterObject.objects.filter(pk=kwargs["service_id"]).first()
         elif "provider_id" in kwargs:
@@ -172,6 +178,9 @@ def _get_obj_changes_data(view: GenericAPIView | ModelViewSet) -> tuple[dict | N
         if view.__class__.__name__ == "ClusterDetail":
             serializer_class = ClusterAuditSerializer
             pk = view.kwargs["cluster_id"]
+        elif view.__class__.__name__ == "ClusterViewSet":
+            serializer_class = ClusterAuditSerializer
+            pk = view.kwargs.get("cluster_pk")
         elif view.__class__.__name__ == "HostDetail":
             serializer_class = HostAuditSerializer
             pk = view.kwargs["host_id"]
@@ -186,7 +195,7 @@ def _get_obj_changes_data(view: GenericAPIView | ModelViewSet) -> tuple[dict | N
             serializer_class = ComponentAuditSerializer
             pk = view.kwargs["component_pk"]
 
-    if serializer_class:
+    if pk and serializer_class:
         model = view.get_queryset().model
         current_obj = model.objects.filter(pk=pk).first()
         prev_data = serializer_class(model.objects.filter(pk=pk).first()).data
@@ -238,7 +247,7 @@ def audit(func):
                 status_code = res.status_code
             else:
                 status_code = HTTP_403_FORBIDDEN
-        except (AdcmEx, ValidationError) as exc:
+        except (AdcmEx, ValidationError, Http404) as exc:
             error = exc
             res = None
 
@@ -273,7 +282,11 @@ def audit(func):
                 deleted_obj = TaskLog.objects.filter(pk=kwargs["task_id"]).first()
 
             if not deleted_obj:
-                status_code = exc.status_code
+                if isinstance(exc, Http404):
+                    status_code = HTTP_404_NOT_FOUND
+                else:
+                    status_code = exc.status_code
+
                 if status_code == HTTP_404_NOT_FOUND:
                     action_perm_denied = (
                         kwargs.get("action_id") and Action.objects.filter(pk=kwargs["action_id"]).exists()

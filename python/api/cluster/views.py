@@ -14,6 +14,7 @@ from itertools import chain
 
 from guardian.mixins import PermissionListMixin
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
@@ -21,12 +22,13 @@ from rest_framework.status import (
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
 )
+from rest_framework.viewsets import ModelViewSet
 
-from api.base_view import DetailView, GenericUIView, PaginatedView
+from adcm.permissions import DjangoObjectPermissionsAudit
+from api.base_view import GenericUIView, GenericUIViewSet
 from api.cluster.serializers import (
     BindSerializer,
     ClusterBindSerializer,
-    ClusterDetailSerializer,
     ClusterDetailUISerializer,
     ClusterSerializer,
     ClusterUISerializer,
@@ -51,7 +53,6 @@ from api.utils import (
     check_obj,
     create,
     get_object_for_user,
-    update,
 )
 from audit.utils import audit
 from cm.api import add_cluster, delete_cluster, get_import, unbind
@@ -59,26 +60,44 @@ from cm.issue import update_hierarchy_issues
 from cm.models import Cluster, ClusterBind, HostComponent, Prototype, Upgrade
 from cm.status_api import make_ui_cluster_status
 from cm.upgrade import do_upgrade, get_upgrade
-from rbac.viewsets import DjangoOnlyObjectPermissions
 
 VIEW_CLUSTER_PERM = "cm.view_cluster"
 
 
-class ClusterList(PermissionListMixin, PaginatedView):
+# pylint: disable-next=too-many-ancestors
+class ClusterViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
     queryset = Cluster.objects.all()
     serializer_class = ClusterSerializer
-    serializer_class_ui = ClusterUISerializer
-    serializer_class_post = ClusterDetailSerializer
+    permission_classes = (DjangoObjectPermissionsAudit,)
     filterset_fields = ("name", "prototype_id")
     ordering_fields = ("name", "state", "prototype__display_name", "prototype__version_order")
     permission_required = [VIEW_CLUSTER_PERM]
+    lookup_url_kwarg = "cluster_pk"
+
+    def get_serializer_class(
+        self,
+    ) -> type[ClusterSerializer | ClusterUpdateSerializer | ClusterUISerializer | ClusterDetailUISerializer]:
+        if self.action in {"update", "partial_update"}:
+            return ClusterUpdateSerializer
+        elif self.action == "list":
+            if self.is_for_ui():
+                return ClusterUISerializer
+            else:
+                return ClusterSerializer
+        elif self.action == "retrieve":
+            if self.is_for_ui():
+                return ClusterDetailUISerializer
+            else:
+                return ClusterSerializer
+
+        return super().get_serializer_class()
 
     @audit
-    def post(self, request, *args, **kwargs):
+    def create(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        prototype_pk = serializer.validated_data.get("prototype_id")
+        prototype_pk = serializer.validated_data["prototype_id"]
         prototype = Prototype.objects.filter(pk=prototype_pk).first()
         if not prototype:
             return Response(
@@ -86,42 +105,24 @@ class ClusterList(PermissionListMixin, PaginatedView):
             )
 
         serializer.instance = add_cluster(
-            prototype,
-            serializer.validated_data.get("name"),
-            serializer.validated_data.get("description", ""),
+            prototype=prototype,
+            name=serializer.validated_data["name"],
+            description=serializer.validated_data.get("description", ""),
         )
 
         return Response(serializer.data, status=HTTP_201_CREATED)
 
+    @audit
+    def update(self, request: Request, *args, **kwargs) -> Response:
+        response: Response = super().update(request, *args, **kwargs)
+        instance = self.get_object()
 
-class ClusterDetail(PermissionListMixin, DetailView):
-    queryset = Cluster.objects.all()
-    permission_classes = (DjangoOnlyObjectPermissions,)
-    permission_required = [VIEW_CLUSTER_PERM]
-    serializer_class = ClusterDetailSerializer
-    serializer_class_put = ClusterUpdateSerializer
-    serializer_class_patch = ClusterUpdateSerializer
-    serializer_class_ui = ClusterDetailUISerializer
-    lookup_field = "id"
-    lookup_url_kwarg = "cluster_id"
-    error_code = "CLUSTER_NOT_FOUND"
+        update_hierarchy_issues(instance)
+
+        return response
 
     @audit
-    def patch(self, request, *args, **kwargs):
-        obj = self.get_object()
-        serializer = self.get_serializer(obj, data=request.data, partial=True)
-
-        return update(serializer)
-
-    @audit
-    def put(self, request, *args, **kwargs):
-        obj = self.get_object()
-        serializer = self.get_serializer(obj, data=request.data, partial=False)
-
-        return update(serializer)
-
-    @audit
-    def delete(self, request, *args, **kwargs):
+    def destroy(self, request: Request, *args, **kwargs) -> Response:
         cluster = self.get_object()
         delete_cluster(cluster)
 

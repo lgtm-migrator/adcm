@@ -590,7 +590,7 @@ class TestGroupConfigOperationName(BaseTestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
 
         response: Response = self.client.post(
-            path=reverse("cluster"),
+            path=reverse("cluster-list"),
             data={
                 "prototype_id": prototype_id,
                 "name": "Magnificent Zambezi",
