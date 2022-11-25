@@ -23,7 +23,7 @@ from api.concern.serializers import (
     ConcernItemUISerializer,
 )
 from cm.errors import AdcmEx
-from cm.models import ConcernCause, ConcernItem, ConcernType
+from cm.models import ConcernItem
 
 OBJECT_TYPES = {
     "adcm": "adcm",
@@ -37,10 +37,8 @@ CHOICES = list(zip(OBJECT_TYPES, OBJECT_TYPES))
 
 
 class ConcernFilter(FilterSet):
-    type = ChoiceFilter(choices=ConcernType.choices)
-    cause = ChoiceFilter(choices=ConcernCause.choices)
-    object_id = NumberFilter(label="Related object ID")
-    object_type = ChoiceFilter(label="Related object type", choices=CHOICES, method="filter_by_object")
+    object_id = NumberFilter(label="Related object ID", method="filter_by_object_id")
+    object_type = ChoiceFilter(label="Related object type", choices=CHOICES, method="filter_by_object_type")
     owner_type = ChoiceFilter(choices=CHOICES, method="filter_by_owner_type")
 
     class Meta:
@@ -49,21 +47,20 @@ class ConcernFilter(FilterSet):
             "name",
             "type",
             "cause",
-            "object_type",
-            "object_id",
-            "owner_type",
             "owner_id",
         ]
 
-    @staticmethod
-    def filter_by_owner_type(queryset: QuerySet, value: str):
+    def filter_by_owner_type(self, queryset: QuerySet, name: str, value: str):
         owner_type = ContentType.objects.get(app_label="cm", model=OBJECT_TYPES[value])
         return queryset.filter(owner_type=owner_type)
 
-    def filter_by_object(self, queryset: QuerySet, value: str):
+    def filter_by_object_type(self, queryset: QuerySet, name: str, value: str):
         object_id = self.request.query_params.get("object_id")
         filters = {f"{OBJECT_TYPES[value]}_entities__id": object_id}
         return queryset.filter(**filters)
+
+    def filter_by_object_id(self, queryset: QuerySet, name: str, value: str):
+        return queryset
 
     def is_valid(self):
         object_type = self.request.query_params.get("object_type")
