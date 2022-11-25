@@ -2,9 +2,9 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { AdwpCellComponent } from "@adwp-ui/widgets";
 
 export enum StatusType {
-  On = 'on',
-  Off = 'off',
-  Disabled = 'disabled'
+  On = 'ON',
+  Off = 'OFF',
+  Changing = 'CHANGING'
 }
 
 export interface Status {
@@ -33,7 +33,7 @@ export class MaintenanceModeButtonComponent<T> implements AdwpCellComponent<T> {
       color: 'primary',
       tooltip:'Turn maintenance mode ON'
     },
-    [StatusType.Disabled]: {
+    [StatusType.Changing]: {
       isButtonActive: false,
       isModeActive: false,
       color: 'primary',
@@ -49,15 +49,19 @@ export class MaintenanceModeButtonComponent<T> implements AdwpCellComponent<T> {
     return this.statuses[this.maintenanceModeStatus];
   }
 
+  get isMaintenanceModeAvailable(): boolean {
+    return this?.row?.is_maintenance_mode_available;
+  }
+
   @Input() row: any;
   @Output() onClick = new EventEmitter();
 
   ngOnInit(): void {}
 
   clickCell(event: MouseEvent, row: T): void {
-    if (this.maintenanceModeStatus !== StatusType.Disabled && this.maintenanceModeStatus === StatusType.On) {
+    if (this.maintenanceModeStatus !== StatusType.Changing && this.maintenanceModeStatus === StatusType.On) {
       this.row.maintenance_mode = StatusType.Off;
-    } else if (this.maintenanceModeStatus !== StatusType.Disabled && this.maintenanceModeStatus === StatusType.Off) {
+    } else if (this.maintenanceModeStatus !== StatusType.Changing && this.maintenanceModeStatus === StatusType.Off) {
       this.row.maintenance_mode = StatusType.On;
     }
 
