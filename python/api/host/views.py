@@ -175,6 +175,10 @@ class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
                 return HostChangeMaintenanceModeSerializer
             case "update" | "partial_update":
                 return HostUpdateSerializerNew
+            case "host_list_provider":
+                return ProvideHostSerializer
+            case "host_list_cluster":
+                return ClusterHostSerializer
         return super().get_serializer_class()
 
     def _update_host_object(self, request, *args, **kwargs):
@@ -257,6 +261,49 @@ class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
             delete_host(host)
 
         return Response(status=HTTP_204_NO_CONTENT)
+
+    @audit
+    @action(detail=False, methods=["post"], url_path="host-list-provider", url_name="list-provider")
+    def host_list_provider(self, request, *args, **kwargs):
+        serializer = self.serializer_class(
+            data=request.data,
+            context={
+                "request": request,
+                "cluster_id": kwargs.get("cluster_id", None),
+                "provider_id": kwargs.get("provider_id", None),
+            },
+        )
+        if serializer.is_valid():
+            if "provider_id" in kwargs:  # List provider hosts
+                provider = get_object_for_user(request.user, PROVIDER_VIEW, HostProvider, id=kwargs["provider_id"])
+            else:
+                provider = serializer.validated_data.get("provider_id")
+                provider = get_object_for_user(request.user, PROVIDER_VIEW, HostProvider, id=provider.id)
+
+            check_custom_perm(request.user, "add_host_to", "hostprovider", provider)
+
+            return create(serializer)
+
+        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+    @audit
+    @action(detail=False, methods=["post"], url_path="host-list-cluster", url_name="list-cluster")
+    def host_list_cluster(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            validated_data = serializer.validated_data
+
+            cluster = None
+            if "cluster_id" in kwargs:
+                cluster = get_object_for_user(request.user, CLUSTER_VIEW, Cluster, id=kwargs["cluster_id"])
+
+            host = get_object_for_user(request.user, HOST_VIEW, Host, id=validated_data.get("id"))
+            check_custom_perm(request.user, "map_host_to", "cluster", cluster)
+            add_host_to_cluster(cluster, host)
+
+            return Response(self.get_serializer(host).data, status=HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
 
 class HostList(PermissionListMixin, PaginatedView):

@@ -13,9 +13,16 @@
 
 from django.urls import include, path
 
-from api.host.views import HostListProvider
+from api.host.views import HostViewSet
 
 urlpatterns = [
-    path("", HostListProvider.as_view(), name="host"),
+    path(
+        "<int:host_id>/",
+        include(
+            [
+                path("", HostViewSet.as_view({"get": "retrieve", "post": "host_list_provider"}), name="host"),
+            ]
+        ),
+    ),
     path("", include("api.host.host_urls")),
 ]
