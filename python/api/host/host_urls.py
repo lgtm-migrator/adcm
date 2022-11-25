@@ -13,18 +13,15 @@
 
 from django.urls import include, path
 
-from api.host.views import HostViewSet, StatusList
+from api.host.urls import router as host_viewset_router
+from api.host.views import StatusList
 
 urlpatterns = [
+    *host_viewset_router.urls,
     path(
         "<int:host_id>/",
         include(
             [
-                path(
-                    "",
-                    HostViewSet.as_view({"delete": "destroy", "put": "update", "patch": "update"}),
-                    name="host-details",
-                ),
                 path("config/", include("api.config.urls"), {"object_type": "host"}),
                 path("action/", include("api.action.urls"), {"object_type": "host"}),
                 path("status/", StatusList.as_view(), name="host-status"),

@@ -84,7 +84,7 @@ class ConcernItemViewSet(ListModelMixin, RetrieveModelMixin, GenericUIViewSet):
     serializer_class = ConcernItemSerializer
     permission_classes = (IsAuthenticated,)
     lookup_url_kwarg = "concern_pk"
-    filterset_class = ConcernFilter
+    # filterset_class = ConcernFilter  # TODO: fix ConcernFilter.filter_by_owner_type
     ordering_fields = ("name",)
 
     def get_serializer_class(self):
