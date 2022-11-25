@@ -145,7 +145,7 @@ class ServiceDetailView(PermissionListMixin, DetailView):
         if TaskLog.objects.filter(action=delete_action, status=JobStatus.RUNNING).exists():
             raise_adcm_ex("SERVICE_DELETE_ERROR", "Service is deleting now")
 
-        if delete_action and host_components_exists:
+        if delete_action and (host_components_exists or instance.state != "created"):
             start_task(
                 action=delete_action,
                 obj=instance,

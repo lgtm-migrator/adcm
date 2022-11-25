@@ -224,6 +224,21 @@ class TestServiceAPI(BaseTestCase):
             action=action, obj=self.service, conf={}, attr={}, hc=[], hosts=[], verbose=False
         )
 
+    def test_delete_with_action_not_crated_state(self):
+        action = Action.objects.create(prototype=self.service.prototype, name=settings.ADCM_DELETE_SERVICE_ACTION_NAME)
+        self.service.state = "not created"
+        self.service.save(update_fields=["state"])
+
+        with patch("api.service.views.delete_service"), patch("api.service.views.start_task") as start_task_mock:
+            response: Response = self.client.delete(
+                path=reverse("service-details", kwargs={"service_id": self.service.pk})
+            )
+
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+        start_task_mock.assert_called_once_with(
+            action=action, obj=self.service, conf={}, attr={}, hc=[], hosts=[], verbose=False
+        )
+
     def test_delete_service_with_requires_fail(self):
         # pylint: disable=too-many-locals
 
