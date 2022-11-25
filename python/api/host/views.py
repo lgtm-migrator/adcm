@@ -259,7 +259,7 @@ class HostViewSet(PermissionListMixin, ModelViewSet, GenericUIViewSet):
         return Response(status=HTTP_204_NO_CONTENT)
 
 
-class HostList(PermissionListMixin, PaginatedView):  # TODO: remove
+class HostList(PermissionListMixin, PaginatedView):
     queryset = Host.objects.all()
     serializer_class = HostSerializer
     serializer_class_ui = HostUISerializer
