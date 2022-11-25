@@ -54,6 +54,7 @@ export class MaintenanceModeButtonComponent<T> implements AdwpCellComponent<T> {
   }
 
   @Input() row: any;
+  @Input() type: string;
   @Output() onClick = new EventEmitter();
 
   ngOnInit(): void {}
@@ -65,7 +66,7 @@ export class MaintenanceModeButtonComponent<T> implements AdwpCellComponent<T> {
       this.row.maintenance_mode = StatusType.On;
     }
 
-    this.onClick.emit({ event, value: { id: this.row['id'], maintenance_mode: this.row.maintenance_mode } });
+    this.onClick.emit({ event, value: { id: this.row['id'], maintenance_mode: this.row.maintenance_mode, type: this.type } });
   }
 
   preventIfDisabled(event) {
