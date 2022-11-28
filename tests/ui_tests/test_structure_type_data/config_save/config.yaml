@@ -15,35 +15,137 @@
   version: 1.5
   edition: community
   config_group_customization: false
+
+# service config default
+- name: service_config_default
+  type: service
+  version: '1.0'
+  config_group_customization: false
   config:
     - name: string
       type: string
       required: false
       default: string
       group_customization: true
-      ui_options:
-        advanced: true
-        invisible: false
+    - name: structure
+      type: structure
+      required: false
+      yspec: ./schema.yaml
+      description: Test description structure
+      group_customization: true
+      default:
+        - code: 1
+          country: Test1
+        - code: 2
+          country: Test2
+
+# service empty structure
+- name: service_config_empty
+  type: service
+  version: '1.0'
+  config_group_customization: false
+  config:
+    - name: string
+      type: string
+      required: false
+      default: string
+      group_customization: true
+    - name: structure
+      type: structure
+      yspec: ./schema.yaml
+      group_customization: true
+      default:
+        - code: 1
+          country: ""
+
+# service config required
+- name: service_config_required
+  type: service
+  version: '1.0'
+  config_group_customization: false
+  config:
+    - name: string
+      type: string
+      required: true
+      default: string
+      group_customization: true
+    - name: structure
+      type: structure
+      required: true
+      yspec: ./schema.yaml
+      group_customization: true
+      description: Test description structure
+
+# service invisible
+- name: service_invisible
+  type: service
+  version: '1.0'
+  config_group_customization: false
+  config:
+    - name: string
+      type: string
+      required: false
+      default: string
+      group_customization: true
+
     - name: structure
       type: structure
       required: false
       yspec: ./schema.yaml
       group_customization: true
       description: Test description structure
+      ui_options:
+        advanced: false
+        invisible: true
       default:
         - code: 1
           country: Test1
         - code: 2
           country: Test2
-#        - country: Greece
-#          code: 30
-#        - country: France
-#          code: 33
-#        - country: Spain
-#          code: 34
 
-
-- name: test_service_1
+# service advanced
+- name: service_advanced
   type: service
   version: '1.0'
   config_group_customization: false
+  config:
+    - name: string
+      type: string
+      required: false
+      default: string
+      group_customization: true
+
+    - name: structure
+      type: structure
+      required: false
+      yspec: ./schema.yaml
+      group_customization: true
+      description: Test description structure
+      ui_options:
+        advanced: true
+        invisible: false
+      default:
+        - code: 1
+          country: Test1
+        - code: 2
+          country: Test2
+
+# service read_only
+- name: service_read_only
+  type: service
+  version: '1.0'
+  config_group_customization: false
+  config:
+    - name: string
+      type: string
+      required: false
+      default: string
+      group_customization: true
+
+    - name: structure
+      type: structure
+      required: false
+      yspec: ./schema.yaml
+      group_customization: true
+      description: Test description structure
+      read_only: any
