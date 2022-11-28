@@ -72,6 +72,7 @@ def load_bundle(bundle_file):
     except Exception:
         clear_stage()
         shutil.rmtree(path)
+
         raise
 
     try:
@@ -82,9 +83,11 @@ def load_bundle(bundle_file):
         bundle.refresh_from_db()
         prepare_action_roles(bundle)
         cm.status_api.post_event("create", "bundle", bundle.id)
+
         return bundle
     except Exception:
         clear_stage()
+
         raise
 
 
@@ -97,8 +100,9 @@ def update_bundle(bundle):
         update_bundle_from_stage(bundle)
         order_versions()
         clear_stage()
-    except:
+    except Exception:
         clear_stage()
+
         raise
 
 
@@ -106,6 +110,7 @@ def order_model_versions(model):
     items = []
     for obj in model.objects.all():
         items.append(obj)
+
     ver = ""
     count = 0
     for obj in sorted(
@@ -114,8 +119,10 @@ def order_model_versions(model):
     ):
         if ver != obj.version:
             count += 1
+
         obj.version_order = count
         ver = obj.version
+
     # Update all table in one time. That is much faster than one by one method
     model.objects.bulk_update(items, ["version_order"])
 
@@ -129,7 +136,8 @@ def process_file(bundle_file):
     path = str(settings.DOWNLOAD_DIR / bundle_file)
     bundle_hash = get_hash_safe(path)
     dir_path = untar_safe(bundle_hash, path)
-    return (bundle_hash, dir_path)
+
+    return bundle_hash, dir_path
 
 
 def untar_safe(bundle_hash: str, path: str) -> str:
@@ -148,10 +156,9 @@ def untar(bundle_hash, bundle):
     if path.is_dir():
         try:
             existed = Bundle.objects.get(hash=bundle_hash)
-            msg = "Bundle already exists. Name: {}, version: {}, edition: {}"
             err(
                 "BUNDLE_ERROR",
-                msg.format(existed.name, existed.version, existed.edition),
+                f"Bundle already exists. Name: {existed.name}, version: {existed.version}, edition: {existed.edition}",
             )
         except Bundle.DoesNotExist:
             logger.warning(
@@ -160,6 +167,7 @@ def untar(bundle_hash, bundle):
                     "but there is a dir on disk with this hash. Dir will be overwritten.",
                 )
             )
+
     tar = tarfile.open(bundle)
     tar.extractall(path=path)
     tar.close()
@@ -608,9 +616,9 @@ def copy_stage_sub_actions(bundle):
 
 def copy_stage_component(stage_components, stage_proto, prototype, bundle):
     components = []
-    for c in stage_components:
+    for stage_component in stage_components:
         comp = copy_obj(
-            c,
+            stage_component,
             Prototype,
             (
                 "type",
@@ -634,10 +642,10 @@ def copy_stage_component(stage_components, stage_proto, prototype, bundle):
         components.append(comp)
 
     Prototype.objects.bulk_create(components)
-    for sp in StagePrototype.objects.filter(type="component", parent=stage_proto):
-        proto = Prototype.objects.get(name=sp.name, type="component", parent=prototype, bundle=bundle)
-        copy_stage_actions(StageAction.objects.filter(prototype=sp), proto)
-        copy_stage_config(StagePrototypeConfig.objects.filter(prototype=sp), proto)
+    for stage_prototype in StagePrototype.objects.filter(type="component", parent=stage_proto):
+        proto = Prototype.objects.get(name=stage_prototype.name, type="component", parent=prototype, bundle=bundle)
+        copy_stage_actions(StageAction.objects.filter(prototype=stage_prototype), proto)
+        copy_stage_config(StagePrototypeConfig.objects.filter(prototype=stage_prototype), proto)
 
 
 def copy_stage_import(stage_imports, prototype):
@@ -661,9 +669,9 @@ def copy_stage_import(stage_imports, prototype):
 
 def copy_stage_config(stage_config, prototype):
     target_config = []
-    for sc in stage_config:
+    for stage_conf in stage_config:
         obj_copy = copy_obj(
-            sc,
+            stage_conf,
             PrototypeConfig,
             (
                 "name",
@@ -678,8 +686,8 @@ def copy_stage_config(stage_config, prototype):
                 "group_customization",
             ),
         )
-        if sc.action:
-            obj_copy.action = Action.objects.get(prototype=prototype, name=sc.action.name)
+        if stage_conf.action:
+            obj_copy.action = Action.objects.get(prototype=prototype, name=stage_conf.action.name)
 
         obj_copy.prototype = prototype
         target_config.append(obj_copy)
@@ -707,22 +715,22 @@ def copy_stage(bundle_hash, bundle_proto):
     stage_prototypes = StagePrototype.objects.exclude(type="component")
     copy_stage_prototype(stage_prototypes, bundle)
 
-    for sp in stage_prototypes:
-        proto = Prototype.objects.get(name=sp.name, type=sp.type, bundle=bundle)
-        copy_stage_actions(StageAction.objects.filter(prototype=sp), proto)
-        copy_stage_config(StagePrototypeConfig.objects.filter(prototype=sp), proto)
+    for stage_prototype in stage_prototypes:
+        proto = Prototype.objects.get(name=stage_prototype.name, type=stage_prototype.type, bundle=bundle)
+        copy_stage_actions(StageAction.objects.filter(prototype=stage_prototype), proto)
+        copy_stage_config(StagePrototypeConfig.objects.filter(prototype=stage_prototype), proto)
         copy_stage_component(
-            StagePrototype.objects.filter(parent=sp, type="component"),
-            sp,
+            StagePrototype.objects.filter(parent=stage_prototype, type="component"),
+            stage_prototype,
             proto,
             bundle,
         )
 
-        for se in StagePrototypeExport.objects.filter(prototype=sp):
-            pe = PrototypeExport(prototype=proto, name=se.name)
+        for stage_prototype_export in StagePrototypeExport.objects.filter(prototype=stage_prototype):
+            pe = PrototypeExport(prototype=proto, name=stage_prototype_export.name)
             pe.save()
 
-        copy_stage_import(StagePrototypeImport.objects.filter(prototype=sp), proto)
+        copy_stage_import(StagePrototypeImport.objects.filter(prototype=stage_prototype), proto)
 
     copy_stage_sub_actions(bundle)
     copy_stage_upgrade(StageUpgrade.objects.all(), bundle)
@@ -733,23 +741,25 @@ def copy_stage(bundle_hash, bundle_proto):
 def update_bundle_from_stage(
     bundle,
 ):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-    for sp in StagePrototype.objects.all():
+    for stage_prototype in StagePrototype.objects.all():
         try:
-            prototype = Prototype.objects.get(bundle=bundle, type=sp.type, name=sp.name, version=sp.version)
-            prototype.path = sp.path
-            prototype.version = sp.version
-            prototype.description = sp.description
-            prototype.display_name = sp.display_name
-            prototype.required = sp.required
-            prototype.shared = sp.shared
-            prototype.monitoring = sp.monitoring
-            prototype.adcm_min_version = sp.adcm_min_version
-            prototype.venv = sp.venv
-            prototype.config_group_customization = sp.config_group_customization
-            prototype.allow_maintenance_mode = sp.allow_maintenance_mode
+            prototype = Prototype.objects.get(
+                bundle=bundle, type=stage_prototype.type, name=stage_prototype.name, version=stage_prototype.version
+            )
+            prototype.path = stage_prototype.path
+            prototype.version = stage_prototype.version
+            prototype.description = stage_prototype.description
+            prototype.display_name = stage_prototype.display_name
+            prototype.required = stage_prototype.required
+            prototype.shared = stage_prototype.shared
+            prototype.monitoring = stage_prototype.monitoring
+            prototype.adcm_min_version = stage_prototype.adcm_min_version
+            prototype.venv = stage_prototype.venv
+            prototype.config_group_customization = stage_prototype.config_group_customization
+            prototype.allow_maintenance_mode = stage_prototype.allow_maintenance_mode
         except Prototype.DoesNotExist:
             prototype = copy_obj(
-                sp,
+                stage_prototype,
                 Prototype,
                 (
                     "type",
@@ -773,7 +783,7 @@ def update_bundle_from_stage(
             prototype.bundle = bundle
 
         prototype.save()
-        for saction in StageAction.objects.filter(prototype=sp):
+        for saction in StageAction.objects.filter(prototype=stage_prototype):
             try:
                 action = Action.objects.get(prototype=prototype, name=saction.name)
                 update_obj(
@@ -855,7 +865,7 @@ def update_bundle_from_stage(
                 sub.action = action
                 sub.save()
 
-        for sc in StagePrototypeConfig.objects.filter(prototype=sp):
+        for stage_prototype_config in StagePrototypeConfig.objects.filter(prototype=stage_prototype):
             flist = (
                 "default",
                 "type",
@@ -867,28 +877,33 @@ def update_bundle_from_stage(
                 "group_customization",
             )
             act = None
-            if sc.action:
-                act = Action.objects.get(prototype=prototype, name=sc.action.name)
+            if stage_prototype_config.action:
+                act = Action.objects.get(prototype=prototype, name=stage_prototype_config.action.name)
 
             try:
-                pconfig = PrototypeConfig.objects.get(prototype=prototype, action=act, name=sc.name, subname=sc.subname)
-                update_obj(pconfig, sc, flist)
+                pconfig = PrototypeConfig.objects.get(
+                    prototype=prototype,
+                    action=act,
+                    name=stage_prototype_config.name,
+                    subname=stage_prototype_config.subname,
+                )
+                update_obj(pconfig, stage_prototype_config, flist)
             except PrototypeConfig.DoesNotExist:
-                pconfig = copy_obj(sc, PrototypeConfig, ("name", "subname") + flist)
+                pconfig = copy_obj(stage_prototype_config, PrototypeConfig, ("name", "subname") + flist)
                 pconfig.action = act
                 pconfig.prototype = prototype
 
             pconfig.save()
 
         PrototypeExport.objects.filter(prototype=prototype).delete()
-        for se in StagePrototypeExport.objects.filter(prototype=sp):
-            pe = PrototypeExport(prototype=prototype, name=se.name)
+        for stage_prototype_export in StagePrototypeExport.objects.filter(prototype=stage_prototype):
+            pe = PrototypeExport(prototype=prototype, name=stage_prototype_export.name)
             pe.save()
 
         PrototypeImport.objects.filter(prototype=prototype).delete()
-        for si in StagePrototypeImport.objects.filter(prototype=sp):
-            pi = copy_obj(
-                si,
+        for stage_prototype_import in StagePrototypeImport.objects.filter(prototype=stage_prototype):
+            prototype_import = copy_obj(
+                stage_prototype_import,
                 PrototypeImport,
                 (
                     "name",
@@ -901,13 +916,13 @@ def update_bundle_from_stage(
                     "multibind",
                 ),
             )
-            pi.prototype = prototype
-            pi.save()
+            prototype_import.prototype = prototype
+            prototype_import.save()
 
     Upgrade.objects.filter(bundle=bundle).delete()
-    for su in StageUpgrade.objects.all():
+    for stage_upgrade in StageUpgrade.objects.all():
         upg = copy_obj(
-            su,
+            stage_upgrade,
             Upgrade,
             (
                 "name",
@@ -974,13 +989,12 @@ def delete_bundle(bundle):
 
 
 def check_services():
-    s = {}
+    prototype_data = {}
     for prototype in StagePrototype.objects.filter(type="service"):
-        if prototype.name in s:
-            msg = "There are more than one service with name {}"
-            err("BUNDLE_ERROR", msg.format(prototype.name))
+        if prototype.name in prototype_data:
+            err("BUNDLE_ERROR", f"There are more than one service with name {prototype.name}")
 
-        s[prototype.name] = prototype.version
+        prototype_data[prototype.name] = prototype.version
 
 
 def check_adcm_version(bundle):
@@ -988,8 +1002,7 @@ def check_adcm_version(bundle):
         return
 
     if rpm.compare_versions(bundle.adcm_min_version, settings.ADCM_VERSION) > 0:
-        msg = "This bundle required ADCM version equal to {} or newer."
-        err("BUNDLE_VERSION_ERROR", msg.format(bundle.adcm_min_version))
+        err("BUNDLE_VERSION_ERROR", f"This bundle required ADCM version equal to {bundle.adcm_min_version} or newer.")
 
 
 def get_stage_bundle(bundle_file):
