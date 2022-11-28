@@ -267,7 +267,7 @@ class OperationsAuditLocators:
     title = Locator(By.TAG_NAME, "mat-card-title", "Audit operations list page's title")
 
     class Filter:
-        button = Locator(By.XPATH, "//app-filter//mat-icon", "Filters button")
+        button = Locator(By.XPATH, "//app-server-filter//mat-icon", "Filters button")
         menu = Locator(By.XPATH, "//div[@role='menu']", "Filters choice menu")
         choice = Locator(By.TAG_NAME, "button", "Filters choice item")
         block = Locator(By.TAG_NAME, "form", "Form container for picked filters")
