@@ -11,7 +11,6 @@
 # limitations under the License.
 
 """The most basic PageObject classes"""
-
 from contextlib import contextmanager
 from typing import Callable, List, Optional, Union
 
@@ -351,13 +350,18 @@ class BasePageObject:
                 self.clear_by_keys(element)
             input_element = self.find_element(element, timeout) if isinstance(element, Locator) else element
             input_element.click()
+            for _ in range(len(input_element.get_property('value'))):
+                input_element.send_keys(Keys.BACK_SPACE)
             input_element.send_keys(text)
+
+        def _check_element_value():
+            input_element = self.find_element(element, timeout) if isinstance(element, Locator) else element
             assert (actual_value := input_element.get_property('value')) == text, (
                 f'Value of input {element.name if isinstance(element, Locator) else element.text} '
                 f'expected to be "{text}", but "{actual_value}" was found'
             )
-
-        wait_until_step_succeeds(_send_keys_and_check, period=0.5, timeout=1.5)
+        _send_keys_and_check()
+        wait_until_step_succeeds(_check_element_value, period=.5, timeout=1.5)
 
     @allure.step('Clear element')
     def clear_by_keys(self, element: Union[Locator, WebElement]) -> None:
