@@ -26,7 +26,7 @@ import pytest
 import websockets.client
 import yaml
 from _pytest.python import Function, FunctionDefinition, Module
-from adcm_client.objects import ADCMClient, Bundle, Provider, User
+from adcm_client.objects import ADCMClient, Bundle, Cluster, Provider, User
 from adcm_pytest_plugin.utils import random_string
 from allure_commons.model2 import Parameter, TestResult
 from allure_pytest.listener import AllureListener
