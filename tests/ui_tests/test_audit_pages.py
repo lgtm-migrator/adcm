@@ -17,9 +17,19 @@ import allure
 import pytest
 import requests
 from adcm_client.audit import AuditOperation, ObjectType, OperationResult, OperationType
-from adcm_client.objects import ADCMClient, Cluster, Component, Group, Host, Policy, Provider, Role, Service, User
+from adcm_client.objects import (
+    ADCMClient,
+    Cluster,
+    Component,
+    Group,
+    Host,
+    Policy,
+    Provider,
+    Role,
+    Service,
+    User,
+)
 from selenium.webdriver.remote.webelement import WebElement
-
 from tests.library.assertions import are_equal, tuples_are_equal
 from tests.ui_tests.app.page.admin.page import OperationRowInfo, OperationsAuditPage
 from tests.ui_tests.app.page.common.dialogs.operation_changes import ChangesRow

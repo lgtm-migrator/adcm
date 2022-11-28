@@ -12,7 +12,8 @@
 
 """Various "rich" checks for common assertions"""
 import json
-import pprint
+from itertools import zip_longest
+from pprint import pformat
 from typing import Callable, Collection, Optional, TypeVar, Union
 
 import allure

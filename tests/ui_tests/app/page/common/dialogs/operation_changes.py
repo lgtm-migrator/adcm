@@ -13,9 +13,10 @@
 from dataclasses import dataclass
 
 from selenium.webdriver.remote.webelement import WebElement
-
 from tests.ui_tests.app.page.common.base_page import BasePageObject
-from tests.ui_tests.app.page.common.dialogs.locators import OperationChangesDialogLocators
+from tests.ui_tests.app.page.common.dialogs.locators import (
+    OperationChangesDialogLocators,
+)
 
 
 @dataclass()
