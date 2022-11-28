@@ -18,13 +18,9 @@ import allure
 import pytest
 from adcm_client.objects import ADCMClient, Bundle, Service
 from adcm_pytest_plugin import utils
-
-from tests.ui_tests.app.page.cluster.page import (
-    ClusterGroupConfigConfig,
-)
+from tests.ui_tests.app.page.cluster.page import ClusterGroupConfigConfig
 from tests.ui_tests.app.page.service.page import ServiceConfigPage
 from tests.ui_tests.test_cluster_list_page import CLUSTER_NAME
-
 
 CONFIG_PARAMETERS_AMOUNT = 2
 CONFIG_ADVANCED_PARAMETERS_AMOUNT = 1
@@ -64,19 +60,19 @@ class TestServiceConfigSave:
     def check_invisible_params(self, service: Service, parameters_amount: int) -> None:
         """Method to check invisible groups in config"""
         config = service.config()
-        assert (
-                len(config.keys()) == parameters_amount
-        ), f"There are should be {parameters_amount} config parameters"
+        assert len(config.keys()) == parameters_amount, f"There are should be {parameters_amount} config parameters"
         for group in self.INVISIBLE_GROUPS:
             assert group in config.keys(), "Invisible group should be present in config object"
 
     def check_advanced_params(self, config_page):
         """Method to check advanced params in config"""
-        assert (len(config_page.config.get_all_config_rows()) == self.PARAMS["config_advanced_parameters_amount"],
-                "Advanced params should be present only when 'Advanced' is enabled")
+        assert (
+            len(config_page.config.get_all_config_rows()) == self.PARAMS["config_advanced_parameters_amount"]
+        ), "Advanced params should be present only when 'Advanced' is enabled"
         config_page.config.click_on_advanced()
-        assert (len(config_page.config.get_all_config_rows()) == self.PARAMS["config_parameters_amount"],
-                "All params should be present when 'Advanced' is enabled")
+        assert (
+            len(config_page.config.get_all_config_rows()) == self.PARAMS["config_parameters_amount"]
+        ), "All params should be present when 'Advanced' is enabled"
         config_page.config.click_on_advanced()
 
     def test_config_save(self, app_fs, sdk_client_fs):
