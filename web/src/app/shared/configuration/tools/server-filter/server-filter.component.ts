@@ -34,19 +34,14 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
     if (listParam) {
       const json = JSON.parse(listParam);
 
-      Object.keys(json[this.entity]).filter((name) => name.includes('_after') || name.includes('_before')).forEach((date) => {
-        let dateProp = date.replace(/_after|_before/gi, '');
-        let period = date.includes('_after') ? 'start' : 'end';
+      if (json[this.entity]) {
+        this.manageDatepickerValue(json);
+        Object.keys(json[this.entity]).forEach((name) => {
+          this.toggleFilters(this.availableFilters.find((f) => f.name === name));
+          this.filterForm.get(name).setValue(json[this.entity][name]);
+        });
+      }
 
-        json[this.entity][dateProp] = { ...json[this.entity][dateProp], [period]: new Date(json[this.entity][date]) };
-
-        delete json[this.entity][date];
-      })
-
-      Object.keys(json[this.entity]).forEach((name) => {
-        this.toggleFilters(this.availableFilters.find((f) => f.name === name));
-        this.filterForm.get(name).setValue(json[this.entity][name]);
-      });
       this.applyFilters();
     }
   }
@@ -77,19 +72,32 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
   }
 
   toggleFilters(filter): void {
-    if (this.activeFilters.includes(filter.id)) {
-      this.activeFilters = this.activeFilters.filter((f) => f !== filter.id);
+    if (this.activeFilters.includes(filter?.id)) {
+      this.activeFilters = this.activeFilters.filter((f) => f !== filter?.id);
       this.localStorageManaging(filter);
-      this.filterForm.removeControl(filter.filter_field);
+      this.filterForm.removeControl(filter?.filter_field);
     } else {
-      this.activeFilters.push(filter.id);
+      this.activeFilters.push(filter?.id);
       if (filter.filter_type === 'datepicker') {
         this.filterForm.addControl(filter.filter_field, new FormGroup({
           start: new FormControl(new Date()),
           end: new FormControl(new Date()),
         }));
-      } else this.filterForm.addControl(filter.filter_field, new FormControl(''))
+      } else this.filterForm.addControl(filter?.filter_field, new FormControl(''))
     }
+  }
+
+  clear(filter, event: any) {
+    if (this.filtersByType[filter] === 'datepicker') {
+      this.filterForm.get(filter).setValue({start: undefined, end: undefined});
+    } else this.filterForm.get(filter).setValue(undefined);
+
+    this.applyFilters();
+  }
+
+  removeFilter(filter, event) {
+    this.toggleFilters(filter);
+    this.applyFilters();
   }
 
   localStorageManaging(filter): void {
@@ -97,16 +105,30 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
 
     if (listParamStr) {
       const json = JSON.parse(listParamStr);
-      delete json[this.entity][filter.filter_field];
 
-      if (Object.keys(json[this.entity]).length === 0) {
-        delete json[this.entity];
+      if (json[this.entity]) {
+        delete json[this.entity][filter.filter_field];
+        this.manageDatepickerValue(json);
+        if (Object.keys(json[this.entity]).length === 0) {
+          delete json[this.entity];
+        }
       }
 
       if (Object.keys(json).length === 0) {
         localStorage.removeItem('list:param');
       } else localStorage.setItem('list:param', JSON.stringify(json));
     }
+  }
+
+  manageDatepickerValue(json) {
+    Object.keys(json[this.entity]).filter((name) => name.includes('_after') || name.includes('_before')).forEach((date) => {
+      let dateProp = date.replace(/_after|_before/gi, '');
+      let period = date.includes('_after') ? 'start' : 'end';
+
+      json[this.entity][dateProp] = {...json[this.entity][dateProp], [period]: new Date(json[this.entity][date])};
+
+      delete json[this.entity][date];
+    })
   }
 
 }

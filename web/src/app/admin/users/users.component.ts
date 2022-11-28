@@ -104,6 +104,18 @@ export class UsersComponent extends RbacEntityListDirective<RbacUserModel> imple
     super(service, store, route, router, dialog, entityService);
   }
 
+  ngOnInit() {
+    super.ngOnInit();
+
+    this.filterParams$.subscribe((params) => {
+      let filter_params = this.baseListDirective.listParams;
+      if (filter_params) {
+        filter_params['params'] = { ...params };
+        this.baseListDirective.refresh(null, filter_params);
+      }
+    })
+  }
+
   getTitle(row: RbacUserModel): string {
     return row.username;
   }
