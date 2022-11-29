@@ -138,7 +138,7 @@ def get_config_files(path: Path):
 
     for item in path.rglob("*"):
         if item.is_file() and item.name in {"config.yaml", "config.yml"}:
-            conf_list.append((item.parent.name, item))
+            conf_list.append((item.parent, item))
 
     if not conf_list:
         raise_adcm_ex("STACK_LOAD_ERROR", f"no config files in stack directory \"{path}\"")
@@ -183,15 +183,10 @@ def check_adcm_config(conf_file: Path):
 
 
 def read_definition(conf_file: Path) -> dict:
-    if conf_file.is_file():
-        conf = check_adcm_config(conf_file)
-        logger.info("Read config file: \"%s\"", conf_file)
+    conf = check_adcm_config(conf_file)
+    logger.info("Read config file: \"%s\"", conf_file)
 
-        return conf
-
-    logger.warning("Can not open config file: \"%s\"", conf_file)
-
-    return {}
+    return conf
 
 
 def get_license_hash(proto, conf, bundle_hash):
@@ -225,9 +220,6 @@ def process_config_group_customization(actual_config: dict, obj: StagePrototype)
 
 
 def save_prototype(path: Path, conf, def_type, bundle_hash):
-    if path != bundle_hash:
-        path = Path(bundle_hash, path)
-
     proto = StagePrototype(name=conf["name"], type=def_type, path=path, version=conf["version"])
 
     dict_to_obj(conf, "required", proto)
