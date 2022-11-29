@@ -1340,6 +1340,7 @@ class AbstractSubAction(ADCMModel):
     multi_state_on_fail_set = models.JSONField(default=list)
     multi_state_on_fail_unset = models.JSONField(default=list)
     params = models.JSONField(default=dict)
+    allow_to_terminate = models.BooleanField(null=True, default=None)
 
     class Meta:
         abstract = True
@@ -1347,6 +1348,12 @@ class AbstractSubAction(ADCMModel):
 
 class SubAction(AbstractSubAction):
     action = models.ForeignKey(Action, on_delete=models.CASCADE)
+
+    @property
+    def allow_to_terminate(self):
+        if self.allow_to_terminate is None:
+            return self.action.allow_to_terminate
+        return self.allow_to_terminate
 
 
 class HostComponent(ADCMModel):
