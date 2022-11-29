@@ -59,7 +59,7 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
       return;
     }
 
-    if (this.filters.some((f) => f.filter_type === 'datepicker' && filters[f.filter_field].end)) {
+    if (this.filters.some((f) => f.filter_type === 'datepicker' && filters[f.filter_field]?.end)) {
       Object.keys(filters).filter((f) => this.filtersByType[f] === 'datepicker').forEach((date) => {
         filters[`${date}_after`] = filters[date].start.toISOString();
         filters[`${date}_before`] = filters[date].end.toISOString();
@@ -108,7 +108,10 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
 
       if (json[this.entity]) {
         delete json[this.entity][filter.filter_field];
-        this.manageDatepickerValue(json);
+
+        this.manageDatepickerValue(json, true);
+        this.manageUrl(json);
+
         if (Object.keys(json[this.entity]).length === 0) {
           delete json[this.entity];
         }
@@ -120,15 +123,39 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
     }
   }
 
-  manageDatepickerValue(json) {
+  manageDatepickerValue(json: Object, deleteMode?: boolean) {
     Object.keys(json[this.entity]).filter((name) => name.includes('_after') || name.includes('_before')).forEach((date) => {
       let dateProp = date.replace(/_after|_before/gi, '');
       let period = date.includes('_after') ? 'start' : 'end';
 
-      json[this.entity][dateProp] = {...json[this.entity][dateProp], [period]: new Date(json[this.entity][date])};
+      if (!deleteMode) {
+        json[this.entity][dateProp] = {...json[this.entity][dateProp], [period]: new Date(json[this.entity][date])};
+      }
 
       delete json[this.entity][date];
     })
+  }
+
+  manageUrl(json) {
+    let queryArray = window.location.href.split(';');
+    const base = queryArray.shift();
+
+    if (Object.keys(json[this.entity]).length === 0) {
+      window.history.pushState(null, null, base);
+      return;
+    }
+
+    queryArray = queryArray.filter((query) => {
+      return Object.keys(json[this.entity]).some((filter) => query.includes(filter));
+    });
+
+    if (queryArray.length > 0) {
+      queryArray.unshift(base);
+      const query = queryArray.join(';');
+
+      window.history.pushState(null, null, query);
+    } else window.history.pushState(null, null, base);
+
   }
 
 }
