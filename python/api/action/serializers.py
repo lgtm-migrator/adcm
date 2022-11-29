@@ -10,6 +10,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pathlib import Path
+from typing import Generator
+
+import yaml
+from django.conf import settings
+from jinja2 import Template
 from rest_framework.reverse import reverse
 from rest_framework.serializers import (
     BooleanField,
@@ -20,11 +26,13 @@ from rest_framework.serializers import (
     JSONField,
     SerializerMethodField,
 )
+from yaml.loader import SafeLoader
 
 from adcm.serializers import EmptySerializer
 from api.config.serializers import ConfigSerializerUI
 from api.utils import get_api_url_kwargs
 from cm.adcm_config import get_action_variant, get_prototype_config
+from cm.inventory import get_inventory_data
 from cm.models import Action, PrototypeConfig, SubAction
 
 
@@ -128,12 +136,27 @@ class StackActionDetailSerializer(StackActionSerializer):
     subs = SerializerMethodField()
     disabling_cause = CharField(read_only=True)
 
-    def get_config(self, obj):
-        aconf = PrototypeConfig.objects.filter(prototype=obj.prototype, action=obj).order_by("id")
-        context = self.context
-        context["prototype"] = obj.prototype
-        conf = ConfigSerializerUI(aconf, many=True, context=context, read_only=True)
-        _, _, _, attr = get_prototype_config(obj.prototype, obj)
+    def get_jinja_config(self, action: Action) -> Generator:
+        inventory_data = get_inventory_data(obj=self.context["objects"][action.prototype_type], action=action)
+        jinja_conf_file = Path(settings.BUNDLE_DIR, action.prototype.bundle.hash, action.config_jinja)
+        template = Template(jinja_conf_file.read_text(encoding=settings.ENCODING_UTF_8))
+        data_yaml = template.render(inventory_data["all"]["children"]["CLUSTER"]["vars"])
+        data = yaml.load(stream=data_yaml, Loader=SafeLoader)
+
+        return (
+            PrototypeConfig.objects.update_or_create(prototype=action.prototype, action=action, **item)[0]
+            for item in data
+        )
+
+    def get_config(self, action: Action) -> dict:
+        if action.config_jinja:
+            action_config = self.get_jinja_config(action=action)
+        else:
+            action_config = PrototypeConfig.objects.filter(prototype=action.prototype, action=action).order_by("id")
+
+        self.context["prototype"] = action.prototype
+        conf = ConfigSerializerUI(action_config, many=True, context=self.context, read_only=True)
+        _, _, _, attr = get_prototype_config(action.prototype, action)
 
         return {"attr": attr, "config": conf.data}
 
@@ -149,11 +172,14 @@ class ActionDetailSerializer(StackActionDetailSerializer):
 
 
 class ActionUISerializer(ActionDetailSerializer):
-    def get_config(self, obj):
-        action_obj = self.context["obj"]
-        action_conf = PrototypeConfig.objects.filter(prototype=obj.prototype, action=obj).order_by("id")
-        _, _, _, attr = get_prototype_config(obj.prototype, obj)
-        get_action_variant(action_obj, action_conf)
-        conf = ConfigSerializerUI(action_conf, many=True, context=self.context, read_only=True)
+    def get_config(self, action: Action) -> dict:
+        if action.config_jinja:
+            action_config = self.get_jinja_config(action=action)
+        else:
+            action_config = PrototypeConfig.objects.filter(prototype=action.prototype, action=action).order_by("id")
+
+        _, _, _, attr = get_prototype_config(action.prototype, action)
+        get_action_variant(self.context["obj"], action_config)
+        conf = ConfigSerializerUI(action_config, many=True, context=self.context, read_only=True)
 
         return {"attr": attr, "config": conf.data}

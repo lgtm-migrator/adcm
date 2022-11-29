@@ -23,6 +23,7 @@ from cm.models import (
     Action,
     ActionType,
     Bundle,
+    Cluster,
     ConfigLog,
     ObjectConfig,
     Prototype,
@@ -135,3 +136,19 @@ class TestPrototypeAPI(BaseTestCase):
         )
 
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
+
+    def test_jinja_conf_serialize(self):
+        bundle = self.upload_and_load_bundle(
+            path=Path(
+                settings.BASE_DIR,
+                "python/api/tests/files/bundle_test_action_with_jinja_conf.tar",
+            )
+        )
+
+        cluster = Cluster.objects.create(name="test_cluster", prototype=Prototype.objects.get(bundle=bundle))
+        action = Action.objects.get(prototype=Prototype.objects.get(bundle=bundle))
+        response: Response = self.client.get(
+            path=reverse("object-action-details", kwargs={"cluster_id": cluster.pk, "action_id": action.pk}),
+        )
+
+        self.assertEqual(response.status_code, HTTP_200_OK)

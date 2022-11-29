@@ -19,6 +19,7 @@ from typing import Any, Hashable, List, Optional, Tuple, Union
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import JSONField
 from django.utils import timezone
 
 from audit.cases.common import get_or_create_audit_obj
@@ -86,10 +87,10 @@ from rbac.roles import re_apply_policy_for_jobs
 
 def start_task(
     action: Action,
-    obj: ADCMEntity,
+    obj: ADCM | Cluster | ClusterObject | ServiceComponent | HostProvider | Host,
     conf: dict,
     attr: dict,
-    hc: List[HostComponent],
+    hc: List[dict],
     hosts: List[Host],
     verbose: bool,
 ) -> TaskLog:
@@ -133,10 +134,10 @@ def check_action_hosts(action: Action, obj: ADCMEntity, cluster: Cluster, hosts:
 
 def prepare_task(
     action: Action,
-    obj: ADCMEntity,
+    obj: ADCM | Cluster | ClusterObject | ServiceComponent | HostProvider | Host,
     conf: dict,
     attr: dict,
-    hc: List[HostComponent],
+    hc: List[dict],
     hosts: List[Host],
     verbose: bool,
 ) -> TaskLog:  # pylint: disable=too-many-locals
@@ -272,59 +273,6 @@ def cook_comp_key(name, subname):
     return f"{name}.{subname}"
 
 
-def cook_delta(  # pylint: disable=too-many-branches
-    cluster: Cluster,
-    new_hc: List[Tuple[ClusterObject, Host, ServiceComponent]],
-    action_hc: List[dict],
-    old: dict = None,
-) -> dict:
-    def add_delta(_delta, action, _key, fqdn, _host):
-        _service, _comp = _key.split(".")
-        if not check_action_hc(action_hc, _service, _comp, action):
-            msg = (
-                f'no permission to "{action}" component "{_comp}" of ' f'service "{_service}" to/from hostcomponentmap'
-            )
-            raise_adcm_ex("WRONG_ACTION_HC", msg)
-
-        add_to_dict(_delta[action], _key, fqdn, _host)
-
-    new = {}
-    for service, host, comp in new_hc:
-        key = cook_comp_key(service.prototype.name, comp.prototype.name)
-        add_to_dict(new, key, host.fqdn, host)
-
-    if old is None:
-        old = {}
-        for hc in HostComponent.objects.filter(cluster=cluster):
-            key = cook_comp_key(hc.service.prototype.name, hc.component.prototype.name)
-            add_to_dict(old, key, hc.host.fqdn, hc.host)
-
-    delta = {"add": {}, "remove": {}}
-    for key, value in new.items():
-        if key in old:
-            for host in value:
-                if host not in old[key]:
-                    add_delta(delta, "add", key, host, value[host])
-
-            for host in old[key]:
-                if host not in value:
-                    add_delta(delta, "remove", key, host, old[key][host])
-        else:
-            for host in value:
-                add_delta(delta, "add", key, host, value[host])
-
-    for key, value in old.items():
-        if key not in new:
-            for host in value:
-                add_delta(delta, "remove", key, host, value[host])
-
-    logger.debug("OLD: %s", old)
-    logger.debug("NEW: %s", new)
-    logger.debug("DELTA: %s", delta)
-
-    return delta
-
-
 def check_hostcomponentmap(cluster: Cluster, action: Action, new_hc: List[dict]):
     if not action.hostcomponentmap:
         return None, []
@@ -346,15 +294,12 @@ def check_hostcomponentmap(cluster: Cluster, action: Action, new_hc: List[dict])
 
     post_upgrade_hc, clear_hc = check_upgrade_hc(action, new_hc)
 
-    old_hc = get_old_hc(get_hc(cluster))
     if not hasattr(action, "upgrade"):
         prepared_hc_list = check_hc(cluster, clear_hc)
     else:
         check_sub_key(clear_hc)
         prepared_hc_list = make_host_comp_list(cluster, clear_hc)
         check_constraints_for_upgrade(cluster, action.upgrade, prepared_hc_list)
-
-    cook_delta(cluster, prepared_hc_list, action.hostcomponentmap, old_hc)
 
     return prepared_hc_list, post_upgrade_hc
 
@@ -488,6 +433,7 @@ def get_actual_hc(cluster: Cluster):
     new_hc = []
     for hc in HostComponent.objects.filter(cluster=cluster):
         new_hc.append((hc.service, hc.host, hc.component))
+
     return new_hc
 
 
@@ -509,7 +455,7 @@ def get_old_hc(saved_hc: List[dict]):
 def re_prepare_job(task: TaskLog, job: JobLog):
     conf = None
     hosts = None
-    delta = {}
+
     if task.config:
         conf = task.config
 
@@ -518,17 +464,11 @@ def re_prepare_job(task: TaskLog, job: JobLog):
 
     action = task.action
     obj = task.task_object
-    cluster = get_object_cluster(obj)
     sub_action = None
     if job.sub_action_id:
         sub_action = job.sub_action
 
-    if action.hostcomponentmap:
-        new_hc = get_actual_hc(cluster)
-        old_hc = get_old_hc(task.hostcomponentmap)
-        delta = cook_delta(cluster, new_hc, action.hostcomponentmap, old_hc)
-
-    prepare_job(action, sub_action, job.pk, obj, conf, delta, hosts, task.verbose)
+    prepare_job(action, sub_action, job.pk, obj, conf, hosts, task.verbose)
 
 
 def prepare_job(
@@ -536,13 +476,12 @@ def prepare_job(
     sub_action: SubAction,
     job_id: int,
     obj: ADCM | Cluster | ClusterObject | ServiceComponent | HostProvider | Host,
-    conf: dict,
-    delta: dict,
-    hosts: List[Host],
+    conf: JSONField | None,
+    hosts: JSONField | None,
     verbose: bool,
 ):
     prepare_job_config(action, sub_action, job_id, obj, conf, verbose)
-    prepare_job_inventory(obj, job_id, action, delta, hosts)
+    prepare_job_inventory(obj, job_id, action, hosts)
     prepare_ansible_config(job_id, action, sub_action)
 
 
@@ -597,7 +536,7 @@ def prepare_job_config(
     sub_action: SubAction,
     job_id: int,
     obj: ADCM | Cluster | ClusterObject | ServiceComponent | HostProvider | Host,
-    conf: dict,
+    conf: JSONField | None,
     verbose: bool,
 ):
     # pylint: disable=too-many-branches,too-many-statements

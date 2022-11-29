@@ -19,6 +19,8 @@ from django.contrib.contenttypes.models import ContentType
 from cm.adcm_config import get_prototype_config, process_config
 from cm.logger import logger
 from cm.models import (
+    ADCM,
+    Action,
     Cluster,
     ClusterBind,
     ClusterObject,
@@ -44,22 +46,26 @@ def process_config_and_attr(obj, conf, attr=None, spec=None):
             prototype = obj.object.prototype
         else:
             prototype = obj.prototype
+
         spec, _, _, _ = get_prototype_config(prototype)
+
     new_conf = process_config(obj, spec, conf)
     if attr:
         for key, val in attr.items():
             if "active" in val and not val["active"]:
                 new_conf[key] = None
+
     return new_conf
 
 
 def get_import(cluster):  # pylint: disable=too-many-branches
-    def get_actual_import(bind, obj):
-        if bind.service:
-            proto = bind.service.prototype
+    def get_actual_import(_bind, _obj):
+        if _bind.service:
+            proto = _bind.service.prototype
         else:
-            proto = bind.cluster.prototype
-        return PrototypeImport.objects.get(prototype=proto, name=obj.prototype.name)
+            proto = _bind.cluster.prototype
+
+        return PrototypeImport.objects.get(prototype=proto, name=_obj.prototype.name)
 
     imports = {}
     for obj in chain([cluster], ClusterObject.objects.filter(cluster=cluster)):
@@ -69,9 +75,11 @@ def get_import(cluster):  # pylint: disable=too-many-branches
                     imports[imp.name] = []
                 else:
                     imports[imp.name] = {}
+
                 for group in imp.default:
                     cl = ConfigLog.objects.get(obj_ref=obj.config, id=obj.config.current)
                     conf = process_config_and_attr(obj, cl.config, cl.attr)
+
                     if imp.multibind:
                         imports[imp.name].append({group: conf[group]})
                     else:
@@ -83,11 +91,13 @@ def get_import(cluster):  # pylint: disable=too-many-branches
             obj = bind.source_service
         else:
             obj = bind.source_cluster
+
         conf_ref = obj.config
         export_proto = obj.prototype
         cl = ConfigLog.objects.get(obj_ref=conf_ref, id=conf_ref.current)
         conf = process_config_and_attr(obj, cl.config, cl.attr)
         actual_import = get_actual_import(bind, obj)
+
         if actual_import.multibind:
             if export_proto.name not in imports:
                 imports[export_proto.name] = []
@@ -96,18 +106,22 @@ def get_import(cluster):  # pylint: disable=too-many-branches
                 first = False
         else:
             imports[export_proto.name] = {}
+
         for export in PrototypeExport.objects.filter(prototype=export_proto):
             if actual_import.multibind:
                 imports[export_proto.name].append({export.name: conf[export.name]})
             else:
                 imports[export_proto.name][export.name] = conf[export.name]
+
     return imports
 
 
 def get_obj_config(obj):
     if obj.config is None:
         return {}
+
     cl = ConfigLog.objects.get(obj_ref=obj.config, id=obj.config.current)
+
     return process_config_and_attr(obj, cl.config, cl.attr)
 
 
@@ -149,6 +163,7 @@ def get_component_variables(component: ServiceComponent, component_config: dict 
 
 def get_provider_variables(provider: HostProvider, provider_config: dict = None):
     host_proto = Prototype.objects.get(bundle=provider.prototype.bundle, type="host")
+
     return {
         "config": provider_config or get_obj_config(provider),
         "name": provider.name,
@@ -163,15 +178,18 @@ def get_provider_variables(provider: HostProvider, provider_config: dict = None)
 def get_group_config(obj, host: Host) -> dict | None:
     group = host.group_config.filter(object_id=obj.id, object_type=ContentType.objects.get_for_model(obj)).last()
     group_config = None
+
     if group:
         conf, attr = group.get_config_and_attr()
         group_config = process_config_and_attr(group, conf, attr)
+
     return group_config
 
 
 def get_host_vars(host: Host, obj):
     groups = host.group_config.filter(object_id=obj.id, object_type=ContentType.objects.get_for_model(obj))
     variables = {}
+
     for group in groups:
         # TODO: What to do with activatable group in attr ???
         conf, attr = group.get_config_and_attr()
@@ -194,6 +212,7 @@ def get_host_vars(host: Host, obj):
                     variables["services"][service.prototype.name][component.prototype.name] = get_component_variables(
                         component, component_config=get_group_config(component, host)
                     )
+
             for component in ServiceComponent.objects.filter(cluster=group.object.cluster, service=group.object):
                 variables["services"][group.object.prototype.name][component.prototype.name] = get_component_variables(
                     component, component_config=get_group_config(component, host)
@@ -220,8 +239,9 @@ def get_host_vars(host: Host, obj):
                     component.prototype.name
                 ] = get_component_variables(component, component_config=get_group_config(component, host))
 
-        else:  # HostProvider
+        elif isinstance(group.object, HostProvider):
             variables.update({"provider": get_provider_variables(group.object, provider_config=group_config)})
+
     return variables
 
 
@@ -237,22 +257,24 @@ def get_cluster_config(cluster):
         res["services"][service.prototype.name] = get_service_variables(service)
         for component in ServiceComponent.objects.filter(cluster=cluster, service=service):
             res["services"][service.prototype.name][component.prototype.name] = get_component_variables(component)
+
     return res
 
 
 def get_provider_config(provider_id):
     provider = HostProvider.objects.get(id=provider_id)
+
     return {"provider": get_provider_variables(provider)}
 
 
-def get_host_groups(cluster: Cluster, delta: dict, action_host: Host | None = None):
+def get_host_groups(cluster: Cluster, action_host: Host | None = None):
     groups = {}
     all_hosts = HostComponent.objects.filter(cluster=cluster)
     for hc in all_hosts:
         if action_host and hc.host.id not in action_host:
             continue
 
-        key_object_pairs: tuple[tuple[str, ClusterObject | ServiceComponent]] = (
+        key_object_pairs = (
             (f"{hc.service.prototype.name}.{hc.component.prototype.name}", hc.component),
             (f"{hc.service.prototype.name}", hc.service),
         )
@@ -267,17 +289,6 @@ def get_host_groups(cluster: Cluster, delta: dict, action_host: Host | None = No
             groups[key]["hosts"][hc.host.fqdn] = get_obj_config(hc.host)
             groups[key]["hosts"][hc.host.fqdn].update(get_host_vars(hc.host, adcm_object))
 
-    for htype in delta:
-        for key in delta[htype]:
-            lkey = f"{key}.{htype}"
-            if lkey not in groups:
-                groups[lkey] = {"hosts": {}}
-            for fqdn in delta[htype][key]:
-                host = delta[htype][key][fqdn]
-                # TODO: What is `delta`? Need calculate delta for group_config?
-                if host.maintenance_mode != MaintenanceMode.ON:
-                    groups[lkey]["hosts"][host.fqdn] = get_obj_config(host)
-
     return groups
 
 
@@ -286,12 +297,14 @@ def get_hosts(host_list, obj, action_host=None):
     for host in host_list:
         if host.maintenance_mode == MaintenanceMode.ON or (action_host and host.id not in action_host):
             continue
+
         group[host.fqdn] = get_obj_config(host)
         group[host.fqdn]["adcm_hostid"] = host.id
         group[host.fqdn]["state"] = host.state
         group[host.fqdn]["multi_state"] = host.multi_state
         if not isinstance(obj, Host):
             group[host.fqdn].update(get_host_vars(host, obj))
+
     return group
 
 
@@ -321,23 +334,44 @@ def get_host(host_id):
 def get_target_host(host_id):
     host = Host.objects.get(id=host_id)
     groups = {"target": {"hosts": get_hosts([host], host), "vars": get_cluster_config(host.cluster)}}
+
     return groups
 
 
-def prepare_job_inventory(obj, job_id, action, delta, action_host=None):
-    logger.info("prepare inventory for job #%s, object: %s", job_id, obj)
-    fd = open(settings.RUN_DIR / f"{job_id}/inventory.json", "w", encoding=settings.ENCODING_UTF_8)
-    inv = {"all": {"children": {}}}
+def get_inventory_data(
+    obj: ADCM | Cluster | ClusterObject | ServiceComponent | HostProvider | Host,
+    action: Action,
+    action_host: list[Host] | None = None,
+) -> dict:
+    inventory_data = {"all": {"children": {}}}
+
     cluster = get_object_cluster(obj)
     if cluster:
-        inv["all"]["children"].update(get_cluster_hosts(cluster, action_host))
-        inv["all"]["children"].update(get_host_groups(cluster, delta, action_host))
+        inventory_data["all"]["children"].update(get_cluster_hosts(cluster, action_host))
+        inventory_data["all"]["children"].update(get_host_groups(cluster, action_host))
+
     if obj.prototype.type == "host":
-        inv["all"]["children"].update(get_host(obj.id))
+        inventory_data["all"]["children"].update(get_host(obj.id))
         if action.host_action:
-            inv["all"]["children"].update(get_target_host(obj.id))
+            inventory_data["all"]["children"].update(get_target_host(obj.id))
+
     if obj.prototype.type == "provider":
-        inv["all"]["children"].update(get_provider_hosts(obj, action_host))
-        inv["all"]["vars"] = get_provider_config(obj.id)
-    json.dump(inv, fd, indent=3)
+        inventory_data["all"]["children"].update(get_provider_hosts(obj, action_host))
+        inventory_data["all"]["vars"] = get_provider_config(obj.id)
+
+    return inventory_data
+
+
+def prepare_job_inventory(
+    obj: ADCM | Cluster | ClusterObject | ServiceComponent | HostProvider | Host,
+    job_id: int,
+    action: Action,
+    action_host: list[Host] | None = None,
+):
+    logger.info("prepare inventory for job #%s, object: %s", job_id, obj)
+    fd = open(settings.RUN_DIR / f"{job_id}/inventory.json", "w", encoding=settings.ENCODING_UTF_8)
+
+    inventory_data = get_inventory_data(obj=obj, action=action, action_host=action_host)
+
+    json.dump(inventory_data, fd, indent=3)
     fd.close()

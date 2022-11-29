@@ -96,7 +96,8 @@ class ConfigSerializer(EmptySerializer):
         return get_default(obj)
 
     def get_value(self, obj):  # pylint: disable=arguments-renamed
-        proto = self.context.get('prototype', None)
+        proto = self.context.get("prototype", None)
+
         return get_default(obj, proto)
 
 
