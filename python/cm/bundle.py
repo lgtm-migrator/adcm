@@ -21,10 +21,8 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from version_utils import rpm
 
-import cm.stack
-import cm.status_api
 from cm.adcm_config import init_object_config, proto_ref, switch_config
-from cm.errors import raise_adcm_ex as err
+from cm.errors import raise_adcm_ex
 from cm.logger import logger
 from cm.models import (
     ADCM,
@@ -47,6 +45,8 @@ from cm.models import (
     SubAction,
     Upgrade,
 )
+from cm.stack import get_config_files, read_definition, save_definition
+from cm.status_api import post_event
 from rbac.models import Role
 from rbac.upgrade.role import prepare_action_roles
 
@@ -60,13 +60,13 @@ STAGE = (
 )
 
 
-def load_bundle(bundle_file):
+def load_bundle(bundle_file: str) -> None:
     logger.info('loading bundle file "%s" ...', bundle_file)
     bundle_hash, path = process_file(bundle_file)
 
     try:
         check_stage()
-        process_bundle(path, bundle_hash)
+        process_bundle(path=path, bundle_hash=bundle_hash)
         bundle_proto = get_stage_bundle(bundle_file)
         second_pass()
     except Exception:
@@ -82,7 +82,7 @@ def load_bundle(bundle_file):
         ProductCategory.re_collect()
         bundle.refresh_from_db()
         prepare_action_roles(bundle)
-        cm.status_api.post_event("create", "bundle", bundle.id)
+        post_event("create", "bundle", bundle.id)
 
         return bundle
     except Exception:
@@ -132,31 +132,31 @@ def order_versions():
     order_model_versions(Bundle)
 
 
-def process_file(bundle_file):
-    path = str(settings.DOWNLOAD_DIR / bundle_file)
-    bundle_hash = get_hash_safe(path)
-    dir_path = untar_safe(bundle_hash, path)
+def process_file(bundle_file: str) -> [str, Path]:
+    path = Path(settings.DOWNLOAD_DIR, bundle_file)
+    bundle_hash = get_hash_safe(str(path))
+    dir_path = untar_safe(bundle_hash=bundle_hash, path=path)
 
     return bundle_hash, dir_path
 
 
-def untar_safe(bundle_hash: str, path: str) -> str:
+def untar_safe(bundle_hash: str, path: Path) -> Path:
     dir_path = None
 
     try:
-        dir_path = untar(bundle_hash, path)
+        dir_path = untar(bundle_hash=bundle_hash, bundle=path)
     except tarfile.ReadError:
-        err("BUNDLE_ERROR", f"Can't open bundle tar file: {path}")
+        raise_adcm_ex("BUNDLE_ERROR", f"Can't open bundle tar file: {path}")
 
     return dir_path
 
 
-def untar(bundle_hash, bundle):
-    path = settings.BUNDLE_DIR / bundle_hash
+def untar(bundle_hash: str, bundle: Path) -> Path:
+    path = Path(settings.BUNDLE_DIR, bundle_hash)
     if path.is_dir():
         try:
             existed = Bundle.objects.get(hash=bundle_hash)
-            err(
+            raise_adcm_ex(
                 "BUNDLE_ERROR",
                 f"Bundle already exists. Name: {existed.name}, version: {existed.version}, edition: {existed.edition}",
             )
@@ -181,9 +181,9 @@ def get_hash_safe(path: str) -> str:
     try:
         bundle_hash = get_hash(path)
     except FileNotFoundError:
-        err("BUNDLE_ERROR", f"Can't find bundle file: {path}")
+        raise_adcm_ex("BUNDLE_ERROR", f"Can't find bundle file: {path}")
     except PermissionError:
-        err("BUNDLE_ERROR", f"Can't open bundle file: {path}")
+        raise_adcm_ex("BUNDLE_ERROR", f"Can't open bundle file: {path}")
 
     return bundle_hash
 
@@ -199,14 +199,14 @@ def get_hash(bundle_file: str) -> str:
 
 def load_adcm():
     check_stage()
-    adcm_file = settings.BASE_DIR / "conf" / "adcm" / "config.yaml"
-    conf = cm.stack.read_definition(adcm_file, "yaml")
+    adcm_file = Path(settings.BASE_DIR, "conf", "adcm", "config.yaml")
+    conf = read_definition(conf_file=adcm_file)
     if not conf:
         logger.warning("Empty adcm config (%s)", adcm_file)
         return
 
     try:
-        cm.stack.save_definition("", adcm_file, conf, {}, "adcm", True)
+        save_definition(Path(""), adcm_file, conf, {}, "adcm", True)
         process_adcm()
     except Exception:
         clear_stage()
@@ -228,7 +228,7 @@ def process_adcm():
             bundle = copy_stage("adcm", adcm_stage_proto)
             upgrade_adcm(adcm[0], bundle)
         else:
-            err(
+            raise_adcm_ex(
                 "UPGRADE_ERROR",
                 f"Current adcm version {old_proto.version} is more than "
                 f"or equal to upgrade version {new_proto.version}",
@@ -255,7 +255,7 @@ def upgrade_adcm(adcm, bundle):
     old_proto = adcm.prototype
     new_proto = Prototype.objects.get(type="adcm", bundle=bundle)
     if rpm.compare_versions(old_proto.version, new_proto.version) >= 0:
-        err(
+        raise_adcm_ex(
             "UPGRADE_ERROR",
             f"Current adcm version {old_proto.version} is more than or equal to upgrade version {new_proto.version}",
         )
@@ -274,18 +274,18 @@ def upgrade_adcm(adcm, bundle):
     return adcm
 
 
-def process_bundle(path, bundle_hash):
+def process_bundle(path: Path, bundle_hash: str) -> None:
     obj_list = {}
-    for conf_path, conf_file, conf_type in cm.stack.get_config_files(path, bundle_hash):
-        conf = cm.stack.read_definition(conf_file, conf_type)
+    for conf_path, conf_file in get_config_files(path=path):
+        conf = read_definition(conf_file=conf_file)
         if conf:
-            cm.stack.save_definition(conf_path, conf_file, conf, obj_list, bundle_hash)
+            save_definition(conf_path, conf_file, conf, obj_list, bundle_hash)
 
 
 def check_stage():
     def count(_model):
         if _model.objects.all().count():
-            err("BUNDLE_ERROR", f"Stage is not empty {_model}")
+            raise_adcm_ex("BUNDLE_ERROR", f"Stage is not empty {_model}")
 
     for model in STAGE:
         count(model)
@@ -314,13 +314,13 @@ def re_check_actions():
         for item in hc:
             stage_proto = StagePrototype.objects.filter(type="service", name=item["service"]).first()
             if not stage_proto:
-                err(
+                raise_adcm_ex(
                     "INVALID_ACTION_DEFINITION",
                     f'Unknown service "{item["service"]}" {ref}',
                 )
 
             if not StagePrototype.objects.filter(parent=stage_proto, type="component", name=item["component"]):
-                err(
+                raise_adcm_ex(
                     "INVALID_ACTION_DEFINITION",
                     f'Unknown component "{item["component"]}" of service "{stage_proto.name}" {ref}',
                 )
@@ -340,7 +340,7 @@ def check_component_requires(comp):
 
         req_comp = StagePrototype.obj.get(name=item["component"], type="component", parent=service)
         if comp == req_comp:
-            err(
+            raise_adcm_ex(
                 "COMPONENT_CONSTRAINT_ERROR",
                 f'Component can not require themself in requires of component '
                 f'"{comp.name}" of {proto_ref(comp.parent)}',
@@ -358,7 +358,7 @@ def check_bound_component(comp):
     service = StagePrototype.obj.get(name=bind["service"], type="service")
     bind_comp = StagePrototype.obj.get(name=bind["component"], type="component", parent=service)
     if comp == bind_comp:
-        err(
+        raise_adcm_ex(
             "COMPONENT_CONSTRAINT_ERROR",
             f'Component can not require themself in "bound_to" of component "{comp.name}" of {proto_ref(comp.parent)}',
         )
@@ -415,14 +415,14 @@ def re_check_config():
                     subname=subname,
                 )
             except StagePrototypeConfig.DoesNotExist:
-                err(
+                raise_adcm_ex(
                     "INVALID_CONFIG_DEFINITION",
                     f'Unknown config source name "{lim["source"]["name"]}" for {ref} config '
                     f'"{stage_prototype_config.name}/{stage_prototype_config.subname}"',
                 )
 
             if same_stage_prototype_config == stage_prototype_config:
-                err(
+                raise_adcm_ex(
                     "INVALID_CONFIG_DEFINITION",
                     f'Config parameter "{stage_prototype_config.name}/{stage_prototype_config.subname}" '
                     f'can not refer to itself ({ref})',
@@ -442,7 +442,7 @@ def re_check_config():
                 try:
                     sp_service = StagePrototype.objects.get(type="service", name=service)
                 except StagePrototype.DoesNotExist:
-                    err(
+                    raise_adcm_ex(
                         "INVALID_CONFIG_DEFINITION",
                         f'Service "{service}" in source:args of {ref} config '
                         f'"{stage_prototype_config.name}/{stage_prototype_config.subname}" does not exists',
@@ -453,7 +453,7 @@ def re_check_config():
                 try:
                     StagePrototype.objects.get(type="component", name=comp, parent=sp_service)
                 except StagePrototype.DoesNotExist:
-                    err(
+                    raise_adcm_ex(
                         "INVALID_CONFIG_DEFINITION",
                         f'Component "{comp}" in source:args of {ref} config '
                         f'"{stage_prototype_config.name}/{stage_prototype_config.subname}" does not exists',
@@ -569,6 +569,7 @@ def copy_stage_actions(stage_actions, prototype):
             "host_action",
             "venv",
             "allow_in_maintenance_mode",
+            "config_jinja",
         ),
     )
     Action.objects.bulk_create(actions)
@@ -710,7 +711,7 @@ def copy_stage(bundle_hash, bundle_proto):
         bundle.save()
     except IntegrityError:
         shutil.rmtree(settings.BUNDLE_DIR / bundle.hash)
-        err("BUNDLE_ERROR", f'Bundle "{bundle_proto.name}" {bundle_proto.version} already installed')
+        raise_adcm_ex("BUNDLE_ERROR", f'Bundle "{bundle_proto.name}" {bundle_proto.version} already installed')
 
     stage_prototypes = StagePrototype.objects.exclude(type="component")
     copy_stage_prototype(stage_prototypes, bundle)
@@ -949,7 +950,7 @@ def delete_bundle(bundle):
     providers = HostProvider.objects.filter(prototype__bundle=bundle)
     if providers:
         provider = providers[0]
-        err(
+        raise_adcm_ex(
             "BUNDLE_CONFLICT",
             f'There is provider #{provider.id} "{provider.name}" of bundle '
             f'#{bundle.id} "{bundle.name}" {bundle.version}',
@@ -958,14 +959,17 @@ def delete_bundle(bundle):
     clusters = Cluster.objects.filter(prototype__bundle=bundle)
     if clusters:
         cluster = clusters[0]
-        err(
+        raise_adcm_ex(
             "BUNDLE_CONFLICT",
             f'There is cluster #{cluster.id} "{cluster.name}" of bundle #{bundle.id} "{bundle.name}" {bundle.version}',
         )
 
     adcm = ADCM.objects.filter(prototype__bundle=bundle)
     if adcm:
-        err("BUNDLE_CONFLICT", f'There is adcm object of bundle #{bundle.id} "{bundle.name}" {bundle.version}')
+        raise_adcm_ex(
+            "BUNDLE_CONFLICT",
+            f'There is adcm object of bundle #{bundle.id} "{bundle.name}" {bundle.version}',
+        )
 
     if bundle.hash != "adcm":
         try:
@@ -985,14 +989,14 @@ def delete_bundle(bundle):
             role.delete()
 
     ProductCategory.re_collect()
-    cm.status_api.post_event("delete", "bundle", bundle_id)
+    post_event("delete", "bundle", bundle_id)
 
 
 def check_services():
     prototype_data = {}
     for prototype in StagePrototype.objects.filter(type="service"):
         if prototype.name in prototype_data:
-            err("BUNDLE_ERROR", f"There are more than one service with name {prototype.name}")
+            raise_adcm_ex("BUNDLE_ERROR", f"There are more than one service with name {prototype.name}")
 
         prototype_data[prototype.name] = prototype.version
 
@@ -1002,7 +1006,10 @@ def check_adcm_version(bundle):
         return
 
     if rpm.compare_versions(bundle.adcm_min_version, settings.ADCM_VERSION) > 0:
-        err("BUNDLE_VERSION_ERROR", f"This bundle required ADCM version equal to {bundle.adcm_min_version} or newer.")
+        raise_adcm_ex(
+            "BUNDLE_VERSION_ERROR",
+            f"This bundle required ADCM version equal to {bundle.adcm_min_version} or newer.",
+        )
 
 
 def get_stage_bundle(bundle_file):
@@ -1012,20 +1019,20 @@ def get_stage_bundle(bundle_file):
 
     if clusters:
         if len(clusters) > 1:
-            err(
+            raise_adcm_ex(
                 "BUNDLE_ERROR",
                 f'There are more than one ({len(clusters)}) cluster definition in bundle "{bundle_file}"',
             )
 
         if providers:
-            err(
+            raise_adcm_ex(
                 "BUNDLE_ERROR",
                 f'There are {len(providers)} host provider definition in cluster type bundle "{bundle_file}"',
             )
 
         hosts = StagePrototype.objects.filter(type="host")
         if hosts:
-            err(
+            raise_adcm_ex(
                 "BUNDLE_ERROR",
                 f'There are {len(hosts)} host definition in cluster type bundle "{bundle_file}"',
             )
@@ -1034,28 +1041,28 @@ def get_stage_bundle(bundle_file):
         bundle = clusters[0]
     elif providers:
         if len(providers) > 1:
-            err(
+            raise_adcm_ex(
                 "BUNDLE_ERROR",
                 f'There are more than one ({len(providers)}) host provider definition in bundle "{bundle_file}"',
             )
 
         services = StagePrototype.objects.filter(type="service")
         if services:
-            err(
+            raise_adcm_ex(
                 "BUNDLE_ERROR",
                 f'There are {len(services)} service definition in host provider type bundle "{bundle_file}"',
             )
 
         hosts = StagePrototype.objects.filter(type="host")
         if not hosts:
-            err(
+            raise_adcm_ex(
                 "BUNDLE_ERROR",
                 f'There isn\'t any host definition in host provider type bundle "{bundle_file}"',
             )
 
         bundle = providers[0]
     else:
-        err(
+        raise_adcm_ex(
             "BUNDLE_ERROR",
             f'There isn\'t any cluster or host provider definition in bundle "{bundle_file}"',
         )

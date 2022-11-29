@@ -10,9 +10,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pathlib import Path
+
 from django.conf import settings
 from django.urls import reverse
 from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_409_CONFLICT
 
 from adcm.tests.base import BaseTestCase
 from cm.models import (
@@ -71,3 +74,64 @@ class TestPrototypeAPI(BaseTestCase):
 
         self.assertEqual(len(response.data), 1)
         self.assertNotIn(action.pk, {action_data["id"] for action_data in response.data})
+
+    def test_jinja_conf(self):
+        path = Path(
+            settings.BASE_DIR,
+            "python/api/tests/files/bundle_test_action_with_jinja_conf.tar",
+        )
+        with open(path, encoding=settings.ENCODING_UTF_8) as f:
+            response: Response = self.client.post(
+                path=reverse("upload-bundle"),
+                data={"file": f},
+            )
+
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+
+        response: Response = self.client.post(
+            path=reverse("load-bundle"),
+            data={"bundle_file": path.name},
+        )
+
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(Action.objects.last().config_jinja, "./config.j2")
+
+    def test_jinja_wrong_conf_fail(self):
+        path = Path(
+            settings.BASE_DIR,
+            "python/api/tests/files/bundle_test_action_with_jinja_wrong_conf.tar",
+        )
+        with open(path, encoding=settings.ENCODING_UTF_8) as f:
+            response: Response = self.client.post(
+                path=reverse("upload-bundle"),
+                data={"file": f},
+            )
+
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+
+        response: Response = self.client.post(
+            path=reverse("load-bundle"),
+            data={"bundle_file": path.name},
+        )
+
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
+
+    def test_jinja_wrong_conf_path_fail(self):
+        path = Path(
+            settings.BASE_DIR,
+            "python/api/tests/files/bundle_test_action_with_jinja_wrong_conf_path.tar",
+        )
+        with open(path, encoding=settings.ENCODING_UTF_8) as f:
+            response: Response = self.client.post(
+                path=reverse("upload-bundle"),
+                data={"file": f},
+            )
+
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+
+        response: Response = self.client.post(
+            path=reverse("load-bundle"),
+            data={"bundle_file": path.name},
+        )
+
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)

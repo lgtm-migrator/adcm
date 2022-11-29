@@ -139,12 +139,22 @@ def get_default(c, proto=None):  # pylint: disable=too-many-branches
     elif c.type == "file":
         if proto:
             if c.default:
-                value = read_file_type(proto, c.default, proto.bundle.hash, c.name, c.subname)
+                value = read_bundle_file(
+                    proto=proto,
+                    fname=c.default,
+                    pattern=proto.bundle.hash,
+                    ref=f'config key "{c.name}/{c.subname}" default file',
+                )
     elif c.type == "secretfile":
         if proto:
             if c.default:
                 value = ansible_encrypt_and_format(
-                    read_file_type(proto, c.default, proto.bundle.hash, c.name, c.subname)
+                    read_bundle_file(
+                        proto=proto,
+                        fname=c.default,
+                        pattern=proto.bundle.hash,
+                        ref=f'config key "{c.name}/{c.subname}" default file',
+                    )
                 )
 
     if c.type == "secretmap":
@@ -164,30 +174,18 @@ def type_is_complex(conf_type):
     return False
 
 
-def read_file_type(proto, default, bundle_hash, name, subname):
-    msg = f'config key "{name}/{subname}" default file'
-
-    return read_bundle_file(proto, default, bundle_hash, msg)
-
-
-def read_bundle_file(proto, fname, bundle_hash, pattern, ref=None) -> str | None:
+def read_bundle_file(proto: Prototype, fname: str, pattern: str, ref=None) -> str | None:
     if not ref:
         ref = proto_ref(proto)
 
-    if fname[0:2] == "./":
-        path = Path(settings.BUNDLE_DIR, bundle_hash, proto.path, fname)
-    else:
-        path = Path(settings.BUNDLE_DIR, bundle_hash, fname)
-
     fd = None
+    path = Path(settings.BUNDLE_DIR, proto.path, fname)
     try:
         fd = open(path, "r", encoding=settings.ENCODING_UTF_8)
     except FileNotFoundError:
-        msg = '{} "{}" is not found ({})'
-        raise_adcm_ex("CONFIG_TYPE_ERROR", msg.format(pattern, path, ref))
+        raise_adcm_ex("CONFIG_TYPE_ERROR", f'{pattern} "{path}" is not found ({ref})')
     except PermissionError:
-        msg = '{} "{}" can not be open ({})'
-        raise_adcm_ex("CONFIG_TYPE_ERROR", msg.format(pattern, path, ref))
+        raise_adcm_ex("CONFIG_TYPE_ERROR", f'{pattern} "{path}" can not be open ({ref})')
 
     if fd:
         body = fd.read()
@@ -1023,8 +1021,6 @@ def check_config_type(
         if default:
             if len(value) > 2048:
                 raise_adcm_ex("CONFIG_VALUE_ERROR", tmpl1.format("is too long"))
-
-            read_file_type(proto, value, default, key, subkey)
 
     if spec["type"] == "structure":
         schema = spec["limits"]["yspec"]
