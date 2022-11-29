@@ -195,6 +195,11 @@ export class BaseListDirective {
 
   refresh(id?: number, filter_params?: ParamMap) {
     if (id) this.parent.current = { id };
+    if (!filter_params) {
+      let ls = localStorage.getItem('list:param');
+      let filters = ls ? JSON.parse(ls) : {};
+      if (filters[this.typeName]) this.listParams['params'] = { ...this.listParams['params'], ...filters[this.typeName] }
+    }
     this.service.getList(filter_params || this.listParams, this.typeName).subscribe((list: IListResult<Entities>) => {
       if (this.reload) {
         this.reload(list);

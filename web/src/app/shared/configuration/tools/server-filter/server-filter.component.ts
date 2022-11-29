@@ -12,6 +12,8 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
   @Input() filterParams$: BehaviorSubject<any>;
   @Input() entity: string;
 
+  filterArr: string[];
+
   constructor() {
     super();
   }
@@ -25,6 +27,8 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
       filter_type: filter.filter_type
     }));
 
+    this.filterArr = this.filterList.map((filter: IFilter) => (filter.name));
+
     this.availableFilters.forEach((i: IFilter) => {
       this.filtersByType[i.filter_field] = i.filter_type;
     })
@@ -37,6 +41,8 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
       if (json[this.entity]) {
         this.manageDatepickerValue(json);
         Object.keys(json[this.entity]).forEach((name) => {
+          if (!this.filterArr.includes(name)) return;
+
           this.toggleFilters(this.availableFilters.find((f) => f.name === name));
           this.filterForm.get(name).setValue(json[this.entity][name]);
         });
@@ -76,14 +82,14 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
       this.activeFilters = this.activeFilters.filter((f) => f !== filter?.id);
       this.localStorageManaging(filter);
       this.filterForm.removeControl(filter?.filter_field);
-    } else {
+    } else if (filter) {
       this.activeFilters.push(filter?.id);
       if (filter?.filter_type === 'datepicker') {
         this.filterForm.addControl(filter.filter_field, new FormGroup({
           start: new FormControl(new Date()),
           end: new FormControl(new Date()),
         }));
-      } else this.filterForm.addControl(filter?.filter_field, new FormControl(''))
+      } else if (filter) this.filterForm.addControl(filter?.filter_field, new FormControl(''))
     }
   }
 
