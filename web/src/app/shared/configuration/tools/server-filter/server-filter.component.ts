@@ -78,7 +78,7 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
       this.filterForm.removeControl(filter?.filter_field);
     } else {
       this.activeFilters.push(filter?.id);
-      if (filter.filter_type === 'datepicker') {
+      if (filter?.filter_type === 'datepicker') {
         this.filterForm.addControl(filter.filter_field, new FormGroup({
           start: new FormControl(new Date()),
           end: new FormControl(new Date()),
@@ -155,7 +155,5 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
 
       window.history.pushState(null, null, query);
     } else window.history.pushState(null, null, base);
-
   }
-
 }
