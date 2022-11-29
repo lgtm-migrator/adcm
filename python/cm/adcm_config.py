@@ -841,7 +841,7 @@ def check_attr(
 
 
 def check_config_spec(
-    proto, obj, spec, flat_spec, conf, old_conf=None, attr=None
+    proto, obj, spec, flat_spec, conf: dict, old_conf=None, attr=None
 ):  # pylint: disable=too-many-branches,too-many-statements
     group = None
     if isinstance(obj, GroupConfig):

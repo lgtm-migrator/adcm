@@ -134,6 +134,7 @@ class StackActionDetailSerializer(StackActionSerializer):
         context["prototype"] = obj.prototype
         conf = ConfigSerializerUI(aconf, many=True, context=context, read_only=True)
         _, _, _, attr = get_prototype_config(obj.prototype, obj)
+
         return {"attr": attr, "config": conf.data}
 
     def get_subs(self, obj):
