@@ -267,7 +267,10 @@ def get_provider_config(provider_id):
     return {"provider": get_provider_variables(provider)}
 
 
-def get_host_groups(cluster: Cluster, action_host: Host | None = None):
+def get_host_groups(cluster: Cluster, delta: dict | None = None, action_host: Host | None = None):
+    if delta is None:
+        delta = {}
+
     groups = {}
     all_hosts = HostComponent.objects.filter(cluster=cluster)
     for hc in all_hosts:
@@ -288,6 +291,17 @@ def get_host_groups(cluster: Cluster, action_host: Host | None = None):
 
             groups[key]["hosts"][hc.host.fqdn] = get_obj_config(hc.host)
             groups[key]["hosts"][hc.host.fqdn].update(get_host_vars(hc.host, adcm_object))
+
+    for htype in delta:
+        for key in delta[htype]:
+            lkey = f"{key}.{htype}"
+            if lkey not in groups:
+                groups[lkey] = {"hosts": {}}
+            for fqdn in delta[htype][key]:
+                host = delta[htype][key][fqdn]
+                # TODO: What is `delta`? Need calculate delta for group_config?
+                if host.maintenance_mode != MaintenanceMode.ON:
+                    groups[lkey]["hosts"][host.fqdn] = get_obj_config(host)
 
     return groups
 
@@ -342,13 +356,17 @@ def get_inventory_data(
     obj: ADCM | Cluster | ClusterObject | ServiceComponent | HostProvider | Host,
     action: Action,
     action_host: list[Host] | None = None,
+    delta: dict | None = None,
 ) -> dict:
+    if delta is None:
+        delta = {}
+
     inventory_data = {"all": {"children": {}}}
 
     cluster = get_object_cluster(obj)
     if cluster:
         inventory_data["all"]["children"].update(get_cluster_hosts(cluster, action_host))
-        inventory_data["all"]["children"].update(get_host_groups(cluster, action_host))
+        inventory_data["all"]["children"].update(get_host_groups(cluster, delta, action_host))
 
     if obj.prototype.type == "host":
         inventory_data["all"]["children"].update(get_host(obj.id))
@@ -366,12 +384,16 @@ def prepare_job_inventory(
     obj: ADCM | Cluster | ClusterObject | ServiceComponent | HostProvider | Host,
     job_id: int,
     action: Action,
+    delta: dict | None = None,
     action_host: list[Host] | None = None,
 ):
+    if delta is None:
+        delta = {}
+
     logger.info("prepare inventory for job #%s, object: %s", job_id, obj)
     fd = open(settings.RUN_DIR / f"{job_id}/inventory.json", "w", encoding=settings.ENCODING_UTF_8)
 
-    inventory_data = get_inventory_data(obj=obj, action=action, action_host=action_host)
+    inventory_data = get_inventory_data(obj=obj, action=action, action_host=action_host, delta=delta)
 
     json.dump(inventory_data, fd, indent=3)
     fd.close()
