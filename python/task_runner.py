@@ -18,6 +18,7 @@ import signal
 import subprocess
 import sys
 import time
+from typing import TextIO
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -64,23 +65,27 @@ def terminate_task(signum, frame):
 signal.signal(signal.SIGTERM, terminate_task)
 
 
-def run_job(task_id, job_id, err_file):
-    logger.debug("task run job #%s of task #%s", job_id, task_id)
+def run_job(task: TaskLog, job: JobLog, err_file: TextIO):
+    task.refresh_from_db()
+    job.refresh_from_db()
+    logger.debug("task run job #%s of task #%s", job.pk, task.pk)
     cmd = [
         "/adcm/python/job_venv_wrapper.sh",
-        TaskLog.objects.get(id=task_id).action.venv,
+        task.action.venv,
         str(settings.CODE_DIR / "job_runner.py"),
-        str(job_id),
+        str(job.pk),
     ]
     logger.info("task run job cmd: %s", " ".join(cmd))
+
     try:
         proc = subprocess.Popen(cmd, stderr=err_file)
+        job.pid = proc.pid
+        job.save()
         res = proc.wait()
-
         return res
-    except Exception:  # pylint: disable=broad-except
-        logger.error("exception running job %s", job_id)
 
+    except Exception:  # pylint: disable=broad-except
+        logger.error("exception running job %s", job.pk)
         return 1
 
 
@@ -120,16 +125,19 @@ def run_task(task_id, args=None):
     job = None
     count = 0
     res = 0
+    last_job_status = None
     for job in jobs:
-        if args == "restart" and job.status == JobStatus.SUCCESS:
+        job.refresh_from_db()
+        last_job_status = job.status
+        if (args == "restart" and job.status == JobStatus.SUCCESS) or job.status == JobStatus.ABORTED:
             logger.info('skip job #%s status "%s" of task #%s', job.id, job.status, task_id)
-
             continue
+
         task.refresh_from_db()
         re_prepare_job(task, job)
         job.start_date = timezone.now()
         job.save()
-        res = run_job(task.id, job.id, err_file)
+        res = run_job(task, job, err_file)
         set_log_body(job)
 
         # For multi jobs task object state and/or config can be changed by adcm plugins
@@ -142,9 +150,14 @@ def run_task(task_id, args=None):
 
         count += 1
         if res != 0:
-            break
+            # job aborted while running
+            job.refresh_from_db()
+            if job.status != JobStatus.ABORTED:
+                break
 
-    if res == 0:
+    if last_job_status == JobStatus.ABORTED:
+        finish_task(task, job, JobStatus.ABORTED)  # TODO: ERROR job unknown task status: aborted
+    elif res == 0:
         finish_task(task, job, JobStatus.SUCCESS)
     else:
         finish_task(task, job, JobStatus.FAILED)

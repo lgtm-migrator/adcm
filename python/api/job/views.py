@@ -43,6 +43,7 @@ from cm.models import ActionType, JobLog, LogStorage, TaskLog
 from rbac.viewsets import DjangoOnlyObjectPermissions
 
 VIEW_TASKLOG_PERMISSION = "cm.view_tasklog"
+VIEW_JOBLOG_PERMISSION = "cm.view_joblog"
 
 
 def get_task_download_archive_name(task: TaskLog) -> str:
@@ -163,6 +164,15 @@ class JobViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Generi
             return JobRetrieveSerializer
 
         return super().get_serializer_class()
+
+    # @audit  TODO
+    @action(methods=["put"], detail=True)
+    def cancel(self, request: Request, job_pk: int) -> Response:
+        job = get_object_for_user(request.user, VIEW_JOBLOG_PERMISSION, JobLog, id=job_pk)
+        check_custom_perm(request.user, "change", JobLog, job_pk)
+        job.cancel()
+
+        return Response(status=HTTP_200_OK)
 
 
 #  pylint:disable-next=too-many-ancestors
