@@ -1561,7 +1561,7 @@ class JobLog(ADCMModel):
 
     def cancel(self):
         if not self.sub_action.allowed_to_terminate:
-            raise AdcmEx("JOB_TERMINATION_ERROR", f"Job #{self.sub_action.pk} can not be terminated")
+            raise AdcmEx("JOB_TERMINATION_ERROR", f"Job #{self.pk} can not be terminated")
         if self.pid == 0:  # not started yet
             self.status = JobStatus.ABORTED
             self.save()
