@@ -511,6 +511,7 @@ def get_old_hc(saved_hc: List[dict]):
 def re_prepare_job(task: TaskLog, job: JobLog):
     conf = None
     hosts = None
+    delta = {}
 
     if task.config:
         conf = task.config
