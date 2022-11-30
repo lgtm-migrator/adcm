@@ -212,7 +212,10 @@ def check_action_state(action: Action, task_object: ADCMEntity, cluster: Cluster
     if obj.concerns.filter(type=ConcernType.Lock).exists():
         raise_adcm_ex("LOCK_ERROR", f"object {obj} is locked")
 
-    if obj.concerns.filter(type=ConcernType.Issue).exists():
+    if (
+        action.name not in settings.ADCM_SERVICE_ACTION_NAMES_SET
+        and obj.concerns.filter(type=ConcernType.Issue).exists()
+    ):
         raise_adcm_ex("ISSUE_INTEGRITY_ERROR", f"object {obj} has issues")
 
     if action.allowed(obj):
