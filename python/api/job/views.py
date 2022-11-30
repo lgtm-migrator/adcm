@@ -39,7 +39,8 @@ from api.job.serializers import (
 from api.utils import check_custom_perm, get_object_for_user
 from audit.utils import audit
 from cm.job import cancel_task, restart_task
-from cm.models import ActionType, JobLog, LogStorage, TaskLog
+from cm.models import ActionType, JobLog, JobStatus, LogStorage, TaskLog
+from cm.status_api import Event
 from rbac.viewsets import DjangoOnlyObjectPermissions
 
 VIEW_TASKLOG_PERMISSION = "cm.view_tasklog"
@@ -168,9 +169,12 @@ class JobViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Generi
     # @audit  TODO
     @action(methods=["put"], detail=True)
     def cancel(self, request: Request, job_pk: int) -> Response:
-        job = get_object_for_user(request.user, VIEW_JOBLOG_PERMISSION, JobLog, id=job_pk)
+        job: JobLog = get_object_for_user(request.user, VIEW_JOBLOG_PERMISSION, JobLog, id=job_pk)
         check_custom_perm(request.user, "change", JobLog, job_pk)
-        job.cancel()
+
+        event = Event()
+        event.set_job_status(job.pk, JobStatus.ABORTED.value)
+        job.cancel(event)
 
         return Response(status=HTTP_200_OK)
 

@@ -1559,18 +1559,22 @@ class JobLog(ADCMModel):
 
     __error_code__ = "JOB_NOT_FOUND"
 
-    def cancel(self):
+    def cancel(self, event_queue: "cm.status_api.Event" = None):
         if not self.sub_action.allowed_to_terminate:
             raise AdcmEx("JOB_TERMINATION_ERROR", f"Job #{self.pk} can not be terminated")
+
         if self.pid == 0:  # not started yet
             self.status = JobStatus.ABORTED
             self.save()
-            return
         elif self.status not in (JobStatus.RUNNING, JobStatus.CREATED):
             raise AdcmEx(
                 "JOB_TERMINATION_ERROR", f"Can't terminate job #{self.pk}, pid: {self.pid} with status {self.status}"
             )
-        os.kill(self.pid, signal.SIGTERM)
+        else:
+            os.kill(self.pid, signal.SIGTERM)
+
+        if event_queue:
+            event_queue.send_state()
 
 
 class GroupCheckLog(ADCMModel):
