@@ -62,11 +62,7 @@ else:
     STATUS_SECRET_KEY = ""
     ANSIBLE_SECRET = ""
 
-if SECRET_KEY_FILE.is_file():
-    with open(SECRET_KEY_FILE, encoding=ENCODING_UTF_8) as f:
-        SECRET_KEY = f.read().strip()
-else:
-    SECRET_KEY = get_random_secret_key()
+SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
 
 if CONFIG_FILE.is_file():
     with open(CONFIG_FILE, encoding=ENCODING_UTF_8) as f:
@@ -78,7 +74,6 @@ DEBUG = False
 ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     "rbac",  # keep it above 'django.contrib.auth' in order to keep "createsuperuser" working
-    "django_generate_secret_key",
     "django_filters",
     "django.contrib.auth",
     "django.contrib.contenttypes",
