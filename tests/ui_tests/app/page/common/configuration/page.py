@@ -28,6 +28,7 @@ from tests.ui_tests.app.page.common.common_locators import (
 )
 from tests.ui_tests.app.page.common.configuration.fields import ConfigFieldsManipulator
 from tests.ui_tests.app.page.common.configuration.locators import CommonConfigMenu
+# pylint: disable=too-many-public-methods
 
 
 @dataclass
@@ -63,8 +64,8 @@ class CommonConfigMenuObj(BasePageObject):
         #  maybe here isn't a good place for it or we need a better check in config hell test
         try:
             self.wait_element_visible(CommonConfigMenu.config_row, timeout=120)
-        except TimeoutException:
-            raise AssertionError("Config menu fields don't appear in time")
+        except TimeoutException as exc:
+            raise AssertionError("Config menu fields don't appear in time") from exc
         return [
             self.find_child(r, CommonConfigMenu.ConfigRow.name, timeout=2).text.rstrip(":")
             for r in self.get_all_config_rows(displayed_only=displayed_only)
@@ -78,6 +79,10 @@ class CommonConfigMenuObj(BasePageObject):
             if self.find_child(row, CommonConfigMenu.ConfigRow.name).text == row_name:
                 return row
         raise AssertionError(f'Configuration field with name {display_name} was not found')
+
+    def config_rows_amount(self) -> int:
+        """Method to get amount of rows"""
+        return len(self.get_all_config_rows())
 
     def get_textbox_rows(self, timeout=2) -> List[WebElement]:
         """Get textbox elements from the page"""
@@ -122,7 +127,6 @@ class CommonConfigMenuObj(BasePageObject):
     @allure.step('Click on advanced button')
     def click_on_advanced(self):
         """Click on advanced button"""
-
         self.find_and_click(CommonConfigMenu.advanced_label)
 
     @property
@@ -147,15 +151,17 @@ class CommonConfigMenuObj(BasePageObject):
 
     def check_inputs_disabled(self, row: WebElement, is_password: bool = False):
         """Check that inputs in row are disabled"""
-
         row_locators = CommonConfigMenu.ConfigRow
         locator = row_locators.value if not is_password else row_locators.password
         for row_input in self.find_children(row, locator):
             assert row_input.get_attribute("disabled") == 'true', "Input should be disabled"
 
+    def check_history_btn_disabled(self):
+        """Method to check that history button is disabled"""
+        return self.find_element(self.locators.history_btn).get_attribute("disabled") == 'true'
+
     def activate_group_chbx(self, row: WebElement):
         """Activate group checkbox in row"""
-
         group_chbx = self.find_child(row, CommonConfigMenu.ConfigRow.group_chbx)
 
         def is_checked(chbx: WebElement):
@@ -263,11 +269,11 @@ class CommonConfigMenuObj(BasePageObject):
         self.find_child(row, CommonConfigMenu.ConfigRow.reset_btn).click()
 
     @allure.step('Type "{values}" into config field with few inputs')
-    def type_in_field_with_few_inputs(self, row: Union[WebElement, str], values: [str], clear: bool = False):
+    def type_in_field_with_few_inputs(self, row: Union[WebElement, str], values: [str | int], clear: bool = False):
         """
         Send keys to config list
         :param row: Config field row
-        :param value: keys to send
+        :param values: keys to send
         :param clear: clean input before sending keys or not
         """
 
@@ -632,9 +638,9 @@ class CommonConfigMenuObj(BasePageObject):
         with allure.step("Change value in json type"):
             self.type_in_field_with_few_inputs(row='json', values=['{}'], clear=True)
 
-    def is_element_read_only(self, row: WebElement) -> bool:
+    @staticmethod
+    def is_element_read_only(row: WebElement) -> bool:
         """Check if element is read-only by checking 'read-only' in class"""
-
         return 'read-only' in str(row.get_attribute("class"))
 
     @allure.step("Check row history on config page")
@@ -687,9 +693,9 @@ class CommonConfigMenuObj(BasePageObject):
     def get_config_title(self):
         return self.find_element(ObjectPageLocators.title).text
 
-    def is_element_editable(self, element: WebElement) -> bool:
+    @staticmethod
+    def is_element_editable(element: WebElement) -> bool:
         """Check if app-field element is read-only by checking 'read-only' class presence"""
-
         return 'read-only' not in str(element.get_attribute("class"))
 
 
