@@ -53,25 +53,28 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
   }
 
   applyFilters(): void {
-    const filters = this.filterForm.value;
+    const filters = Object.entries(this.filterForm.value).reduce((res, [filterKey,filterVal]) => {
+      if (filterVal === '' || filterVal === undefined) {
+        return res;
+      }
 
-    if (Object.keys(filters).filter((f) => {
-      if (filters[f] === '' || filters[f] === undefined) {
-        delete filters[f];
-        return false;
-      } else return true;
-    }).length === 0) {
+      if (this.filtersByType[filterKey] === 'datepicker' && filterVal['start'] && filterVal['end']) {
+        return {
+          ...res,
+          [`${filterKey}_after`]: filterVal['start'].toISOString(),
+          [`${filterKey}_before`]: filterVal['end'].toISOString()
+        }
+      }
+
+      return {
+        ...res,
+        [filterKey]: filterVal
+      }
+    }, {})
+
+    if (Object.keys(filters).length === 0 ) {
       this.filterParams$.next({});
       return;
-    }
-
-    if (this.filters.some((f) => f.filter_type === 'datepicker' && filters[f.filter_field]?.end)) {
-      Object.keys(filters).filter((f) => this.filtersByType[f] === 'datepicker').forEach((date) => {
-        filters[`${date}_after`] = filters[date].start.toISOString();
-        filters[`${date}_before`] = filters[date].end.toISOString();
-
-        delete filters[date];
-      })
     }
 
     this.filterParams$.next(filters);
