@@ -72,11 +72,6 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
       }
     }, {})
 
-    if (Object.keys(filters).length === 0 ) {
-      this.filterParams$.next({});
-      return;
-    }
-
     this.filterParams$.next(filters);
   }
 
