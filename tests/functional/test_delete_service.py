@@ -11,6 +11,7 @@
 # limitations under the License.
 
 """Tests for service delete method"""
+from time import sleep
 
 import allure
 import pytest
@@ -130,12 +131,15 @@ def test_service_delete_with_concerns(cluster: Cluster, sdk_client_fs: ADCMClien
         service_to_delete = cluster.service_add(name="with_component")
         cluster.hostcomponent_set((host, service_to_delete.component()))
         task = cluster.action().run()
+        # to avoid catching "termination is too early"
+        sleep(1.1)
         expect_no_api_error("delete service", operation=service_to_delete.delete)
         _wait_job_status(task, "aborted")
         _wait_all_tasks_succeed_or_aborted(sdk_client_fs, 3)
 
     with allure.step("Check service deletion is forbidden if it's already running"):
         service_long_deletion = cluster.service_add(name="with_long_remove")
+        service_to_delete = cluster.service_add(name="with_component")
         cluster.hostcomponent_set((host, service_to_delete.component()), (host, service_long_deletion.component()))
         expect_no_api_error("delete service 1st time", operation=service_long_deletion.delete)
         expect_api_error("delete service 2nd time", operation=service_long_deletion.delete, err_=SERVICE_DELETE_ERROR)

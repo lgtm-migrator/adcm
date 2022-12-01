@@ -17,4 +17,4 @@
 
   tasks:
     - pause:
-        seconds: 7
+        seconds: 10
