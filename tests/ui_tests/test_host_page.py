@@ -15,7 +15,6 @@
 """UI tests for /host page"""
 
 import os
-from time import sleep
 from typing import Tuple
 
 import allure
@@ -361,8 +360,8 @@ class TestHostListPage:
         with allure.step("Run action and check available actions changed"):
             page.run_action(0, INIT_ACTION)
             _ = [job.wait() for job in sdk_client_fs.job_list()]
-            # no adequate way to detect if action button is there (not !)
-            sleep(0.2)
+            page.header.wait_success_job_amount_from_header(1)
+            page.driver.refresh()
             assert page.get_disabled_action_names(0) == [
                 REINIT_ACTION
             ], f"Action {REINIT_ACTION} should be shown and disabled in new state"
