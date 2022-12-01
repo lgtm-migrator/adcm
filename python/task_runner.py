@@ -156,7 +156,7 @@ def run_task(task_id, args=None):
                 break
 
     if last_job_status == JobStatus.ABORTED:
-        finish_task(task, job, JobStatus.ABORTED)  # TODO: ERROR job unknown task status: aborted
+        finish_task(task, job, JobStatus.ABORTED)
     elif res == 0:
         finish_task(task, job, JobStatus.SUCCESS)
     else:
