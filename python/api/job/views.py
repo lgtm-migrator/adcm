@@ -166,7 +166,7 @@ class JobViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Generi
 
         return super().get_serializer_class()
 
-    # @audit  TODO
+    @audit
     @action(methods=["put"], detail=True)
     def cancel(self, request: Request, job_pk: int) -> Response:
         job: JobLog = get_object_for_user(request.user, VIEW_JOBLOG_PERMISSION, JobLog, id=job_pk)
