@@ -117,7 +117,7 @@ class TestJob(BaseTestCase):
         test_data = [
             [JobStatus.SUCCESS, "success", ["success"], ["success unset"]],
             [JobStatus.FAILED, "fail", ["fail"], ["fail unset"]],
-            [JobStatus.ABORTED, None, [], []],
+            [JobStatus.ABORTED, "fail", ["fail"], ["fail unset"]],
         ]
         for status, exp_state, exp_m_state_set, exp_m_state_unset in test_data:
             state, m_state_set, m_state_unset = get_state(action, job, status)
@@ -146,7 +146,7 @@ class TestJob(BaseTestCase):
         test_data = [
             [JobStatus.SUCCESS, "success", ["success"], ["success unset"]],
             [JobStatus.FAILED, "sub_action fail", ["fail"], ["fail unset"]],
-            [JobStatus.ABORTED, None, [], []],
+            [JobStatus.ABORTED, "sub_action fail", ["fail"], ["fail unset"]],
         ]
         for status, exp_state, exp_m_state_set, exp_m_state_unset in test_data:
             state, m_state_set, m_state_unset = get_state(action, job, status)
