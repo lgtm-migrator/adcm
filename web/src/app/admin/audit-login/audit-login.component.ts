@@ -95,7 +95,7 @@ export class AuditLoginComponent extends RbacEntityListDirective<RbacAuditLoginM
     super.ngOnInit();
 
     this.filterParams$.subscribe((params) => {
-      let filter_params = this.baseListDirective.listParams;
+      const filter_params = this.baseListDirective.listParams;
       if (filter_params) {
         filter_params['params'] = { ...params };
         this.baseListDirective.refresh(null, filter_params);

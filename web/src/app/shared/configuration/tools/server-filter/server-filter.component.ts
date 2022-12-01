@@ -33,7 +33,7 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
       this.filtersByType[i.filter_field] = i.filter_type;
     })
 
-    let listParam = localStorage.getItem('list:param');
+    const listParam = localStorage.getItem('list:param');
 
     if (listParam) {
       const json = JSON.parse(listParam);
@@ -131,8 +131,8 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
 
   manageDatepickerValue(json: Object, deleteMode?: boolean) {
     Object.keys(json[this.entity]).filter((name) => name.includes('_after') || name.includes('_before')).forEach((date) => {
-      let dateProp = date.replace(/_after|_before/gi, '');
-      let period = date.includes('_after') ? 'start' : 'end';
+      const dateProp = date.replace(/_after|_before/gi, '');
+      const period = date.includes('_after') ? 'start' : 'end';
 
       if (!deleteMode) {
         json[this.entity][dateProp] = {...json[this.entity][dateProp], [period]: new Date(json[this.entity][date])};
