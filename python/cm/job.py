@@ -71,6 +71,7 @@ from cm.models import (
     JobLog,
     JobStatus,
     LogStorage,
+    MaintenanceMode,
     ObjectType,
     Prototype,
     ServiceComponent,
@@ -78,7 +79,6 @@ from cm.models import (
     TaskLog,
     Upgrade,
     get_object_cluster,
-    MaintenanceMode
 )
 from cm.status_api import post_event
 from cm.variant import process_variant
@@ -841,15 +841,15 @@ def finish_task(task: TaskLog, job: Optional[JobLog], status: str):
         operation_name = f"{action.display_name} action completed"
 
     if (
-            action.name in {settings.ADCM_TURN_ON_MM_ACTION_NAME, settings.ADCM_HOST_TURN_ON_MM_ACTION_NAME}
-            and obj.maintenance_mode == MaintenanceMode.CHANGING
+        action.name in {settings.ADCM_TURN_ON_MM_ACTION_NAME, settings.ADCM_HOST_TURN_ON_MM_ACTION_NAME}
+        and obj.maintenance_mode == MaintenanceMode.CHANGING
     ):
         obj.maintenance_mode = MaintenanceMode.OFF
         obj.save()
 
     if (
-            action.name in {settings.ADCM_TURN_OFF_MM_ACTION_NAME, settings.ADCM_HOST_TURN_OFF_MM_ACTION_NAME}
-            and obj.maintenance_mode == MaintenanceMode.CHANGING
+        action.name in {settings.ADCM_TURN_OFF_MM_ACTION_NAME, settings.ADCM_HOST_TURN_OFF_MM_ACTION_NAME}
+        and obj.maintenance_mode == MaintenanceMode.CHANGING
     ):
         obj.maintenance_mode = MaintenanceMode.ON
         obj.save()
