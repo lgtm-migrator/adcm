@@ -11,7 +11,6 @@
 # limitations under the License.
 
 from pathlib import Path
-from typing import Generator
 
 import yaml
 from django.conf import settings
@@ -136,20 +135,23 @@ class StackActionDetailSerializer(StackActionSerializer):
     subs = SerializerMethodField()
     disabling_cause = CharField(read_only=True)
 
-    def get_jinja_config(self, action: Action) -> Generator:
+    def get_jinja_config(self, action: Action) -> list[PrototypeConfig]:
         inventory_data = get_inventory_data(obj=self.context["objects"][action.prototype_type], action=action)
         jinja_conf_file = Path(settings.BUNDLE_DIR, action.prototype.bundle.hash, action.config_jinja)
         template = Template(jinja_conf_file.read_text(encoding=settings.ENCODING_UTF_8))
         data_yaml = template.render(inventory_data["all"]["children"]["CLUSTER"]["vars"])
         data = yaml.load(stream=data_yaml, Loader=SafeLoader)
 
-        return (
+        return [
             PrototypeConfig.objects.update_or_create(prototype=action.prototype, action=action, **item)[0]
             for item in data
-        )
+        ]
 
     def get_config(self, action: Action) -> dict:
         if action.config_jinja:
+            if not self.context.get("objects"):
+                return {}
+
             action_config = self.get_jinja_config(action=action)
         else:
             action_config = PrototypeConfig.objects.filter(prototype=action.prototype, action=action).order_by("id")

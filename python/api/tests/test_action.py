@@ -141,14 +141,25 @@ class TestPrototypeAPI(BaseTestCase):
         bundle = self.upload_and_load_bundle(
             path=Path(
                 settings.BASE_DIR,
-                "python/api/tests/files/bundle_test_action_with_jinja_conf.tar",
+                "python/api/tests/files/test_actions_data.tar",
             )
         )
 
-        cluster = Cluster.objects.create(name="test_cluster", prototype=Prototype.objects.get(bundle=bundle))
-        action = Action.objects.get(prototype=Prototype.objects.get(bundle=bundle))
+        cluster_prototype = Prototype.objects.get(bundle=bundle, type="cluster")
+        cluster = Cluster.objects.create(name="test_cluster", prototype=cluster_prototype)
+        action = Action.objects.get(prototype=cluster_prototype)
+        action.state_available = "any"
+        action.save(update_fields=["state_available"])
         response: Response = self.client.get(
             path=reverse("object-action-details", kwargs={"cluster_id": cluster.pk, "action_id": action.pk}),
         )
 
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertTrue(response.data["config"])
+
+        response: Response = self.client.get(
+            path=f'{reverse("object-action", kwargs={"cluster_id": cluster.pk})}?view=interface',
+        )
+
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertTrue(response.data[0]["config"])
