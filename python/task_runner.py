@@ -129,7 +129,9 @@ def run_task(task_id, args=None):
     for job in jobs:
         job.refresh_from_db()
         last_job_status = job.status
-        if (args == "restart" and job.status == JobStatus.SUCCESS) or job.status == JobStatus.ABORTED:
+        if (args == "restart" and job.status == JobStatus.SUCCESS) or (
+            args != "restart" and job.status == JobStatus.ABORTED
+        ):
             logger.info('skip job #%s status "%s" of task #%s', job.id, job.status, task_id)
             continue
 
