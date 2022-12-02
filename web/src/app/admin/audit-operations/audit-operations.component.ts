@@ -164,6 +164,7 @@ export class AuditOperationsComponent extends RbacEntityListDirective<RbacAuditO
       const filter_params = this.baseListDirective.listParams;
       if (filter_params) {
         filter_params['params'] = { ...params };
+        this.baseListDirective.checkParam(filter_params);
         this.baseListDirective.refresh(null, filter_params);
       }
     })
