@@ -146,10 +146,20 @@ class TestPrototypeAPI(BaseTestCase):
         )
 
         cluster_prototype = Prototype.objects.get(bundle=bundle, type="cluster")
-        cluster = Cluster.objects.create(name="test_cluster", prototype=cluster_prototype)
+        cluster_response: Response = self.client.post(
+            path=reverse("cluster"),
+            data={"name": "test_cluster", "prototype_id": cluster_prototype.pk},
+        )
+        cluster = Cluster.objects.get(pk=cluster_response.data["id"])
+
+        cluster_config = ConfigLog.objects.get(pk=cluster.config.current)
+        cluster_config.config["flag"] = "complex"
+        cluster_config.save(update_fields={"config"})
+
         action = Action.objects.get(prototype=cluster_prototype)
         action.state_available = "any"
         action.save(update_fields=["state_available"])
+
         response: Response = self.client.get(
             path=reverse("object-action-details", kwargs={"cluster_id": cluster.pk, "action_id": action.pk}),
         )
