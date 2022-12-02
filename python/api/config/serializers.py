@@ -32,6 +32,7 @@ from cm.adcm_config import (
     ui_config,
 )
 from cm.api import update_obj_config
+from cm.models import PrototypeConfig
 
 
 class ConfigVersionURL(HyperlinkedIdentityField):
@@ -82,7 +83,7 @@ class ConfigHistorySerializer(ObjectConfigSerializer):
 class ConfigSerializer(EmptySerializer):
     name = CharField()
     description = CharField(required=False)
-    display_name = CharField(required=False)
+    display_name = SerializerMethodField()
     subname = CharField()
     default = SerializerMethodField(method_name="get_default_field")
     value = SerializerMethodField()
@@ -92,10 +93,17 @@ class ConfigSerializer(EmptySerializer):
     required = BooleanField()
 
     @staticmethod
-    def get_default_field(obj):
+    def get_display_name(obj: PrototypeConfig) -> str:
+        if not obj.display_name:
+            return obj.name
+
+        return obj.display_name
+
+    @staticmethod
+    def get_default_field(obj: PrototypeConfig):
         return get_default(obj)
 
-    def get_value(self, obj):  # pylint: disable=arguments-renamed
+    def get_value(self, obj: PrototypeConfig):  # pylint: disable=arguments-renamed
         proto = self.context.get("prototype", None)
 
         return get_default(obj, proto)
