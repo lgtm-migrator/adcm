@@ -99,6 +99,7 @@ class TestServiceAPI(BaseTestCase):
         self.service.refresh_from_db()
 
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data["maintenance_mode"], MaintenanceMode.ON)
         self.assertEqual(self.service.maintenance_mode, MaintenanceMode.ON)
 
     def test_change_maintenance_mode_on_with_action_success(self):
@@ -113,12 +114,13 @@ class TestServiceAPI(BaseTestCase):
         self.service.refresh_from_db()
 
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data["maintenance_mode"], MaintenanceMode.CHANGING)
         self.assertEqual(self.service.maintenance_mode, MaintenanceMode.CHANGING)
         start_task_mock.assert_called_once_with(
             action=action, obj=self.service, conf={}, attr={}, hc=[], hosts=[], verbose=False
         )
 
-    def test_change_maintenance_mode_on_from_on_with_action_success(self):
+    def test_change_maintenance_mode_on_from_on_with_action_fail(self):
         self.service.maintenance_mode = MaintenanceMode.ON
         self.service.save()
 
@@ -130,7 +132,7 @@ class TestServiceAPI(BaseTestCase):
 
         self.service.refresh_from_db()
 
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
         self.assertEqual(self.service.maintenance_mode, MaintenanceMode.ON)
         start_task_mock.assert_not_called()
 
@@ -146,6 +148,7 @@ class TestServiceAPI(BaseTestCase):
         self.service.refresh_from_db()
 
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data["maintenance_mode"], MaintenanceMode.OFF)
         self.assertEqual(self.service.maintenance_mode, MaintenanceMode.OFF)
 
     def test_change_maintenance_mode_off_with_action_success(self):
@@ -162,12 +165,13 @@ class TestServiceAPI(BaseTestCase):
         self.service.refresh_from_db()
 
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data["maintenance_mode"], MaintenanceMode.CHANGING)
         self.assertEqual(self.service.maintenance_mode, MaintenanceMode.CHANGING)
         start_task_mock.assert_called_once_with(
             action=action, obj=self.service, conf={}, attr={}, hc=[], hosts=[], verbose=False
         )
 
-    def test_change_maintenance_mode_off_to_off_with_action_success(self):
+    def test_change_maintenance_mode_off_to_off_with_action_fail(self):
         self.service.maintenance_mode = MaintenanceMode.OFF
         self.service.save()
 
@@ -179,7 +183,7 @@ class TestServiceAPI(BaseTestCase):
 
         self.service.refresh_from_db()
 
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
         self.assertEqual(self.service.maintenance_mode, MaintenanceMode.OFF)
         start_task_mock.assert_not_called()
 
@@ -193,7 +197,6 @@ class TestServiceAPI(BaseTestCase):
         )
 
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
-        self.assertEqual(response.data["error"], "Service maintenance mode is changing now")
 
         response: Response = self.client.post(
             path=reverse("service-maintenance-mode", kwargs={"service_id": self.service.pk}),
@@ -201,7 +204,6 @@ class TestServiceAPI(BaseTestCase):
         )
 
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
-        self.assertEqual(response.data["error"], "Service maintenance mode is changing now")
 
     def test_delete_without_action(self):
         response: Response = self.client.delete(path=reverse("service-details", kwargs={"service_id": self.service.pk}))

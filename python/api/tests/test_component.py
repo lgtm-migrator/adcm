@@ -72,6 +72,7 @@ class TestComponentAPI(BaseTestCase):
         self.component.refresh_from_db()
 
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data["maintenance_mode"], MaintenanceMode.ON)
         self.assertEqual(self.component.maintenance_mode, MaintenanceMode.ON)
 
     def test_change_maintenance_mode_on_no_service_issue_success(self):
@@ -112,6 +113,7 @@ class TestComponentAPI(BaseTestCase):
         service.refresh_from_db()
 
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data["maintenance_mode"], MaintenanceMode.ON)
         self.assertEqual(component_2.maintenance_mode, MaintenanceMode.ON)
         self.assertFalse(service.concerns.exists())
 
@@ -127,12 +129,13 @@ class TestComponentAPI(BaseTestCase):
         self.component.refresh_from_db()
 
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data["maintenance_mode"], MaintenanceMode.CHANGING)
         self.assertEqual(self.component.maintenance_mode, MaintenanceMode.CHANGING)
         start_task_mock.assert_called_once_with(
             action=action, obj=self.component, conf={}, attr={}, hc=[], hosts=[], verbose=False
         )
 
-    def test_change_maintenance_mode_on_from_on_with_action_success(self):
+    def test_change_maintenance_mode_on_from_on_with_action_fail(self):
         self.component.maintenance_mode = MaintenanceMode.ON
         self.component.save()
 
@@ -144,7 +147,7 @@ class TestComponentAPI(BaseTestCase):
 
         self.component.refresh_from_db()
 
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
         self.assertEqual(self.component.maintenance_mode, MaintenanceMode.ON)
         start_task_mock.assert_not_called()
 
@@ -160,6 +163,7 @@ class TestComponentAPI(BaseTestCase):
         self.component.refresh_from_db()
 
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data["maintenance_mode"], MaintenanceMode.OFF)
         self.assertEqual(self.component.maintenance_mode, MaintenanceMode.OFF)
 
     def test_change_maintenance_mode_off_with_action_success(self):
@@ -176,12 +180,13 @@ class TestComponentAPI(BaseTestCase):
         self.component.refresh_from_db()
 
         self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data["maintenance_mode"], MaintenanceMode.CHANGING)
         self.assertEqual(self.component.maintenance_mode, MaintenanceMode.CHANGING)
         start_task_mock.assert_called_once_with(
             action=action, obj=self.component, conf={}, attr={}, hc=[], hosts=[], verbose=False
         )
 
-    def test_change_maintenance_mode_off_to_off_with_action_success(self):
+    def test_change_maintenance_mode_off_to_off_with_action_fail(self):
         self.component.maintenance_mode = MaintenanceMode.OFF
         self.component.save()
 
@@ -193,7 +198,7 @@ class TestComponentAPI(BaseTestCase):
 
         self.component.refresh_from_db()
 
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.status_code, HTTP_409_CONFLICT)
         self.assertEqual(self.component.maintenance_mode, MaintenanceMode.OFF)
         start_task_mock.assert_not_called()
 
@@ -207,7 +212,6 @@ class TestComponentAPI(BaseTestCase):
         )
 
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
-        self.assertEqual(response.data["error"], "Component maintenance mode is changing now")
 
         response: Response = self.client.post(
             path=reverse("component-maintenance-mode", kwargs={"component_id": self.component.pk}),
@@ -215,4 +219,3 @@ class TestComponentAPI(BaseTestCase):
         )
 
         self.assertEqual(response.status_code, HTTP_409_CONFLICT)
-        self.assertEqual(response.data["error"], "Component maintenance mode is changing now")
