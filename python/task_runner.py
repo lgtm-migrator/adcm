@@ -79,8 +79,6 @@ def run_job(task: TaskLog, job: JobLog, err_file: TextIO):
 
     try:
         proc = subprocess.Popen(cmd, stderr=err_file)
-        job.pid = proc.pid
-        job.save()
         res = proc.wait()
         return res
 
