@@ -52,6 +52,15 @@ class TestServiceAPI(BaseTestCase):
             display_name="test_service",
         )
         self.service = ClusterObject.objects.create(prototype=self.service_prototype, cluster=self.cluster)
+        self.component = ServiceComponent.objects.create(
+            prototype=Prototype.objects.create(
+                bundle=self.bundle,
+                type="component",
+                display_name="test_component",
+            ),
+            cluster=self.cluster,
+            service=self.service,
+        )
 
     def get_host(self, bundle_path: str):
         provider_bundle = self.upload_and_load_bundle(
@@ -103,6 +112,12 @@ class TestServiceAPI(BaseTestCase):
         self.assertEqual(self.service.maintenance_mode, MaintenanceMode.ON)
 
     def test_change_maintenance_mode_on_with_action_success(self):
+        HostComponent.objects.create(
+            cluster=self.cluster,
+            host=self.get_host(bundle_path="python/api/tests/files/bundle_test_provider.tar"),
+            service=self.service,
+            component=self.component,
+        )
         action = Action.objects.create(prototype=self.service.prototype, name=settings.ADCM_TURN_ON_MM_ACTION_NAME)
 
         with patch("api.utils.start_task") as start_task_mock:
@@ -154,6 +169,12 @@ class TestServiceAPI(BaseTestCase):
     def test_change_maintenance_mode_off_with_action_success(self):
         self.service.maintenance_mode = MaintenanceMode.ON
         self.service.save()
+        HostComponent.objects.create(
+            cluster=self.cluster,
+            host=self.get_host(bundle_path="python/api/tests/files/bundle_test_provider.tar"),
+            service=self.service,
+            component=self.component,
+        )
         action = Action.objects.create(prototype=self.service.prototype, name=settings.ADCM_TURN_OFF_MM_ACTION_NAME)
 
         with patch("api.utils.start_task") as start_task_mock:

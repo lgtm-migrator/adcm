@@ -24,6 +24,8 @@ from cm.models import (
     Bundle,
     Cluster,
     ClusterObject,
+    Host,
+    HostComponent,
     MaintenanceMode,
     Prototype,
     ServiceComponent,
@@ -36,22 +38,24 @@ class TestComponentAPI(BaseTestCase):
 
         bundle = Bundle.objects.create()
         cluster_prototype = Prototype.objects.create(bundle=bundle, type="cluster")
-        cluster = Cluster.objects.create(prototype=cluster_prototype, name="test_cluster")
+        self.cluster = Cluster.objects.create(prototype=cluster_prototype, name="test_cluster")
         service_prototype = Prototype.objects.create(
             bundle=bundle,
             type="service",
             display_name="test_service",
         )
-        service = ClusterObject.objects.create(prototype=service_prototype, cluster=cluster)
-        component_prototype = Prototype.objects.create(
-            bundle=bundle,
-            type="component",
-            display_name="test_component",
-        )
+        self.service = ClusterObject.objects.create(prototype=service_prototype, cluster=self.cluster)
         self.component = ServiceComponent.objects.create(
-            prototype=component_prototype,
-            cluster=cluster,
-            service=service,
+            prototype=Prototype.objects.create(
+                bundle=bundle,
+                type="component",
+                display_name="test_component",
+            ),
+            cluster=self.cluster,
+            service=self.service,
+        )
+        self.host = Host.objects.create(
+            fqdn="test-host", prototype=Prototype.objects.create(bundle=bundle, type="host")
         )
 
     def test_change_maintenance_mode_wrong_name_fail(self):
@@ -118,6 +122,9 @@ class TestComponentAPI(BaseTestCase):
         self.assertFalse(service.concerns.exists())
 
     def test_change_maintenance_mode_on_with_action_success(self):
+        HostComponent.objects.create(
+            cluster=self.cluster, host=self.host, service=self.service, component=self.component
+        )
         action = Action.objects.create(prototype=self.component.prototype, name=settings.ADCM_TURN_ON_MM_ACTION_NAME)
 
         with patch("api.utils.start_task") as start_task_mock:
@@ -169,6 +176,9 @@ class TestComponentAPI(BaseTestCase):
     def test_change_maintenance_mode_off_with_action_success(self):
         self.component.maintenance_mode = MaintenanceMode.ON
         self.component.save()
+        HostComponent.objects.create(
+            cluster=self.cluster, host=self.host, service=self.service, component=self.component
+        )
         action = Action.objects.create(prototype=self.component.prototype, name=settings.ADCM_TURN_OFF_MM_ACTION_NAME)
 
         with patch("api.utils.start_task") as start_task_mock:
