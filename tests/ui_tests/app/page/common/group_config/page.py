@@ -31,7 +31,7 @@ class CommonGroupConfigMenu(BasePageObject):
 
     def is_customization_chbx_disabled(self, row: WebElement) -> bool:
         """Check if customization checkbox is disabled"""
-        return 'mat-checkbox-disabled' in str(
+        return "mat-checkbox-disabled" in str(
             self.find_child(row, self.locators.customization_chbx).get_attribute("class")
         )
 
@@ -48,7 +48,7 @@ class CommonGroupConfigMenu(BasePageObject):
     def is_customization_chbx_checked(self, row: WebElement) -> bool:
         """Check if customization checkbox is checked"""
 
-        return 'mat-checkbox-checked' in str(
+        return "mat-checkbox-checked" in str(
             self.find_child(row, self.locators.customization_chbx).get_attribute("class")
         )
 
@@ -72,7 +72,7 @@ class CommonGroupConfigMenu(BasePageObject):
         except TimeoutException:
             return []
 
-    @allure.step('Check that there are no rows on group config page')
+    @allure.step("Check that there are no rows on group config page")
     def check_no_rows(self):
         assert len(self.get_all_group_config_rows(timeout=1)) == 0, "There should not be any rows"
 
@@ -86,17 +86,17 @@ class CommonGroupConfigMenu(BasePageObject):
         """
         field_row = row if isinstance(row, WebElement) else self.get_config_row(display_name=row)
         self.scroll_to(field_row)
-        for id, value in enumerate(values):
+        for value_id, value in enumerate(values):
             try:
-                field = self.find_children(field_row, self.locators.input)[id]
+                field = self.find_children(field_row, self.locators.input)[value_id]
             except IndexError:
                 self.find_child(field_row, self.locators.add_item_btn).click()
                 self.wait_element_visible(self.find_child(field_row, self.locators.input))
-                field = self.find_children(field_row, self.locators.input)[id]
+                field = self.find_children(field_row, self.locators.input)[value_id]
             if clear:
                 field.clear()
-            self.find_children(field_row, self.locators.input)[id].click()
-            self.find_children(field_row, self.locators.input)[id].send_keys(value)
+            self.find_children(field_row, self.locators.input)[value_id].click()
+            self.find_children(field_row, self.locators.input)[value_id].send_keys(value)
 
     def get_config_row(self, display_name: str) -> WebElement:
         """Return group config field row with provided display name"""
@@ -104,4 +104,4 @@ class CommonGroupConfigMenu(BasePageObject):
         for row in self.get_all_group_config_rows():
             if self.find_child(row, GroupConfigLocators.group_row.name).text == row_name:
                 return row
-        raise AssertionError(f'Configuration field with name {display_name} was not found')
+        raise AssertionError(f"Configuration field with name {display_name} was not found")
