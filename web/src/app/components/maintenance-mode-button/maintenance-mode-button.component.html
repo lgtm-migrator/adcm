@@ -1,4 +1,4 @@
-<div [matTooltip]="status?.tooltip" (click)="preventIfDisabled($event)">
+<div [matTooltip]="!isMaintenanceModeAvailable ? mminaTooltip : status?.tooltip" (click)="preventIfDisabled($event)">
   <button
     mat-icon-button
     class="mm-button"

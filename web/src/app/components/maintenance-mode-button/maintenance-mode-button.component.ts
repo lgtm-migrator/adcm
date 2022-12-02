@@ -20,6 +20,7 @@ export interface Status {
   styleUrls: ['./maintenance-mode-button.component.scss']
 })
 export class MaintenanceModeButtonComponent<T> implements AdwpCellComponent<T> {
+  mminaTooltip = 'Maintenance mode is not available';
   statuses: { [key in StatusType]: Status; } = {
     [StatusType.On]: {
       isButtonActive: true,
