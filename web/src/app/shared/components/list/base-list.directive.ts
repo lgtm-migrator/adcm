@@ -136,7 +136,7 @@ export class BaseListDirective {
   checkParam(p: ParamMap): boolean {
     const listParamStr = localStorage.getItem('list:param');
 
-    if (!p.keys.length && listParamStr) {
+    if (!p?.keys?.length && listParamStr) {
       const json = JSON.parse(listParamStr);
 
       if (json[this.typeName]) {

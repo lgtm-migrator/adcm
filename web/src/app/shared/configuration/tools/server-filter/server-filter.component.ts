@@ -114,7 +114,6 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
         delete json[this.entity][filter.filter_field];
 
         this.manageDatepickerValue(json, true);
-        this.manageUrl(json);
 
         if (Object.keys(json[this.entity]).length === 0) {
           delete json[this.entity];
@@ -138,26 +137,5 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
 
       delete json[this.entity][date];
     })
-  }
-
-  manageUrl(json) {
-    let queryArray = window.location.href.split(';');
-    const base = queryArray.shift();
-
-    if (Object.keys(json[this.entity]).length === 0) {
-      window.history.pushState(null, null, base);
-      return;
-    }
-
-    queryArray = queryArray.filter((query) => {
-      return Object.keys(json[this.entity]).some((filter) => query.includes(filter));
-    });
-
-    if (queryArray.length > 0) {
-      queryArray.unshift(base);
-      const query = queryArray.join(';');
-
-      window.history.pushState(null, null, query);
-    } else window.history.pushState(null, null, base);
   }
 }
