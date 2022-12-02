@@ -151,7 +151,7 @@ def run_task(task_id, args=None):
             if job.status != JobStatus.ABORTED:
                 break
 
-    if last_job_status == JobStatus.ABORTED:
+    if last_job_status == JobStatus.ABORTED and args != "restart":
         finish_task(task, job, JobStatus.ABORTED)
     elif res == 0:
         finish_task(task, job, JobStatus.SUCCESS)
