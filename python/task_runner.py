@@ -18,7 +18,6 @@ import signal
 import subprocess
 import sys
 import time
-from typing import TextIO
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
