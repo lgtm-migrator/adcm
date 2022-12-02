@@ -121,14 +121,14 @@
       type: string
       required: false
       default: string
-      read_only: any
+      writable: any
 
     - name: structure
       type: structure
       required: false
       yspec: ./schema.yaml
       description: Test description structure
-      writable: any
+      read_only: any
 
 # service config schema_dict
 - name: service_config_schema_dict
