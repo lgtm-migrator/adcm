@@ -65,15 +65,13 @@ def terminate_task(signum, frame):
 signal.signal(signal.SIGTERM, terminate_task)
 
 
-def run_job(task: TaskLog, job: JobLog, err_file: TextIO):
-    task.refresh_from_db()
-    job.refresh_from_db()
-    logger.debug("task run job #%s of task #%s", job.pk, task.pk)
+def run_job(task_id, job_id, err_file):
+    logger.debug("task run job #%s of task #%s", job_id, task_id)
     cmd = [
         "/adcm/python/job_venv_wrapper.sh",
-        task.action.venv,
+        TaskLog.objects.get(id=task_id).action.venv,
         str(settings.CODE_DIR / "job_runner.py"),
-        str(job.pk),
+        str(job_id),
     ]
     logger.info("task run job cmd: %s", " ".join(cmd))
 
@@ -81,9 +79,8 @@ def run_job(task: TaskLog, job: JobLog, err_file: TextIO):
         proc = subprocess.Popen(cmd, stderr=err_file)
         res = proc.wait()
         return res
-
     except Exception:  # pylint: disable=broad-except
-        logger.error("exception running job %s", job.pk)
+        logger.error("exception running job %s", job_id)
         return 1
 
 
@@ -137,7 +134,7 @@ def run_task(task_id, args=None):
         re_prepare_job(task, job)
         job.start_date = timezone.now()
         job.save()
-        res = run_job(task, job, err_file)
+        res = run_job(task.id, job.id, err_file)
         set_log_body(job)
 
         # For multi jobs task object state and/or config can be changed by adcm plugins
