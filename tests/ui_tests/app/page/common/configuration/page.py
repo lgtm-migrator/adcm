@@ -28,6 +28,7 @@ from tests.ui_tests.app.page.common.common_locators import (
 )
 from tests.ui_tests.app.page.common.configuration.fields import ConfigFieldsManipulator
 from tests.ui_tests.app.page.common.configuration.locators import CommonConfigMenu
+
 # pylint: disable=too-many-public-methods
 
 
