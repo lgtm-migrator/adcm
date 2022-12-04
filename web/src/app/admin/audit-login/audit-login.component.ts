@@ -96,9 +96,13 @@ export class AuditLoginComponent extends RbacEntityListDirective<RbacAuditLoginM
 
     this.filterParams$.subscribe((params) => {
       const filter_params = this.baseListDirective.listParams;
-      if (filter_params) {
+
+      if (filter_params && filter_params.keys.length > 0) {
         filter_params['params'] = { ...params };
-        this.baseListDirective.refresh(null, filter_params);
+        this.router.navigate(['./', filter_params['params']], {
+          relativeTo: this.route,
+          replaceUrl: true,
+        });
       }
     })
   }
