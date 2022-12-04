@@ -110,7 +110,7 @@ export class UsersComponent extends RbacEntityListDirective<RbacUserModel> imple
     this.filterParams$.subscribe((params) => {
       const filter_params = this.baseListDirective.listParams;
 
-      if (filter_params && filter_params.keys.length > 0) {
+      if (filter_params) {
         filter_params['params'] = { ...params };
         this.router.navigate(['./', filter_params['params']], {
           relativeTo: this.route,

@@ -53,7 +53,7 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
   }
 
   applyFilters(): void {
-    const filters = Object.entries(this.filterForm.value).reduce((res, [filterKey,filterVal]) => {
+    const filters = Object.entries(this.filterForm.value).reduce((res, [filterKey, filterVal]) => {
       if (filterVal === '' || filterVal === undefined) {
         return res;
       }
@@ -72,13 +72,14 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
       }
     }, {})
 
+    this.localStorageUpdate(filters);
     this.filterParams$.next(filters);
   }
 
   toggleFilters(filter): void {
     if (this.activeFilters.includes(filter?.id)) {
       this.activeFilters = this.activeFilters.filter((f) => f !== filter?.id);
-      this.localStorageManaging(filter);
+      this.localStorageCleaning(filter);
       this.filterForm.removeControl(filter?.filter_field);
     } else if (filter) {
       this.activeFilters.push(filter?.id);
@@ -104,7 +105,7 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
     this.applyFilters();
   }
 
-  localStorageManaging(filter): void {
+  localStorageCleaning(filter): void {
     const listParamStr = localStorage.getItem('list:param');
 
     if (listParamStr) {
@@ -124,6 +125,21 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
         localStorage.removeItem('list:param');
       } else localStorage.setItem('list:param', JSON.stringify(json));
     }
+  }
+
+  localStorageUpdate(filters) {
+    const listParamStr = localStorage.getItem('list:param');
+    const json = listParamStr ? JSON.parse(listParamStr) : null;
+
+    let listParam = {
+      ...json,
+      [this.entity]: {
+        ...json?.[this.entity],
+        ...filters,
+      }
+    }
+
+    localStorage.setItem('list:param', JSON.stringify(listParam));
   }
 
   manageDatepickerValue(json: Object, deleteMode?: boolean) {

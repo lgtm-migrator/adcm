@@ -179,6 +179,7 @@ export abstract class ListDirective extends BaseDirective implements OnInit, OnD
     const ls = localStorage.getItem('list:param');
     let listParam = ls ? JSON.parse(ls) : null;
     listParam = {
+      ...listParam,
       [this.type]: {
         ...listParam?.[this.type],
         limit: String(pageEvent.pageSize),
