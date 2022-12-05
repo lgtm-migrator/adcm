@@ -81,8 +81,7 @@ class CommonConfigMenuObj(BasePageObject):
                 return row
         raise AssertionError(f"Configuration field with name {display_name} was not found")
 
-    def config_rows_amount(self) -> int:
-        """Method to get amount of rows"""
+    def rows_amount(self) -> int:
         return len(self.get_all_config_rows())
 
     def get_textbox_rows(self, timeout=2) -> List[WebElement]:
@@ -157,8 +156,7 @@ class CommonConfigMenuObj(BasePageObject):
         for row_input in self.find_children(row, locator):
             assert row_input.get_attribute("disabled") == "true", "Input should be disabled"
 
-    def check_history_btn_disabled(self):
-        """Method to check that history button is disabled"""
+    def is_history_disabled(self):
         return self.find_element(self.locators.history_btn).get_attribute("disabled") == "true"
 
     def activate_group_chbx(self, row: WebElement):
@@ -270,7 +268,7 @@ class CommonConfigMenuObj(BasePageObject):
         self.find_child(row, CommonConfigMenu.ConfigRow.reset_btn).click()
 
     @allure.step('Type "{values}" into config field with few inputs')
-    def type_in_field_with_few_inputs(self, row: Union[WebElement, str], values: [str | int], clear: bool = False):
+    def type_in_field_with_few_inputs(self, row: [WebElement | str], values: [str | int], clear: bool = False):
         """
         Send keys to config list
         :param row: Config field row

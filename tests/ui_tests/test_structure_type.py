@@ -12,12 +12,10 @@
 
 """Test designed to check config save with different config params"""
 
-import os
-
 import allure
 import pytest
 from adcm_client.objects import ADCMClient, Cluster, Service
-from adcm_pytest_plugin import utils
+from adcm_pytest_plugin.utils import get_data_dir
 from tests.ui_tests.app.page.cluster.page import ClusterGroupConfigConfig
 from tests.ui_tests.app.page.service.page import ServiceConfigPage
 from tests.ui_tests.test_cluster_list_page import CLUSTER_NAME
@@ -28,7 +26,7 @@ CONFIG_DIR = "config_save"
 @allure.step("Upload cluster bundle")
 def cluster_bundle(sdk_client_fs: ADCMClient) -> Cluster:
     """Upload cluster bundle and create cluster"""
-    bundle = sdk_client_fs.upload_from_fs(os.path.join(utils.get_data_dir(__file__), CONFIG_DIR))
+    bundle = sdk_client_fs.upload_from_fs(get_data_dir(__file__, CONFIG_DIR))
     return bundle.cluster_create(name=CLUSTER_NAME)
 
 
@@ -59,6 +57,13 @@ class TestServiceConfigSave:
         assert not config.is_popup_presented_on_page(), "No popup should be shown after save"
         config.driver.refresh()
 
+    @staticmethod
+    def _check_read_only_params(config_page):
+        """Method to check read only state of params"""
+        string_row, structure_row, *_ = config_page.config.get_all_config_rows()
+        assert not config_page.config.is_element_read_only(string_row), "Config param must be writable"
+        assert config_page.config.is_element_read_only(structure_row), "Config param must be read_only"
+
     def check_invisible_params(self, service: Service, parameters_amount: int) -> None:
         """Method to check invisible groups in config"""
         config = service.config()
@@ -69,21 +74,13 @@ class TestServiceConfigSave:
     def check_advanced_params(self, config_page):
         """Method to check advanced params in config"""
         assert (
-            config_page.config.config_rows_amount() == self.CONFIG_ADVANCED_PARAM_AMOUNT
+            config_page.config.rows_amount() == self.CONFIG_ADVANCED_PARAM_AMOUNT
         ), "Advanced params should be present only when 'Advanced' is enabled"
         config_page.config.click_on_advanced()
         assert (
-            config_page.config.config_rows_amount() == self.CONFIG_PARAM_AMOUNT
+            config_page.config.rows_amount() == self.CONFIG_PARAM_AMOUNT
         ), "All params should be present when 'Advanced' is enabled"
         config_page.config.click_on_advanced()
-
-    @staticmethod
-    def _check_read_only_params(config_page):
-        """Method to check read only state of params"""
-        string_row = config_page.config.get_all_config_rows()[0]
-        structure_row = config_page.config.get_all_config_rows()[1]
-        assert not config_page.config.is_element_read_only(string_row), "Config param must be writable"
-        assert config_page.config.is_element_read_only(structure_row), "Config param must be read_only"
 
     def test_config_save(self, app_fs, sdk_client_fs):
         """Test to check config save with default params"""
@@ -120,7 +117,7 @@ class TestServiceConfigSave:
             service_config_page.wait_page_is_opened()
             service_config_page.config.set_description(self.CONFIG_NAME_NEW)
             self._save_config_and_refresh(service_config_page)
-            service_config_page.config.check_history_btn_disabled()
+            service_config_page.config.is_history_disabled()
 
         with allure.step("Add params to empty config and save"):
             service_config_page.config.click_add_item_btn_in_row(self.STRUCTURE_ROW_NAME)
@@ -254,8 +251,7 @@ class TestServiceConfigSave:
 
         with allure.step("Check config read_only options after save"):
             self._check_read_only_params(service_config_page)
-
-            string_row = service_config_page.config.get_all_config_rows()[0]
+            string_row, *_ = service_config_page.config.get_all_config_rows()
             service_config_page.config.type_in_field_with_few_inputs(
                 string_row, [self.CHANGE_STRUCTURE_COUNTRY], clear=True
             )
@@ -271,7 +267,7 @@ class TestServiceConfigSave:
             cluster_group_config_page.wait_page_is_opened()
 
         with allure.step("Change writable param and click save button"):
-            string_row = cluster_group_config_page.group_config.get_all_group_config_rows()[0]
+            string_row, *_ = service_config_page.config.get_all_config_rows()
             cluster_group_config_page.group_config.click_on_customization_chbx(string_row)
             cluster_group_config_page.group_config.type_in_field_with_few_inputs(
                 string_row, [self.CHANGE_STRUCTURE_COUNTRY], clear=True
@@ -300,7 +296,7 @@ class TestServiceConfigSave:
             cluster_group_config_page.wait_page_is_opened()
 
         with allure.step("Add params to group config and save"):
-            structure_row = cluster_group_config_page.group_config.get_all_group_config_rows()[1]
+            _, structure_row, *_ = cluster_group_config_page.group_config.get_all_group_config_rows()
             cluster_group_config_page.group_config.click_on_customization_chbx(structure_row)
             structure_params = [self.CHANGE_STRUCTURE_CODE, self.CHANGE_STRUCTURE_COUNTRY]
             for i in range(3):
@@ -337,7 +333,7 @@ class TestServiceConfigSave:
             cluster_group_config_page.wait_page_is_opened()
 
         with allure.step("Change structure params in group config and disable customization checkbox"):
-            structure_row = cluster_group_config_page.group_config.get_all_group_config_rows()[1]
+            _, structure_row, *_ = cluster_group_config_page.group_config.get_all_group_config_rows()
             cluster_group_config_page.group_config.click_on_customization_chbx(structure_row)
             cluster_group_config_page.group_config.type_in_field_with_few_inputs(
                 structure_row, [self.CHANGE_STRUCTURE_CODE], clear=True
