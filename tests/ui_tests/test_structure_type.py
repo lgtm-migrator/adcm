@@ -74,11 +74,11 @@ class TestServiceConfigSave:
     def check_advanced_params(self, config_page):
         """Method to check advanced params in config"""
         assert (
-            config_page.config.rows_amount() == self.CONFIG_ADVANCED_PARAM_AMOUNT
+            config_page.config.rows_amount == self.CONFIG_ADVANCED_PARAM_AMOUNT
         ), "Advanced params should be present only when 'Advanced' is enabled"
         config_page.config.click_on_advanced()
         assert (
-            config_page.config.rows_amount() == self.CONFIG_PARAM_AMOUNT
+            config_page.config.rows_amount == self.CONFIG_PARAM_AMOUNT
         ), "All params should be present when 'Advanced' is enabled"
         config_page.config.click_on_advanced()
 

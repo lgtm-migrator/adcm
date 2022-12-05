@@ -48,6 +48,10 @@ class CommonConfigMenuObj(BasePageObject):
         self.locators = config_class_locators
         self.fields = ConfigFieldsManipulator(self.driver, self.base_url)
 
+    @property
+    def rows_amount(self) -> int:
+        return len(self.get_all_config_rows())
+
     def get_all_config_rows(self, *, displayed_only: bool = True, timeout: int = 5) -> List[WebElement]:
         """Return all config field rows"""
 
@@ -80,9 +84,6 @@ class CommonConfigMenuObj(BasePageObject):
             if self.find_child(row, CommonConfigMenu.ConfigRow.name).text == row_name:
                 return row
         raise AssertionError(f"Configuration field with name {display_name} was not found")
-
-    def rows_amount(self) -> int:
-        return len(self.get_all_config_rows())
 
     def get_textbox_rows(self, timeout=2) -> List[WebElement]:
         """Get textbox elements from the page"""
@@ -268,7 +269,7 @@ class CommonConfigMenuObj(BasePageObject):
         self.find_child(row, CommonConfigMenu.ConfigRow.reset_btn).click()
 
     @allure.step('Type "{values}" into config field with few inputs')
-    def type_in_field_with_few_inputs(self, row: [WebElement | str], values: [str | int], clear: bool = False):
+    def type_in_field_with_few_inputs(self, row: Union[WebElement | str], values: list[str | int], clear: bool = False):
         """
         Send keys to config list
         :param row: Config field row
