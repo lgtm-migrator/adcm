@@ -958,10 +958,24 @@ class OperationsAuditPage(GeneralAdminPage):
         self.wait_element_hide(filter_locators.menu)
 
     def remove_filter(self, filter_position: int) -> None:
-        self._click_filter_by_position(OperationsAuditLocators.Filter.remove_button, filter_position)
+        filter_buttons = self.find_elements_or_empty(OperationsAuditLocators.Filter.remove_button)
+        amount_of_buttons = len(filter_buttons)
+        if filter_position >= amount_of_buttons:
+            raise ValueError(f"Can't get remove element #{filter_position}, because there's only {amount_of_buttons}")
+
+        filter_buttons[filter_position].click()
+
+        wait_until_step_succeeds(
+            self._remove_buttons_amount_should_decrease, initial_amount=amount_of_buttons, timeout=2, period=0.5
+        )
 
     def refresh_filter(self, filter_position: int) -> None:
-        self._click_filter_by_position(OperationsAuditLocators.Filter.refresh_button, filter_position)
+        filter_buttons = self.find_elements_or_empty(OperationsAuditLocators.Filter.refresh_button)
+        amount_of_buttons = len(filter_buttons)
+        if filter_position >= amount_of_buttons:
+            raise ValueError(f"Can't get remove element #{filter_position}, because there's only {amount_of_buttons}")
+
+        filter_buttons[filter_position].click()
 
     def is_filter_visible(self, filter_name: str, timeout: int = 1) -> bool:
         locators = OperationsAuditLocators.Filter.Item
@@ -1004,18 +1018,6 @@ class OperationsAuditPage(GeneralAdminPage):
 
     def click_out_of_filter(self):
         self.find_and_click(OperationsAuditLocators.title, timeout=1.5)
-
-    def _click_filter_by_position(self, locator: Locator, position: int) -> None:
-        filter_buttons = self.find_elements_or_empty(locator)
-        amount_of_buttons = len(filter_buttons)
-        if position >= amount_of_buttons:
-            raise ValueError(f"Can't get remove element #{position}, because there's only {amount_of_buttons}")
-
-        filter_buttons[position].click()
-
-        wait_until_step_succeeds(
-            self._remove_buttons_amount_should_decrease, initial_amount=amount_of_buttons, timeout=2, period=0.5
-        )
 
     def _remove_buttons_amount_should_decrease(self, initial_amount: int) -> None:
         assert (
