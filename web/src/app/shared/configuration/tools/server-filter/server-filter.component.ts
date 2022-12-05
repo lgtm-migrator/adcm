@@ -134,7 +134,9 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
     let listParam = {
       ...json,
       [this.entity]: {
-        ...json?.[this.entity],
+        limit: json?.[this.entity]?.limit,
+        filter: json?.[this.entity]?.filter,
+        ordering: json?.[this.entity]?.ordering,
         ...filters,
       }
     }
