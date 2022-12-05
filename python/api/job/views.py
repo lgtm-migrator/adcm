@@ -161,7 +161,7 @@ class JobViewSet(PermissionListMixin, ListModelMixin, RetrieveModelMixin, Generi
         return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
-        if self.is_for_ui() or self.action == "retrieve":
+        if self.is_for_ui() or self.action in ("retrieve", "cancel"):
             return JobRetrieveSerializer
 
         return super().get_serializer_class()
