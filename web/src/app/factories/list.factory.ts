@@ -200,8 +200,11 @@ export class ListFactory {
       instanceTaken: (componentRef: ComponentRef<MaintenanceModeButtonComponent<T>>) => {
         componentRef.instance.type = type;
         componentRef.instance.onClick
-        .pipe(listDirective.takeUntil())
-        .subscribe(({event, value}) => listDirective.maintenanceModeToggle(event, value));
+        .subscribe(({event, value}) => {
+          listDirective.maintenanceModeToggle(event, value);
+          event.stopPropagation();
+          event.preventDefault();
+        });
       }
     };
   }
