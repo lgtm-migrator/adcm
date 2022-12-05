@@ -176,21 +176,23 @@ export abstract class ListDirective extends BaseDirective implements OnInit, OnD
   pageHandler(pageEvent: PageEvent): void {
     this.pageEvent.emit(pageEvent);
 
+    const f = this.route.snapshot.paramMap.get('filter') || '';
+    const ordering = this.getSortParam(this.getSort());
     const ls = localStorage.getItem('list:param');
     let listParam = ls ? JSON.parse(ls) : null;
+
     listParam = {
       ...listParam,
       [this.type]: {
         ...listParam?.[this.type],
         limit: String(pageEvent.pageSize),
         page: String(pageEvent.pageIndex),
+        filter: f, ordering
       }
     }
     localStorage.setItem('list:param', JSON.stringify(listParam));
     localStorage.setItem('limit', String(pageEvent.pageSize));
 
-    const f = this.route.snapshot.paramMap.get('filter') || '';
-    const ordering = this.getSortParam(this.getSort());
     this.router.navigate(['./', listParam?.[this.type]], {
       relativeTo: this.route,
     });
