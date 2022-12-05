@@ -71,9 +71,9 @@ export class MaintenanceModeButtonComponent<T> implements AdwpCellComponent<T> {
   }
 
   preventIfDisabled(event) {
-    if (!this.status?.isModeActive) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
+    if (this.isMaintenanceModeAvailable && this.status?.isModeActive) return;
+
+    event.stopPropagation();
+    event.preventDefault();
   }
 }
