@@ -190,7 +190,7 @@ export abstract class ListDirective extends BaseDirective implements OnInit, OnD
 
     const f = this.route.snapshot.paramMap.get('filter') || '';
     const ordering = this.getSortParam(this.getSort());
-    this.router.navigate(['./', { page: pageEvent.pageIndex, limit: pageEvent.pageSize, filter: f, ordering }], {
+    this.router.navigate(['./', listParam?.[this.type]], {
       relativeTo: this.route,
     });
   }

@@ -73,7 +73,6 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
     }, {})
 
     this.localStorageUpdate(filters);
-    this.filterParams$.next(filters);
   }
 
   toggleFilters(filter): void {
@@ -134,14 +133,15 @@ export class ServerFilterComponent extends FilterComponent implements OnInit {
     let listParam = {
       ...json,
       [this.entity]: {
-        limit: json?.[this.entity]?.limit,
-        filter: json?.[this.entity]?.filter,
-        ordering: json?.[this.entity]?.ordering,
+        limit: json?.[this.entity]?.limit || '',
+        filter: json?.[this.entity]?.filter || '',
+        ordering: json?.[this.entity]?.ordering || '',
         ...filters,
       }
     }
 
     localStorage.setItem('list:param', JSON.stringify(listParam));
+    this.filterParams$.next(listParam[this.entity]);
   }
 
   manageDatepickerValue(json: Object, deleteMode?: boolean) {
