@@ -34,7 +34,7 @@
           </ng-container>
           <button type="button" class="clear-button" mat-button matSuffix mat-icon-button aria-label="Clear"
                   *ngIf="clearButtonVisible(filter.filter_field)"
-                  (click)="clear(filter.filter_field, $event)">
+                  (click)="clear(filter.filter_field, $event);$event.stopPropagation()">
             <mat-icon>refresh</mat-icon>
           </button>
           <button type="button" class="remove-button" mat-button matSuffix mat-icon-button aria-label="Remove"
