@@ -93,11 +93,6 @@ def prepare_audit_entries(sdk_client_fs, prepare_rbac_entries, prepare_cluster_o
 def test_audit_operations_page(app_fs, sdk_client_fs):
     page = OperationsAuditPage(app_fs.driver, app_fs.adcm.url).open()
 
-    # remove after https://tracker.yandex.ru/ADCM-3335
-    with allure.step("Jump pages to set correct paging"):
-        page.table.click_next_page()
-        page.table.click_previous_page()
-
     _test_unfiltered_paging(client=sdk_client_fs, page=page)
     _test_filters_one_by_one(client=sdk_client_fs, page=page)
     _test_two_filters(client=sdk_client_fs, page=page)
@@ -176,11 +171,15 @@ def _test_two_filters(client: ADCMClient, page: OperationsAuditPage):
 
         _check_records(client=client, page=page, filters=(lambda rec: rec.object_type == ObjectType.USER,))
 
+    with allure.step("Refresh page and cleanup filters"):
+        page.driver.refresh()
+        page.remove_filter(0)
+
 
 @allure.step("Check object changes")
 def _test_object_changes(page: OperationsAuditPage):
-    object_type_filter = page.get_filter_input(filter_name="object_type")
-    operation_type_filter = page.get_filter_input(filter_name="operation_type")
+    object_type_filter = _add_filter(page=page, filter_menu_name="Object type")
+    operation_type_filter = _add_filter(page=page, filter_menu_name="Operation type")
 
     page.pick_filter_value(filter_input=object_type_filter, value_to_pick="User")
     page.pick_filter_value(filter_input=operation_type_filter, value_to_pick="Update")

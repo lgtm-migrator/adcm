@@ -999,7 +999,7 @@ class OperationsAuditPage(GeneralAdminPage):
             raise ValueError("Incorrect filter name")
 
         filters_block = self.find_element(OperationsAuditLocators.Filter.block, timeout=1)
-        return self.find_child(filters_block, getattr(locators, filter_name))
+        return self.find_child(filters_block, getattr(locators, filter_name), timeout=3)
 
     def pick_filter_value(self, filter_input: WebElement, value_to_pick: str) -> None:
         filter_input.click()
