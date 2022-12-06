@@ -11,6 +11,7 @@
 # limitations under the License.
 
 """Various "rich" checks for common assertions"""
+
 import json
 from itertools import zip_longest
 from pprint import pformat

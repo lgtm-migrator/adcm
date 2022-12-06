@@ -27,6 +27,7 @@ from tests.ui_tests.app.page.admin.locators import (
     AdminRolesLocators,
     AdminSettingsLocators,
     AdminUsersLocators,
+    LoginAuditLocators,
     OperationsAuditLocators,
 )
 from tests.ui_tests.app.page.common.base_page import (
@@ -896,6 +897,93 @@ class AdminPoliciesPage(GeneralAdminPage):
 # !===== Audit =====!
 
 
+class GeneralAuditPage(GeneralAdminPage):
+    FILTER_LOCATORS = None
+
+    def add_filter(self, filter_menu_name: str) -> None:
+        """Filter name is the visible name of filter in menu"""
+        filter_locators = self.FILTER_LOCATORS
+        self.find_and_click(filter_locators.button)
+        self.wait_element_visible(filter_locators.menu)
+
+        suitable_option = next(
+            filter(
+                lambda child: child.text.strip() == filter_menu_name,
+                self.find_children(self.find_element(filter_locators.menu, timeout=0.5), filter_locators.choice),
+            ),
+            None,
+        )
+        if suitable_option is None:
+            raise AssertionError(f"Failed to find filter named '{filter_menu_name}'")
+
+        suitable_option.click()
+        self.wait_element_hide(filter_locators.menu)
+
+    def remove_filter(self, filter_position: int) -> None:
+        filter_buttons = self.find_elements_or_empty(self.FILTER_LOCATORS.remove_button)
+        amount_of_buttons = len(filter_buttons)
+        if filter_position >= amount_of_buttons:
+            raise ValueError(f"Can't get remove element #{filter_position}, because there's only {amount_of_buttons}")
+
+        filter_buttons[filter_position].click()
+
+        wait_until_step_succeeds(
+            self._remove_buttons_amount_should_decrease, initial_amount=amount_of_buttons, timeout=2, period=0.5
+        )
+
+    def refresh_filter(self, filter_position: int) -> None:
+        filter_buttons = self.find_elements_or_empty(self.FILTER_LOCATORS.refresh_button)
+        amount_of_buttons = len(filter_buttons)
+        if filter_position >= amount_of_buttons:
+            raise ValueError(f"Can't get remove element #{filter_position}, because there's only {amount_of_buttons}")
+
+        filter_buttons[filter_position].click()
+
+    def is_filter_visible(self, filter_name: str, timeout: int = 1) -> bool:
+        locators = self.FILTER_LOCATORS.Item
+
+        if not hasattr(locators, filter_name):
+            raise ValueError("Incorrect filter name")
+
+        filters_block = self.find_element(self.FILTER_LOCATORS.block, timeout=1)
+        return self.is_child_displayed(filters_block, getattr(locators, filter_name), timeout=timeout)
+
+    def get_filter_input(self, filter_name: str) -> WebElement:
+        """
+        Based on filter, return element will be:
+        - input
+        - mat-select
+        - mat-date-range-input
+        """
+        locators = self.FILTER_LOCATORS.Item
+
+        if not hasattr(locators, filter_name):
+            raise ValueError("Incorrect filter name")
+
+        filters_block = self.find_element(self.FILTER_LOCATORS.block, timeout=1)
+        return self.find_child(filters_block, getattr(locators, filter_name), timeout=3)
+
+    def pick_filter_value(self, filter_input: WebElement, value_to_pick: str) -> None:
+        filter_input.click()
+        dropdown_locator = self.FILTER_LOCATORS.dropdown_option
+        self.wait_element_visible(dropdown_locator)
+
+        suitable_option: WebElement | None = next(
+            filter(lambda option: option.text.strip() == value_to_pick, self.find_elements(dropdown_locator)), None
+        )
+        if suitable_option is None:
+            raise AssertionError(f"Failed to find option with value '{value_to_pick}'")
+
+        suitable_option.click()
+
+        self.wait_element_hide(dropdown_locator)
+
+    def _remove_buttons_amount_should_decrease(self, initial_amount: int) -> None:
+        assert (
+            len(self.find_elements_or_empty(self.FILTER_LOCATORS.remove_button)) < initial_amount
+        ), f"There should be less than {initial_amount} buttons"
+
+
 @dataclass()
 class OperationRowInfo:
     object_type: str
@@ -907,9 +995,10 @@ class OperationRowInfo:
     username: str
 
 
-class OperationsAuditPage(GeneralAdminPage):
+class OperationsAuditPage(GeneralAuditPage):
 
     MENU_SUFFIX = "audit/operations"
+    FILTER_LOCATORS = OperationsAuditLocators.Filter
     MAIN_ELEMENTS = (OperationsAuditLocators.Filter.button,)
 
     def get_audit_operation_info(self, row: WebElement) -> OperationRowInfo:
@@ -938,88 +1027,33 @@ class OperationsAuditPage(GeneralAdminPage):
     def get_show_changes_button(self, row: WebElement) -> WebElement:
         return self.find_child(row, OperationsAuditLocators.Row.show_changes, timeout=1)
 
-    def add_filter(self, filter_menu_name: str) -> None:
-        """Filter name is the visible name of filter in menu"""
-        filter_locators = OperationsAuditLocators.Filter
-        self.find_and_click(filter_locators.button)
-        self.wait_element_visible(filter_locators.menu)
-
-        suitable_option = next(
-            filter(
-                lambda child: child.text.strip() == filter_menu_name,
-                self.find_children(self.find_element(filter_locators.menu, timeout=0.5), filter_locators.choice),
-            ),
-            None,
-        )
-        if suitable_option is None:
-            raise AssertionError(f"Failed to find filter named '{filter_menu_name}'")
-
-        suitable_option.click()
-        self.wait_element_hide(filter_locators.menu)
-
-    def remove_filter(self, filter_position: int) -> None:
-        filter_buttons = self.find_elements_or_empty(OperationsAuditLocators.Filter.remove_button)
-        amount_of_buttons = len(filter_buttons)
-        if filter_position >= amount_of_buttons:
-            raise ValueError(f"Can't get remove element #{filter_position}, because there's only {amount_of_buttons}")
-
-        filter_buttons[filter_position].click()
-
-        wait_until_step_succeeds(
-            self._remove_buttons_amount_should_decrease, initial_amount=amount_of_buttons, timeout=2, period=0.5
-        )
-
-    def refresh_filter(self, filter_position: int) -> None:
-        filter_buttons = self.find_elements_or_empty(OperationsAuditLocators.Filter.refresh_button)
-        amount_of_buttons = len(filter_buttons)
-        if filter_position >= amount_of_buttons:
-            raise ValueError(f"Can't get remove element #{filter_position}, because there's only {amount_of_buttons}")
-
-        filter_buttons[filter_position].click()
-
-    def is_filter_visible(self, filter_name: str, timeout: int = 1) -> bool:
-        locators = OperationsAuditLocators.Filter.Item
-
-        if not hasattr(locators, filter_name):
-            raise ValueError("Incorrect filter name")
-
-        filters_block = self.find_element(OperationsAuditLocators.Filter.block, timeout=1)
-        return self.is_child_displayed(filters_block, getattr(locators, filter_name), timeout=timeout)
-
-    def get_filter_input(self, filter_name: str) -> WebElement:
-        """
-        Based on filter, return element will be:
-        - input
-        - mat-select
-        - mat-date-range-input
-        """
-        locators = OperationsAuditLocators.Filter.Item
-
-        if not hasattr(locators, filter_name):
-            raise ValueError("Incorrect filter name")
-
-        filters_block = self.find_element(OperationsAuditLocators.Filter.block, timeout=1)
-        return self.find_child(filters_block, getattr(locators, filter_name), timeout=3)
-
-    def pick_filter_value(self, filter_input: WebElement, value_to_pick: str) -> None:
-        filter_input.click()
-        dropdown_locator = OperationsAuditLocators.Filter.dropdown_option
-        self.wait_element_visible(dropdown_locator)
-
-        suitable_option: WebElement | None = next(
-            filter(lambda option: option.text.strip() == value_to_pick, self.find_elements(dropdown_locator)), None
-        )
-        if suitable_option is None:
-            raise AssertionError(f"Failed to find option with value '{value_to_pick}'")
-
-        suitable_option.click()
-
-        self.wait_element_hide(dropdown_locator)
-
     def click_out_of_filter(self):
         self.find_and_click(OperationsAuditLocators.title, timeout=1.5)
 
-    def _remove_buttons_amount_should_decrease(self, initial_amount: int) -> None:
-        assert (
-            len(self.find_elements_or_empty(OperationsAuditLocators.Filter.remove_button)) < initial_amount
-        ), f"There should be less than {initial_amount} buttons"
+
+@dataclass()
+class LoginRowInfo:
+    login: str
+    result: str
+    login_time: str
+
+
+class LoginAuditPage(GeneralAuditPage):
+
+    MENU_SUFFIX = "audit/logins"
+    MAIN_ELEMENTS = (LoginAuditLocators.Filter.button,)
+    FILTER_LOCATORS = LoginAuditLocators.Filter
+
+    def get_audit_login_info(self, row: WebElement) -> LoginRowInfo:
+        return LoginRowInfo(
+            **{
+                field: self.find_child(row, getattr(LoginAuditLocators.Row, field), timeout=0.5).text
+                for field in ("login", "result", "login_time")
+            }
+        )
+
+    def get_info_from_all_rows(self) -> tuple[LoginRowInfo, ...]:
+        return tuple(self.get_audit_login_info(row) for row in self.table.get_all_rows(timeout=2))
+
+    def click_out_of_filter(self):
+        self.find_and_click(LoginAuditLocators.title, timeout=1.5)
