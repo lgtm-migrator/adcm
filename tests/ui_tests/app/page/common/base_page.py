@@ -364,7 +364,9 @@ class BasePageObject:
 
         def _clear():
             locator_before = element if isinstance(element, WebElement) else self.find_element(element)
-            locator_before.send_keys(Keys.CONTROL + Keys.BACKSPACE)
+            actual_value = locator_before.get_property('value')
+            for _ in range(len(actual_value)):
+                locator_before.send_keys(Keys.BACKSPACE)
             locator_before.send_keys(Keys.BACK_SPACE)
             locator_after = element if isinstance(element, WebElement) else self.find_element(element)
             assert locator_after.text == ""
