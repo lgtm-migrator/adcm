@@ -248,7 +248,7 @@ class TestServiceConfigSave:
             )
             string_row, *_ = service_config_page.config.get_all_config_rows()
             cluster_group_config_page.group_config.click_on_customization_chbx(string_row)
-            cluster_group_config_page.group_config.type_in_field_with_few_inputs(
+            cluster_group_config_page.config.type_in_field_with_few_inputs(
                 string_row, [self.STRING_ROW_NAME], clear=True
             )
 
@@ -309,7 +309,7 @@ class TestServiceConfigSave:
         with allure.step("Change structure params in group config and disable customization checkbox"):
             _, structure_row, *_ = cluster_group_config_page.group_config.get_all_group_config_rows()
             cluster_group_config_page.group_config.click_on_customization_chbx(structure_row)
-            cluster_group_config_page.group_config.type_in_field_with_few_inputs(
+            cluster_group_config_page.config.type_in_field_with_few_inputs(
                 structure_row, [self.CHANGE_STRUCTURE_CODE], clear=True
             )
             cluster_group_config_page.group_config.click_on_customization_chbx(structure_row)

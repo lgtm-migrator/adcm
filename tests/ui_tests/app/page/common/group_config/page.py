@@ -75,33 +75,3 @@ class CommonGroupConfigMenu(BasePageObject):
     @allure.step("Check that there are no rows on group config page")
     def check_no_rows(self):
         assert len(self.get_all_group_config_rows(timeout=1)) == 0, "There should not be any rows"
-
-    @allure.step('Type "{values}" into config field with few inputs')
-    def type_in_field_with_few_inputs(self, row: Union[WebElement, str], values: [str], clear: bool = False):
-        """
-        Send keys to config list
-        :param row: Config field row
-        :param values: keys to send
-        :param clear: clean input before sending keys or not
-        """
-        field_row = row if isinstance(row, WebElement) else self.get_config_row(display_name=row)
-        self.scroll_to(field_row)
-        for value_id, value in enumerate(values):
-            try:
-                field = self.find_children(field_row, self.locators.input)[value_id]
-            except IndexError:
-                self.find_child(field_row, self.locators.add_item_btn).click()
-                self.wait_element_visible(self.find_child(field_row, self.locators.input))
-                field = self.find_children(field_row, self.locators.input)[value_id]
-            if clear:
-                field.clear()
-            self.find_children(field_row, self.locators.input)[value_id].click()
-            self.find_children(field_row, self.locators.input)[value_id].send_keys(value)
-
-    def get_config_row(self, display_name: str) -> WebElement:
-        """Return group config field row with provided display name"""
-        row_name = f'{display_name}:' if not display_name.endswith(':') else display_name
-        for row in self.get_all_group_config_rows():
-            if self.find_child(row, GroupConfigLocators.group_row.name).text == row_name:
-                return row
-        raise AssertionError(f"Configuration field with name {display_name} was not found")
