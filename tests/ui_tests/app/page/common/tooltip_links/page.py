@@ -68,7 +68,7 @@ class CommonToolbar(BasePageObject):
         self.hover_element(CommonToolbarLocators.Popup.item(action_name))
         hint_el = self.find_element(CommonToolbarLocators.Hint.hint_text)
         self.wait_element_visible(hint_el)
-        assert hint_el.text == hint_text, f"Action hint text should be {hint_text}"
+        assert hint_el.text == hint_text, f"Action hint text should be {hint_text}\nActual hint text: {hint_el.text}"
         self.find_and_click(CommonToolbarLocators.adcm_action_btn, is_js=True)
 
     @allure.step("Run action {action_name} in ADCM tab")
