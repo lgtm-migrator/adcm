@@ -13,6 +13,7 @@
 """Tooltip page PageObjects classes"""
 
 import allure
+from selenium.common.exceptions import TimeoutException
 from tests.ui_tests.app.page.common.base_page import BasePageObject
 from tests.ui_tests.app.page.common.dialogs.locators import ActionDialog
 from tests.ui_tests.app.page.common.tooltip_links.locator import CommonToolbarLocators
@@ -60,16 +61,18 @@ class CommonToolbar(BasePageObject):
         self.find_and_click(CommonToolbarLocators.adcm_action_btn, is_js=True)
         return is_active
 
-    @allure.step("Check hint in toolbox action {action_name}")
-    def check_adcm_action_hint(self, action_name: str, hint_text: str):
-        """Check hint Action from toolbar"""
+    @allure.step("Getting hint from toolbox actions for {action_name}")
+    def get_action_hint(self, action_name: str) -> str:
         self.wait_element_visible(CommonToolbarLocators.admin_link)
         self.find_and_click(CommonToolbarLocators.adcm_action_btn)
         self.hover_element(CommonToolbarLocators.Popup.item(action_name))
-        hint_el = self.find_element(CommonToolbarLocators.Hint.hint_text)
-        self.wait_element_visible(hint_el)
-        assert hint_el.text == hint_text, f"Action hint text should be {hint_text}\nActual hint text: {hint_el.text}"
+        try:
+            self.wait_element_visible(CommonToolbarLocators.Hint.hint_text)
+            hint_text = self.find_element(CommonToolbarLocators.Hint.hint_text).text
+        except TimeoutException:
+            hint_text = ""
         self.find_and_click(CommonToolbarLocators.adcm_action_btn, is_js=True)
+        return hint_text
 
     @allure.step("Run action {action_name} in ADCM tab")
     def run_adcm_action(self, action_name: str):

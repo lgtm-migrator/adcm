@@ -263,8 +263,11 @@ class TestAdminSettingsPage:
             ), f"Action {params['test_action']} should be disabled"
 
         with allure.step("Check actions hint is present on toolbar"):
-            settings_page.toolbar.check_adcm_action_hint(action_name=params["connect_action"], hint_text=ACTION_HINT)
-            settings_page.toolbar.check_adcm_action_hint(action_name=params["test_action"], hint_text=ACTION_HINT)
+            hint_text = settings_page.toolbar.get_action_hint(action_name=params["connect_action"])
+            assert hint_text == ACTION_HINT, f"Action hint text should be {ACTION_HINT}\nActual hint text: {hint_text}"
+
+            hint_text = settings_page.toolbar.get_action_hint(action_name=params["test_action"])
+            assert hint_text == ACTION_HINT, f"Action hint text should be {ACTION_HINT}\nActual hint text: {hint_text}"
 
         with allure.step("Fill ldap config"):
             settings_page.config.expand_or_close_group(group_name="LDAP integration")
