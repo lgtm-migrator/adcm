@@ -12,7 +12,7 @@
 
 """Config page PageObjects classes"""
 
-from typing import List, Union
+from typing import List
 
 import allure
 from adcm_pytest_plugin.utils import wait_until_step_succeeds
