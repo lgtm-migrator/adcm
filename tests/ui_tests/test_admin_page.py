@@ -118,6 +118,7 @@ CUSTOM_POLICY = AdminPolicyInfo(
     groups=None,
     objects=None,
 )
+ACTION_HINT = "The Action is not available. You need to fill in the LDAP integration settings."
 
 
 @pytest.mark.usefixtures("_login_to_adcm_over_api")
@@ -260,6 +261,11 @@ class TestAdminSettingsPage:
             assert settings_page.toolbar.is_adcm_action_inactive(
                 action_name=params["test_action"]
             ), f"Action {params['test_action']} should be disabled"
+
+        with allure.step("Check actions hint is present on toolbar"):
+            settings_page.toolbar.check_adcm_action_hint(action_name=params["connect_action"], hint_text=ACTION_HINT)
+            settings_page.toolbar.check_adcm_action_hint(action_name=params["test_action"], hint_text=ACTION_HINT)
+
         with allure.step("Fill ldap config"):
             settings_page.config.expand_or_close_group(group_name="LDAP integration")
             settings_page.config.type_in_field_with_few_inputs(row="LDAP URI", values=[params["test_value"]])

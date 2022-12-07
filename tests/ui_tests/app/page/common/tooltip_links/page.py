@@ -60,6 +60,17 @@ class CommonToolbar(BasePageObject):
         self.find_and_click(CommonToolbarLocators.adcm_action_btn, is_js=True)
         return is_active
 
+    @allure.step("Check hint in toolbox action {action_name}")
+    def check_adcm_action_hint(self, action_name: str, hint_text: str):
+        """Check hint Action from toolbar"""
+        self.wait_element_visible(CommonToolbarLocators.admin_link)
+        self.find_and_click(CommonToolbarLocators.adcm_action_btn)
+        self.hover_element(CommonToolbarLocators.Popup.item(action_name))
+        hint_el = self.find_element(CommonToolbarLocators.Hint.hint_text)
+        self.wait_element_visible(hint_el)
+        assert hint_el.text == hint_text, f"Action hint text should be {hint_text}"
+        self.find_and_click(CommonToolbarLocators.adcm_action_btn, is_js=True)
+
     @allure.step("Run action {action_name} in ADCM tab")
     def run_adcm_action(self, action_name: str):
         """Run Action from toolbar"""
