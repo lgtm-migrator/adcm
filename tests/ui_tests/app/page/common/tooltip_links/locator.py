@@ -46,4 +46,5 @@ class CommonToolbarLocators:
 
     class Hint:
         """Hints with information"""
+
         hint_text = Locator(By.CSS_SELECTOR, "mat-tooltip-component div", "Hint text")
